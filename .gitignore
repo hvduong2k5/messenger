@@ -1,0 +1,60 @@
+# ==========================================
+# 1. CẤU TRÚC GỐC (ROOT) & IDE
+# ==========================================
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+.DS_Store
+Thumbs.db
+local.properties
+captures/
+.externalNativeBuild/
+.cxx/
+
+# ==========================================
+# 2. MOBILE APP (ANDROID)
+# ==========================================
+# Ignore tất cả các thư mục build trong mobile-app
+mobile-app/build/
+mobile-app/*/build/
+mobile-app/.gradle/
+mobile-app/local.properties
+
+# Các file thực thi và log của Android
+mobile-app/*.apk
+mobile-app/*.ap_
+mobile-app/*.dex
+mobile-app/*.class
+
+# Keystore & Google Services (Bảo mật)
+mobile-app/*.jks
+mobile-app/*.keystore
+mobile-app/google-services.json
+
+# ==========================================
+# 3. BACKEND API
+# ==========================================
+# Ignore thư mục build/target của Backend (Java/Node.js/Python)
+backend-api/build/
+backend-api/target/
+backend-api/bin/
+backend-api/out/
+backend-api/node_modules/
+backend-api/.env
+
+# Log & Database tạm thời ở Backend
+backend-api/*.log
+backend-api/*.sqlite
+backend-api/*.db
+
+# ==========================================
+# 4. GRADLE & HỆ THỐNG
+# ==========================================
+.gradle/
+build/
+/*/build/
+*.log
+*.temp
+*.tmp
