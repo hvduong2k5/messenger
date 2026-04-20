@@ -1,7 +1,14 @@
+
 # ==========================================
 # 1. CẤU TRÚC GỐC (ROOT) & IDE
 # ==========================================
 .idea/
+.idea/caches
+.idea/libraries
+.idea/modules.xml
+.idea/workspace.xml
+.idea/navEditor.xml
+.idea/assetWizardSettings.xml
 .vscode/
 *.iml
 *.ipr
@@ -9,9 +16,12 @@
 .DS_Store
 Thumbs.db
 local.properties
+
 captures/
 .externalNativeBuild/
 .cxx/
+.gradle/
+
 
 # ==========================================
 # 2. MOBILE APP (ANDROID)
@@ -33,6 +43,7 @@ mobile-app/*.jks
 mobile-app/*.keystore
 mobile-app/google-services.json
 
+
 # ==========================================
 # 3. BACKEND API
 # ==========================================
@@ -48,7 +59,57 @@ backend-api/.env
 backend-api/*.log
 backend-api/*.sqlite
 backend-api/*.db
+/target/
+HELP.md
+target/
+.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
 
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+### IntelliJ IDEA ###
+# Ignore logs
+*.log
+
+# Ignore temporary files
+*.tmp
+*.temp
+
+*.ipr
+*.properties
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+application.properties
+
+# Ignore Docker files
+*.pid
+
+# Ignore paho directories
+paho*/
+
+# Ignore other unnecessary files
+*.bak
+*.swp
+*.swo
+*.orig
+*.rej
 # ==========================================
 # 4. GRADLE & HỆ THỐNG
 # ==========================================
