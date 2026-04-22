@@ -22,12 +22,16 @@ public class UserValidationTest {
         }
     }
 
+    private String longPassword() {
+        return "p".repeat(60);
+    }
+
     @Test
     public void testValidUser() {
         User user = User.builder()
                 .username("testuser")
                 .email("test@example.com")
-                .password("password123")
+                .password(longPassword())
                 .status("ACTIVE")
                 .build();
 
@@ -40,7 +44,7 @@ public class UserValidationTest {
         User user = User.builder()
                 .username("")
                 .email("test@example.com")
-                .password("password123")
+                .password(longPassword())
                 .build();
 
         Set<ConstraintViolation<User>> violations = validator.validate(user);
@@ -55,7 +59,7 @@ public class UserValidationTest {
         User user = User.builder()
                 .username("testuser")
                 .email("not-an-email")
-                .password("password123")
+                .password(longPassword())
                 .build();
 
         Set<ConstraintViolation<User>> violations = validator.validate(user);
