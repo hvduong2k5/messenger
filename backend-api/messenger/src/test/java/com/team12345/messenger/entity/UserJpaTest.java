@@ -16,12 +16,16 @@ public class UserJpaTest {
     @Autowired
     private TestEntityManager entityManager;
 
+    private String longPassword() {
+        return "p".repeat(60); // create a dummy BCrypt-length password for tests
+    }
+
     @Test
     public void testSaveUser() {
         User user = User.builder()
                 .username("johndoe")
                 .email("john.doe@example.com")
-                .password("securePassword")
+                .password(longPassword())
                 .status("ACTIVE")
                 .build();
 
@@ -36,14 +40,14 @@ public class UserJpaTest {
         User user1 = User.builder()
                 .username("uniqueuser")
                 .email("user1@example.com")
-                .password("password")
+                .password(longPassword())
                 .build();
         entityManager.persistAndFlush(user1);
 
         User user2 = User.builder()
                 .username("uniqueuser") // Trùng username
                 .email("user2@example.com")
-                .password("password")
+                .password(longPassword())
                 .build();
 
         assertThatThrownBy(() -> entityManager.persistAndFlush(user2))
@@ -59,14 +63,14 @@ public class UserJpaTest {
         User user1 = User.builder()
                 .username("user1")
                 .email("unique@example.com")
-                .password("password")
+                .password(longPassword())
                 .build();
         entityManager.persistAndFlush(user1);
 
         User user2 = User.builder()
                 .username("user2")
                 .email("unique@example.com") // Trùng email
-                .password("password")
+                .password(longPassword())
                 .build();
 
         assertThatThrownBy(() -> entityManager.persistAndFlush(user2))
