@@ -8,12 +8,11 @@ import lombok.*;
 
 @Entity
 @Table(name = "users")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Getter
-@Setter
 public class User {
 
     @Id
@@ -31,7 +30,8 @@ public class User {
     @Column(unique = true, nullable = false, length = 150)
     private String email;
 
-    @Column(name = "avatar_url", columnDefinition = "TEXT")
+    @Size(max = 512)
+    @Column(name = "avatar_url", length = 512)
     private String avatarUrl;
 
     @Size(max = 50)
@@ -39,6 +39,8 @@ public class User {
     private String status;
 
     @NotBlank
-    @Column(nullable = false, columnDefinition = "TEXT")
+    @Size(min = 60, max = 255)
+    @Column(nullable = false, length = 255)
     private String password;
+
 }
