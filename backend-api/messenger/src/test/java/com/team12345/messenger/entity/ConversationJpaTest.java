@@ -10,7 +10,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @DataJpaTest
 @TestPropertySource(properties = {
-        "spring.datasource.url=jdbc:h2:mem:testdb",
+        "spring.datasource.url=jdbc:h2:mem:testdb_conversation",
         "spring.datasource.driverClassName=org.h2.Driver",
         "spring.datasource.username=sa",
         "spring.datasource.password=",
@@ -47,5 +47,18 @@ public class ConversationJpaTest {
         assertThat(savedConversation.getIsGroup()).isFalse();
         assertThat(savedConversation.getCreatedAt()).isNotNull();
         assertThat(savedConversation.getName()).isNull();
+    }
+
+    @Test
+    public void testSaveConversationWithLongName() {
+        String longName = "A".repeat(255);
+        Conversation conversation = Conversation.builder()
+                .name(longName)
+                .isGroup(true)
+                .build();
+
+        Conversation savedConversation = entityManager.persistAndFlush(conversation);
+
+        assertThat(savedConversation.getName()).isEqualTo(longName);
     }
 }
