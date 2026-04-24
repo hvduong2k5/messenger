@@ -53,4 +53,82 @@ public class MessageJpaTest {
         assertThat(savedMessage.getSender().getUsername()).isEqualTo("sender_user");
         assertThat(savedMessage.getConversation().getName()).isEqualTo("Chat with sender");
     }
-}
+
+    @Test
+    public void testSaveMessageWithAttachments() {
+        User user = User.builder()
+                .username("attachment_sender")
+                .email("attachment@example.com")
+                .password("password12345678901234567890123456789012345678901234567890123456")
+                .build();
+        entityManager.persistAndFlush(user);
+
+        Conversation conversation = Conversation.builder()
+                .name("Attachment Test Chat")
+                .isGroup(false)
+                .build();
+        entityManager.persistAndFlush(conversation);
+
+        Message message = Message.builder()
+                .conversation(conversation)
+                .sender(user)
+                .content("Message with attachments")
+                .build();
+        
+        Attachment attachment1 = Attachment.builder()
+                .fileUrl("http://example.com/file1.jpg")
+                .fileType("image")
+                .fileSize(1024)
+                .message(message)
+                .build();
+        
+        Attachment attachment2 = Attachment.builder()
+                .fileUrl("http://example.com/file2.pdf")
+                .fileType("file")
+                .fileSize(2048)
+                .message(message)
+                .build();
+
+        message.setAttachments(java.util.Arrays.asList(attachment1, attachment2));
+
+        Message savedMessage = entityManager.persistAndFlush(message);
+        entityManager.clear();
+
+        Message foundMessage = entityManager.find(Message.class, savedMessage.getId());
+        assertThat(foundMessage.getAttachments()).hasSize(2);
+        assertThat(foundMessage.getAttachments()).extracting(Attachment::getFileUrl)
+                .containsExactlyInAnyOrder("http://example.com/file1.jpg", "http://example.com/file2.pdf");
+    }
+
+    @Test
+    public void testSaveMessageWithLongContent() {
+        User user = User.builder()
+                .username("long_content_user")
+                .email("long@example.com")
+                .password("password12345678901234567890123456789012345678901234567890123456")
+                .build();
+        entityManager.persistAndFlush(user);
+
+        Conversation conversation = Conversation.builder()
+                .name("Long Content Chat")
+                .isGroup(false)
+                .build();
+        entityManager.persistAndFlush(conversation);
+
+        StringBuilder longContent = new StringBuilder();
+        for (int i = 0; i < 1000; i++) {
+            longContent.append("Word ");
+        }
+
+        Message message = Message.builder()
+                .conversation(conversation)
+                .sender(user)
+                .content(longContent.toString())
+                .build();
+
+        Message savedMessage = entityManager.persistAndFlush(message);
+        
+        assertThat(savedMessage.getId()).isNotNull();
+        assertThat(savedMessage.getContent()).isEqualTo(longContent.toString());
+    }
+}
