@@ -74,7 +74,7 @@ class ParticipantRepositoryTest {
         entityManager.persistAndFlush(participant3);
 
         // Test findByUserId
-        List<Participant> participants = participantRepository.findByUserId(user1.getId());
+        List<Participant> participants = participantRepository.findById_UserId(user1.getId());
 
         // Verify results
         assertThat(participants).hasSize(2);
@@ -132,7 +132,7 @@ class ParticipantRepositoryTest {
         entityManager.persistAndFlush(participant3);
 
         // Test findByConversationId
-        List<Participant> participants = participantRepository.findByConversationId(conversation2.getId());
+        List<Participant> participants = participantRepository.findById_ConversationId(conversation2.getId());
 
         // Verify results
         assertThat(participants).hasSize(2);
