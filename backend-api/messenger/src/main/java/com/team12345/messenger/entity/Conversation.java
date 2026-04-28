@@ -39,4 +39,8 @@ public class Conversation {
     @Builder.Default
     @OneToMany(mappedBy = "conversation", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<GroupSetting> settings = new ArrayList<>();
+
+    @Builder.Default
+    @OneToMany(mappedBy = "conversation", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Participant> participants = new ArrayList<>();
 }
