@@ -10,6 +10,34 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "participants")
+// Bọc tất cả bên trong @NamedEntityGraphs
+@NamedEntityGraphs({
+
+// Graph 1: Như bạn đã viết (chỉ lấy Conversation)
+@NamedEntityGraph(
+    name = "Participant.conversation",
+    attributeNodes = {
+        @NamedAttributeNode("conversation")
+    }
+),
+
+// Graph 2: Viết tiếp cái mới (Ví dụ: Chỉ lấy User)
+@NamedEntityGraph(
+    name = "Participant.user",
+    attributeNodes = {
+        @NamedAttributeNode("user")
+    }
+),
+
+// Graph 3: Kết hợp lấy cả Conversation và User (Rất hay dùng)
+@NamedEntityGraph(
+    name = "Participant.fullDetail",
+    attributeNodes = {
+        @NamedAttributeNode("conversation"),
+        @NamedAttributeNode("user")
+    }
+)
+})
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
