@@ -15,6 +15,12 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@NamedEntityGraph(
+    name = "Message.withSender",
+    attributeNodes = {
+        @NamedAttributeNode("sender")
+    }
+)
 public class Message {
 
     @Id
