@@ -136,7 +136,7 @@ class MessageRepositoryTest {
     }
 
     @Test
-    void testFindLastMessageByConversationId() {
+    void testFindFirstByConversationIdOrderByCreatedAtDesc() {
         // Create user
         User sender = User.builder()
                 .username("sender")
@@ -178,7 +178,7 @@ class MessageRepositoryTest {
         entityManager.persistAndFlush(message3);
 
         // Test finding last message
-        Optional<Message> lastMessage = messageRepository.findLastMessageByConversationId(conversation.getId());
+        Optional<Message> lastMessage = messageRepository.findFirstByConversationIdOrderByCreatedAtDesc(conversation.getId());
 
         assertThat(lastMessage).isPresent();
         assertThat(lastMessage.get().getId()).isEqualTo(message3.getId());
@@ -186,7 +186,7 @@ class MessageRepositoryTest {
     }
 
     @Test
-    void testFindLastMessageByConversationIdWhenEmpty() {
+    void testFindFirstByConversationIdOrderByCreatedAtDescWhenEmpty() {
         // Create conversation without messages
         Conversation conversation = Conversation.builder()
                 .name("Empty Conversation")
@@ -196,7 +196,7 @@ class MessageRepositoryTest {
         entityManager.persistAndFlush(conversation);
 
         // Test finding last message in empty conversation
-        Optional<Message> lastMessage = messageRepository.findLastMessageByConversationId(conversation.getId());
+        Optional<Message> lastMessage = messageRepository.findFirstByConversationIdOrderByCreatedAtDesc(conversation.getId());
 
         assertThat(lastMessage).isEmpty();
     }
