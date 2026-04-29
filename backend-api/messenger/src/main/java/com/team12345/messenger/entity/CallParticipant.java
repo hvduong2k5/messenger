@@ -11,6 +11,13 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@NamedEntityGraph(
+name = "CallParticipant.withUser",
+attributeNodes = {
+@NamedAttributeNode("user")
+}
+)
+
 public class CallParticipant {
 
     @EmbeddedId
