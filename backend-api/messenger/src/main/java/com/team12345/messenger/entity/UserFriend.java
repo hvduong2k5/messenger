@@ -13,6 +13,12 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@NamedEntityGraph(
+    name = "UserFriend.withFriendInfo",
+    attributeNodes = {
+        @NamedAttributeNode("friend")
+    }
+)
 public class UserFriend {
 
     @EmbeddedId
