@@ -16,4 +16,5 @@ public interface ParticipantRepository extends JpaRepository<Participant, Partic
 
     @EntityGraph(value = "Participant.fullDetail", type = EntityGraph.EntityGraphType.FETCH)
     List<Participant> findById_ConversationId(Long conversationId);
+
 }
