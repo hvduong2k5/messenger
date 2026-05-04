@@ -93,6 +93,18 @@ public class UserServiceImplTest {
     }
 
     @Test
+    void updateStatus_WhenStatusIsNull_ShouldThrowException() {
+        // Act & Assert
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+            userService.updateStatus(1L, null);
+        });
+        
+        assertThat(exception.getMessage()).isEqualTo("Status cannot be null");
+        verify(userRepository, never()).findById(anyLong());
+        verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
     void updateStatus_WhenUserDoesNotExist_ShouldThrowException() {
         // Arrange
         when(userRepository.findById(1L)).thenReturn(Optional.empty());
@@ -123,6 +135,18 @@ public class UserServiceImplTest {
 
         verify(userRepository, times(1)).findById(1L);
         verify(userRepository, times(1)).save(any(User.class));
+    }
+
+    @Test
+    void updateAvatar_WhenAvatarUrlIsNull_ShouldThrowException() {
+        // Act & Assert
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+            userService.updateAvatar(1L, null);
+        });
+
+        assertThat(exception.getMessage()).isEqualTo("Avatar URL cannot be null");
+        verify(userRepository, never()).findById(anyLong());
+        verify(userRepository, never()).save(any(User.class));
     }
 
     @Test
