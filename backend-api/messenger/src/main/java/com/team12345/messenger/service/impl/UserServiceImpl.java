@@ -26,12 +26,14 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public UserProfileResponseDTO updateStatus(Long userId, String status) {
+        if (status == null) {
+            throw new IllegalArgumentException("Status cannot be null");
+        }
+
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
 
-        if (status != null) {
-            user.setStatus(status);
-        }
+        user.setStatus(status);
 
         User updatedUser = userRepository.save(user);
         return mapToResponse(updatedUser);
@@ -40,6 +42,10 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public UserProfileResponseDTO updateAvatar(Long userId, String avatarUrl) {
+        if (avatarUrl == null) {
+            throw new IllegalArgumentException("Avatar URL cannot be null");
+        }
+
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
 
