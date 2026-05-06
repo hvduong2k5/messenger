@@ -74,7 +74,7 @@ class MessageStatusRepositoryTest {
         entityManager.persistAndFlush(status2);
 
         // Test count unread
-        long unreadCount = messageStatusRepository.countUnreadByReceiverId(receiver.getId());
+        long unreadCount = messageStatusRepository.countById_ReceiverIdAndStatusNot(receiver.getId(), MessageStatusEnum.read);
         assertThat(unreadCount).isEqualTo(2); // Both sent and delivered are unread
     }
 
@@ -139,8 +139,8 @@ class MessageStatusRepositoryTest {
         entityManager.persistAndFlush(status2);
 
         // Test count unread by conversation
-        long unreadCount1 = messageStatusRepository.countUnreadByReceiverIdAndConversationId(receiver.getId(), conversation1.getId());
-        long unreadCount2 = messageStatusRepository.countUnreadByReceiverIdAndConversationId(receiver.getId(), conversation2.getId());
+        long unreadCount1 = messageStatusRepository.countUnreadInConversation(receiver.getId(), conversation1.getId(), MessageStatusEnum.read);
+        long unreadCount2 = messageStatusRepository.countUnreadInConversation(receiver.getId(), conversation2.getId(), MessageStatusEnum.read);
 
         assertThat(unreadCount1).isEqualTo(1); // sent status is unread
         assertThat(unreadCount2).isEqualTo(0); // read status is not unread
@@ -188,7 +188,7 @@ class MessageStatusRepositoryTest {
         entityManager.persistAndFlush(status);
 
         // Mark as read
-        int updatedRows = messageStatusRepository.markAsReadByReceiverIdAndMessageId(receiver.getId(), message.getId());
+        int updatedRows = messageStatusRepository.markAsReadByMessageId(receiver.getId(), message.getId(), MessageStatusEnum.read);
         entityManager.flush();
         entityManager.clear();
 
@@ -253,7 +253,7 @@ class MessageStatusRepositoryTest {
         entityManager.persistAndFlush(status2);
 
         // Mark all as read in conversation
-        int updatedRows = messageStatusRepository.markAsReadByReceiverIdAndConversationId(receiver.getId(), conversation.getId());
+        int updatedRows = messageStatusRepository.markAsReadByConversationId(receiver.getId(), conversation.getId(), MessageStatusEnum.read);
         entityManager.flush();
         entityManager.clear();
 
