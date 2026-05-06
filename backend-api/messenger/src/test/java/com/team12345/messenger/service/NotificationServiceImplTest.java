@@ -1,8 +1,11 @@
 package com.team12345.messenger.service;
 
+import com.team12345.messenger.dto.response.NotificationResponseDTO;
 import com.team12345.messenger.entity.Notification;
 import com.team12345.messenger.entity.User;
 import com.team12345.messenger.repository.NotificationRepository;
+import com.team12345.messenger.service.impl.NotificationServiceImpl;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -21,13 +24,13 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class NotificationServiceTest {
+class NotificationServiceImplTest {
 
     @Mock
     private NotificationRepository notificationRepository;
 
     @InjectMocks
-    private NotificationService notificationService;
+    private NotificationServiceImpl notificationService;
 
     private User user;
 
@@ -84,6 +87,7 @@ class NotificationServiceTest {
         Notification notification = Notification.builder()
                 .id(1L)
                 .user(user)
+                .isSeen(false)
                 .content("Test Content")
                 .build();
         Slice<Notification> slice = new SliceImpl<>(List.of(notification));
@@ -91,7 +95,7 @@ class NotificationServiceTest {
         when(notificationRepository.findByUserIdOrderByCreatedAtDesc(1L, pageable)).thenReturn(slice);
 
         // Act
-        Slice<Notification> result = notificationService.getUserNotifications(1L, pageable);
+        Slice<NotificationResponseDTO> result = notificationService.getUserNotifications(1L, pageable);
 
         // Assert
         assertThat(result.getContent()).hasSize(1);
