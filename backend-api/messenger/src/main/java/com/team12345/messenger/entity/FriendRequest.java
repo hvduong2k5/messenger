@@ -10,8 +10,18 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@NamedEntityGraphs({
+@NamedEntityGraph(
+name = "FriendRequest.withSender",
+        attributeNodes = { @NamedAttributeNode("sender") }
+),
+@NamedEntityGraph(
+        name = "FriendRequest.withReceiver",
+        attributeNodes = { @NamedAttributeNode("receiver") }
+) 
+})
 public class FriendRequest {
-
+ 
     @EmbeddedId
     private FriendRequestId id;
 
