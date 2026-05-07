@@ -13,3 +13,8 @@ spring.jpa.show-sql=true
 spring.jpa.database-platform=org.hibernate.dialect.PostgreSQLDialect
 # Logging Configuration
 logging.level.org.springframework=INFO
+
+# Cloudinary
+cloudinary.cloud_name=your_cloud_name
+cloudinary.api_key=your_api_key
+cloudinary.api_secret=your_api_secret
