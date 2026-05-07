@@ -2,6 +2,7 @@ package com.team12345.messenger.repository;
 
 import com.team12345.messenger.entity.MessageStatus;
 import com.team12345.messenger.entity.MessageStatusEnum;
+import com.team12345.messenger.entity.MessageStatusEnum;
 import com.team12345.messenger.entity.MessageStatusId;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
