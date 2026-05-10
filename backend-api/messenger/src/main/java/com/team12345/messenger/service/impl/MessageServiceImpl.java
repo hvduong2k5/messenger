@@ -2,7 +2,7 @@ package com.team12345.messenger.service.impl;
 
 import com.team12345.messenger.dto.request.MessageRequestDTO;
 import com.team12345.messenger.dto.response.AttachmentResponseDTO;
-import com.team12345.messenger.dto.response.MessageResponseDTO;
+import com.team12345.messenger.dto.response.DetailMessageResponseDTO;
 import com.team12345.messenger.entity.*;
 import com.team12345.messenger.exception.ResourceNotFoundException;
 import com.team12345.messenger.repository.*;
@@ -35,7 +35,7 @@ public class MessageServiceImpl implements MessageService {
 
     @Override
     @Transactional
-    public MessageResponseDTO saveMessage(MessageRequestDTO requestDTO) {
+    public DetailMessageResponseDTO saveMessage(MessageRequestDTO requestDTO) {
         // Validate conversation & sender
         Conversation conversation = conversationRepository.findById(requestDTO.getConversationId())
                 .orElseThrow(() -> new ResourceNotFoundException("Conversation not found"));
@@ -68,7 +68,7 @@ public class MessageServiceImpl implements MessageService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<MessageResponseDTO> getMessagesByConversation(Long conversationId, Pageable pageable) {
+    public Page<DetailMessageResponseDTO> getMessagesByConversation(Long conversationId, Pageable pageable) {
         // Default pagination: 20 messages, sorted by createdAt DESC
         Pageable actualPageable = pageable != null ? pageable :
                 PageRequest.of(0, 20, Sort.by(Sort.Direction.DESC, "createdAt"));
@@ -118,7 +118,7 @@ public class MessageServiceImpl implements MessageService {
         messageStatusRepository.saveAll(statusRecords);
     }
 
-    private MessageResponseDTO mapToResponseDTO(Message message) {
+    private DetailMessageResponseDTO mapToResponseDTO(Message message) {
         List<AttachmentResponseDTO> attachmentDTOs = new ArrayList<>();
         if (message.getAttachments() != null) {
             attachmentDTOs = message.getAttachments().stream()
@@ -135,7 +135,7 @@ public class MessageServiceImpl implements MessageService {
              type = "media"; // basic logic, can be improved based on actual fileType
         }
 
-        return MessageResponseDTO.builder()
+        return DetailMessageResponseDTO.builder()
                 .messageId(message.getId())
                 .conversationId(message.getConversation().getId())
                 .senderId(message.getSender().getId())

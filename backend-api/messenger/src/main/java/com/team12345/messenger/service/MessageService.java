@@ -1,13 +1,13 @@
 package com.team12345.messenger.service;
 
 import com.team12345.messenger.dto.request.MessageRequestDTO;
-import com.team12345.messenger.dto.response.MessageResponseDTO;
+import com.team12345.messenger.dto.response.DetailMessageResponseDTO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 public interface MessageService {
 
-    MessageResponseDTO saveMessage(MessageRequestDTO requestDTO);
+    DetailMessageResponseDTO saveMessage(MessageRequestDTO requestDTO);
 
-    Page<MessageResponseDTO> getMessagesByConversation(Long conversationId, Pageable pageable);
+    Page<DetailMessageResponseDTO> getMessagesByConversation(Long conversationId, Pageable pageable);
 }
