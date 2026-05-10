@@ -1,6 +1,7 @@
 package com.team12345.messenger.service;
 
 import com.team12345.messenger.dto.response.ConversationResponseDTO;
+import com.team12345.messenger.dto.response.MessageResponseDTO;
 import com.team12345.messenger.entity.Conversation;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -66,8 +67,8 @@ public interface ConversationService {
      *
      * @param conversationId the ID of the conversation
      * @param pageable       pagination and sorting information
-     * @return a page of MessageResponseDTO objects
+     * @return a page of DetailMessageResponseDTO objects
      * @throws RuntimeException if the conversation is not found
      */
-    Page<com.team12345.messenger.dto.response.MessageResponseDTO> getConversationMessages(Long conversationId, Pageable pageable);
+    Page<MessageResponseDTO> getConversationMessages(Long conversationId, Pageable pageable);
 }
