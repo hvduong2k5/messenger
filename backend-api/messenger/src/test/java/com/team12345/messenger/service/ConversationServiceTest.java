@@ -135,6 +135,7 @@ class ConversationServiceTest {
                 .id(1L)
                 .content("Hello")
                 .sender(testUser)
+                .conversation(testConversation)
                 .createdAt(LocalDateTime.now())
                 .build();
         Page<Message> messagePage = new PageImpl<>(Arrays.asList(message));
