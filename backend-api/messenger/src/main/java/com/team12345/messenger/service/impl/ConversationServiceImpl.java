@@ -1,5 +1,6 @@
 package com.team12345.messenger.service.impl;
 
+import com.team12345.messenger.dto.response.AttachmentResponseDTO;
 import com.team12345.messenger.dto.response.ConversationResponseDTO;
 import com.team12345.messenger.dto.response.MessageResponseDTO;
 import com.team12345.messenger.entity.Conversation;
@@ -21,8 +22,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * Implementation of {@link ConversationService} providing business logic for chat management.
@@ -76,13 +79,36 @@ public class ConversationServiceImpl implements ConversationService {
         
         Page<Message> messages = messageRepository.findByConversationIdOrderByCreatedAtDesc(conversationId, pageable);
         
-        return messages.map(message -> MessageResponseDTO.builder()
-                .id(message.getId())
-                .senderId(message.getSender().getId())
-                .senderUsername(message.getSender().getUsername())
-                .content(message.getContent())
-                .createdAt(message.getCreatedAt())
-                .build());
+        return messages.map(message -> {
+            List<AttachmentResponseDTO> attachmentDTOs = new ArrayList<>();
+            if (message.getAttachments() != null) {
+                attachmentDTOs = message.getAttachments().stream()
+                        .map(att -> AttachmentResponseDTO.builder()
+                                .url(att.getFileUrl())
+                                .type(att.getFileType())
+                                .fileSize(att.getFileSize())
+                                .build())
+                        .collect(Collectors.toList());
+            }
+
+            String type = "text";
+            if (!attachmentDTOs.isEmpty()) {
+                type = "media";
+            }
+
+            return MessageResponseDTO.builder()
+                    .messageId(message.getId())
+                    .conversationId(message.getConversation().getId())
+                    .senderId(message.getSender().getId())
+                    .senderUsername(message.getSender().getUsername())
+                    .senderAvatarUrl(message.getSender().getAvatarUrl())
+                    .content(message.getContent())
+                    .type(type)
+                    .status("SENT") // placeholder
+                    .createdAt(message.getCreatedAt())
+                    .attachments(attachmentDTOs)
+                    .build();
+        });
     }
 
     @Override
