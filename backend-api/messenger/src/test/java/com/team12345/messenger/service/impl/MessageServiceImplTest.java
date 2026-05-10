@@ -1,7 +1,7 @@
 package com.team12345.messenger.service.impl;
 
 import com.team12345.messenger.dto.request.MessageRequestDTO;
-import com.team12345.messenger.dto.response.MessageResponseDTO;
+import com.team12345.messenger.dto.response.DetailMessageResponseDTO;
 import com.team12345.messenger.entity.*;
 import com.team12345.messenger.exception.ResourceNotFoundException;
 import com.team12345.messenger.repository.*;
@@ -81,7 +81,7 @@ public class MessageServiceImplTest {
                 .thenReturn(Arrays.asList(senderParticipant, receiverParticipant));
 
         // Act
-        MessageResponseDTO response = messageService.saveMessage(textMessageRequest);
+        DetailMessageResponseDTO response = messageService.saveMessage(textMessageRequest);
 
         // Assert
         assertThat(response).isNotNull();
@@ -116,7 +116,7 @@ public class MessageServiceImplTest {
                 .thenReturn(Arrays.asList(senderParticipant, receiverParticipant));
 
         // Act
-        MessageResponseDTO response = messageService.saveMessage(textMessageRequest);
+        DetailMessageResponseDTO response = messageService.saveMessage(textMessageRequest);
 
         // Assert
         assertThat(response).isNotNull();
@@ -149,7 +149,7 @@ public class MessageServiceImplTest {
                 .thenReturn(messagePage);
 
         // Act
-        Page<MessageResponseDTO> resultPage = messageService.getMessagesByConversation(conversation.getId(), pageable);
+        Page<DetailMessageResponseDTO> resultPage = messageService.getMessagesByConversation(conversation.getId(), pageable);
 
         // Assert
         assertThat(resultPage).isNotNull();
