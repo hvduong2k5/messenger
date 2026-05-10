@@ -12,7 +12,7 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class DetailMessageResponseDTO {
+public class MessageResponseDTO {
     private Long messageId;
     private Long conversationId;
     private Long senderId;
