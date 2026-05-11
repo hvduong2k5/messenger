@@ -18,3 +18,14 @@ logging.level.org.springframework=INFO
 cloudinary.cloud_name=your_cloud_name
 cloudinary.api_key=your_api_key
 cloudinary.api_secret=your_api_secret
+
+# JWT
+jwt.secret=your_super_secret_key_that_is_long_enough_for_hmac_sha_512
+jwt.expirationMs=86400000
+
+# MQTT Integration
+mqtt.broker.url=tcp://localhost:1883
+mqtt.username=admin
+mqtt.password=public
+mqtt.client.id=server-messenger
+mqtt.default.topic=chat/server/default
