@@ -1,6 +1,10 @@
-spring.datasource.url=jdbc:h2:mem:testdb
-spring.datasource.driverClassName=org.h2.Driver
-spring.datasource.username=sa
-spring.datasource.password=
-spring.jpa.database-platform=org.hibernate.dialect.H2Dialect
-spring.jpa.hibernate.ddl-auto=create-drop
+# JWT Test config
+app.jwt.secret=a_very_secret_key_for_testing_purposes_only_which_needs_to_be_long
+app.jwt.expiration=86400000
+
+# MQTT Integration
+mqtt.broker.url=tcp://localhost:1883
+mqtt.username=admin
+mqtt.password=public
+mqtt.client.id=server-messenger
+mqtt.default.topic=chat/server/default
