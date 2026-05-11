@@ -98,10 +98,10 @@ public class ConversationServiceImpl implements ConversationService {
 
             return MessageResponseDTO.builder()
                     .messageId(message.getId())
-                    .conversationId(message.getConversation().getId())
-                    .senderId(message.getSender().getId())
-                    .senderUsername(message.getSender().getUsername())
-                    .senderAvatarUrl(message.getSender().getAvatarUrl())
+                    .conversationId(message.getConversation() != null ? message.getConversation().getId() : null)
+                    .senderId(message.getSender() != null ? message.getSender().getId() : null)
+                    .senderUsername(message.getSender() != null ? message.getSender().getUsername() : null)
+                    .senderAvatarUrl(message.getSender() != null ? message.getSender().getAvatarUrl() : null)
                     .content(message.getContent())
                     .type(type)
                     .status("SENT") // placeholder
