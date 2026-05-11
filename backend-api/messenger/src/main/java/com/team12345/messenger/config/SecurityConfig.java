@@ -1,6 +1,7 @@
 package com.team12345.messenger.config;
 
 import com.team12345.messenger.repository.UserRepository;
+import com.team12345.messenger.security.CustomUserDetails;
 import com.team12345.messenger.security.JwtAuthenticationFilter;
 import com.team12345.messenger.security.JwtUtils;
 import lombok.RequiredArgsConstructor;
@@ -34,10 +35,7 @@ public class SecurityConfig {
             var user = userRepository.findByUsername(username)
                     .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
 
-            return org.springframework.security.core.userdetails.User.builder()
-                    .username(user.getUsername())
-                    .password(user.getPassword())
-                    .build();
+            return new CustomUserDetails(user);
         };
     }
 
@@ -65,6 +63,7 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authz -> authz
                         .requestMatchers("/auth/**").permitAll()
+                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         .anyRequest().authenticated()
                 );
 
