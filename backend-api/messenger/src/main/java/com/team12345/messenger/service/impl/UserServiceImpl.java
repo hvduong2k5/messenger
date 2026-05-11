@@ -1,6 +1,7 @@
 package com.team12345.messenger.service.impl;
 
 import com.team12345.messenger.dto.response.UserProfileResponseDTO;
+import com.team12345.messenger.dto.response.UserResponseDTO;
 import com.team12345.messenger.entity.User;
 import com.team12345.messenger.exception.ResourceNotFoundException;
 import com.team12345.messenger.repository.UserRepository;
@@ -8,6 +9,9 @@ import com.team12345.messenger.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -20,6 +24,14 @@ public class UserServiceImpl implements UserService {
     public UserProfileResponseDTO getProfile(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
+        return mapToResponse(user);
+    }
+    
+    @Override
+    @Transactional(readOnly = true)
+    public UserProfileResponseDTO getProfileByUsername(String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with username: " + username));
         return mapToResponse(user);
     }
 
@@ -54,9 +66,29 @@ public class UserServiceImpl implements UserService {
         User updatedUser = userRepository.save(user);
         return mapToResponse(updatedUser);
     }
+    
+    @Override
+    @Transactional(readOnly = true)
+    public List<UserResponseDTO> searchUsers(String query, Long excludeUserId) {
+        List<User> users = userRepository.findByUsernameContainingIgnoreCaseOrEmailContainingIgnoreCase(query, query);
+        return users.stream()
+                .filter(u -> !u.getId().equals(excludeUserId))
+                .map(this::mapToUserResponse)
+                .collect(Collectors.toList());
+    }
 
     private UserProfileResponseDTO mapToResponse(User user) {
         return UserProfileResponseDTO.builder()
+                .id(user.getId())
+                .username(user.getUsername())
+                .email(user.getEmail())
+                .avatarUrl(user.getAvatarUrl())
+                .status(user.getStatus())
+                .build();
+    }
+    
+    private UserResponseDTO mapToUserResponse(User user) {
+        return UserResponseDTO.builder()
                 .id(user.getId())
                 .username(user.getUsername())
                 .email(user.getEmail())
