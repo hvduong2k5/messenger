@@ -34,7 +34,6 @@ public class CallSignaling {
     private String signalType;
 
     @JdbcTypeCode(SqlTypes.JSON)
-    @Column(columnDefinition = "jsonb")
     private String data;
 
     @CreationTimestamp

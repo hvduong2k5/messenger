@@ -8,18 +8,27 @@ public interface MessageStatusService {
     /**
      * Marks all messages in a conversation as read for a specific user.
      *
-     * @param userId         the ID of the user reading the messages
      * @param conversationId the ID of the conversation
+     * @param userId         the ID of the user reading the messages
      */
-    void markAsRead(Long userId, Long conversationId);
+    void markConversationAsRead(Long conversationId, Long userId);
 
     /**
-     * Marks a specific message as read for a specific user.
+     * Updates the status of a specific message for a user.
      *
-     * @param userId    the ID of the user reading the message
      * @param messageId the ID of the message
+     * @param userId    the ID of the user reading/receiving the message
+     * @param status    the new status (DELIVERED or READ)
      */
-    void markMessageAsRead(Long userId, Long messageId);
+    void updateMessageStatus(Long messageId, Long userId, String status);
+
+    /**
+     * Gets the statuses of a specific message (for group chat read receipts).
+     *
+     * @param messageId the ID of the message
+     * @return list of status DTOs
+     */
+    java.util.List<com.team12345.messenger.dto.response.MessageStatusResponseDTO> getMessageStatuses(Long messageId);
 
     /**
      * Counts the number of unread messages for a user in a specific conversation.

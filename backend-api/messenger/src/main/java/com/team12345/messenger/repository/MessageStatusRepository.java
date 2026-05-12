@@ -10,8 +10,12 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
 public interface MessageStatusRepository extends JpaRepository<MessageStatus, MessageStatusId> {
+
+    List<MessageStatus> findById_MessageId(Long messageId);
 
     long countById_ReceiverIdAndStatusNot(Long receiverId, MessageStatusEnum status);
 
