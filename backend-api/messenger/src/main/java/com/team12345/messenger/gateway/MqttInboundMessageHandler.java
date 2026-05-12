@@ -5,12 +5,15 @@ import com.team12345.messenger.dto.request.MessageRequestDTO;
 import com.team12345.messenger.dto.response.MessageResponseDTO;
 import com.team12345.messenger.entity.Conversation;
 import com.team12345.messenger.entity.Participant;
+import com.team12345.messenger.entity.User;
 import com.team12345.messenger.repository.ConversationRepository;
 import com.team12345.messenger.repository.ParticipantRepository;
+import com.team12345.messenger.repository.UserRepository;
 import com.team12345.messenger.service.MessageService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.integration.annotation.ServiceActivator;
+import org.springframework.integration.mqtt.support.MqttHeaders;
 import org.springframework.messaging.Message;
 import org.springframework.stereotype.Component;
 
@@ -25,6 +28,7 @@ public class MqttInboundMessageHandler {
     private final ObjectMapper objectMapper;
     private final ConversationRepository conversationRepository;
     private final ParticipantRepository participantRepository;
+    private final UserRepository userRepository;
     private final MessageService messageService;
     private final MqttGateway mqttGateway;
 
@@ -41,13 +45,35 @@ public class MqttInboundMessageHandler {
             return;
         }
 
+        // Authenticate sender from topic (chat/server/incoming/{username})
+        // Never trust senderId from the payload — resolve identity from the broker-authenticated topic
+        String receivedTopic = (String) mqttMessage.getHeaders().get(MqttHeaders.RECEIVED_TOPIC);
+        if (receivedTopic == null) {
+            log.error("[Inbound] Missing MQTT topic header");
+            return;
+        }
+        // Expected: chat/server/incoming/{username}
+        String[] parts = receivedTopic.split("/");
+        if (parts.length < 4) {
+            log.error("[Inbound] Unexpected topic format: {}", receivedTopic);
+            return;
+        }
+        String authenticatedUsername = parts[3];
+        Optional<User> senderOpt = userRepository.findByUsername(authenticatedUsername);
+        if (senderOpt.isEmpty()) {
+            log.error("[Inbound] Authenticated user not found: {}", authenticatedUsername);
+            return;
+        }
+        // Overwrite senderId from DB — payload value is ignored for authorization
+        requestDTO.setSenderId(senderOpt.get().getId());
+
         // Validate required fields
-        if (requestDTO.getSenderId() == null || requestDTO.getConversationId() == null) {
-            log.error("[Inbound] Malformed payload - missing senderId or conversationId");
+        if (requestDTO.getConversationId() == null) {
+            log.error("[Inbound] Malformed payload - missing conversationId from sender {}", authenticatedUsername);
             return;
         }
         if (requestDTO.getContent() == null || requestDTO.getContent().isBlank()) {
-            log.error("[Inbound] Malformed payload - missing content from sender {}", requestDTO.getSenderId());
+            log.error("[Inbound] Malformed payload - missing content from sender {}", authenticatedUsername);
             return;
         }
 
