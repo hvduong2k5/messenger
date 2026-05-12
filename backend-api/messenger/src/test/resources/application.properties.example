@@ -2,7 +2,8 @@
 app.jwt.secret=a_very_secret_key_for_testing_purposes_only_which_needs_to_be_long
 app.jwt.expiration=86400000
 
-# MQTT Integration
+# MQTT Integration (Disabled by default for tests)
+mqtt.enabled=false
 mqtt.broker.url=tcp://localhost:1883
 mqtt.username=admin
 mqtt.password=public
