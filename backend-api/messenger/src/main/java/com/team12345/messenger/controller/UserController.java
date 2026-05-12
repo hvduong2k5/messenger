@@ -3,12 +3,15 @@ package com.team12345.messenger.controller;
 import com.team12345.messenger.dto.request.UpdateProfileRequestDTO;
 import com.team12345.messenger.dto.response.UserProfileResponseDTO;
 import com.team12345.messenger.dto.response.UserResponseDTO;
+import com.team12345.messenger.dto.response.UserSearchResponseDTO;
 import com.team12345.messenger.security.CustomUserDetails;
 import com.team12345.messenger.service.MediaService;
 import com.team12345.messenger.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
@@ -63,6 +66,20 @@ public class UserController {
         return ResponseEntity.ok(userService.searchUsers(query, currentUserId));
     }
     
+    @Operation(summary = "Search users with friendship status")
+    @GetMapping("/search")
+    public ResponseEntity<Page<UserSearchResponseDTO>> searchUsersV2(
+            @RequestParam("q") String query,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        if (query == null || query.trim().length() < 2) {
+            return ResponseEntity.badRequest().build();
+        }
+        Long currentUserId = getCurrentUserId();
+        Page<UserSearchResponseDTO> result = userService.searchUsers(query.trim(), PageRequest.of(page, size), currentUserId);
+        return ResponseEntity.ok(result);
+    }
+
     // Helper method to extract ID from SecurityContext
     private Long getCurrentUserId() {
          Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
