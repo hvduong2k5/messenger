@@ -47,6 +47,14 @@ public class Message {
     private LocalDateTime createdAt;
 
     @Builder.Default
+    @Column(name = "is_deleted")
+    private Boolean isDeleted = false;
+
+    @Builder.Default
+    @Column(name = "is_edited")
+    private Boolean isEdited = false;
+
+    @Builder.Default
     @OneToMany(mappedBy = "message", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Attachment> attachments = new ArrayList<>();
 }

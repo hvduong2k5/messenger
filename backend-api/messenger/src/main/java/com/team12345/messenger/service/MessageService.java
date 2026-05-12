@@ -9,5 +9,11 @@ public interface MessageService {
 
     MessageResponseDTO saveMessage(MessageRequestDTO requestDTO);
 
-    Page<MessageResponseDTO> getMessagesByConversation(Long conversationId, Pageable pageable);
+    Page<MessageResponseDTO> getMessagesByConversation(Long conversationId, Long userId, Pageable pageable);
+
+    void revokeMessage(Long messageId, Long userId);
+
+    MessageResponseDTO editMessage(Long messageId, Long userId, String newContent);
+
+    Page<MessageResponseDTO> searchMessages(String keyword, Long conversationId, Long userId, Pageable pageable);
 }
