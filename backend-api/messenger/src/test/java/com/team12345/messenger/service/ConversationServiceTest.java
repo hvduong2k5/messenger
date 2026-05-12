@@ -78,7 +78,7 @@ class ConversationServiceTest {
         when(conversationRepository.save(any(Conversation.class))).thenReturn(testConversation);
         when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
 
-        Conversation result = conversationService.createConversation("New Group", true, Arrays.asList(1L));
+        Conversation result = conversationService.createConversation(1L, "New Group", true, new java.util.ArrayList<>(Arrays.asList(1L)));
 
         assertThat(result).isNotNull();
         verify(conversationRepository).save(any(Conversation.class));
@@ -89,9 +89,15 @@ class ConversationServiceTest {
     void testAddParticipant() {
         when(conversationRepository.findById(1L)).thenReturn(Optional.of(testConversation));
         when(userRepository.findById(2L)).thenReturn(Optional.of(User.builder().id(2L).build()));
-        when(participantRepository.existsById(any(ParticipantId.class))).thenReturn(false);
+        
+        Participant adminParticipant = Participant.builder()
+                .conversation(testConversation)
+                .role(ParticipantRole.admin)
+                .build();
+        when(participantRepository.findById(new ParticipantId(1L, 1L))).thenReturn(Optional.of(adminParticipant));
+        when(participantRepository.existsById(new ParticipantId(1L, 2L))).thenReturn(false);
 
-        conversationService.addParticipant(1L, 2L);
+        conversationService.addParticipant(1L, 1L, 2L);
 
         verify(participantRepository).save(any(Participant.class));
     }
@@ -100,24 +106,31 @@ class ConversationServiceTest {
     void testAddParticipant_AlreadyExists() {
         when(conversationRepository.findById(1L)).thenReturn(Optional.of(testConversation));
         when(userRepository.findById(2L)).thenReturn(Optional.of(User.builder().id(2L).build()));
-        when(participantRepository.existsById(any(ParticipantId.class))).thenReturn(true);
+        
+        Participant adminParticipant = Participant.builder()
+                .conversation(testConversation)
+                .role(ParticipantRole.admin)
+                .build();
+        when(participantRepository.findById(new ParticipantId(1L, 1L))).thenReturn(Optional.of(adminParticipant));
+        when(participantRepository.existsById(new ParticipantId(1L, 2L))).thenReturn(true);
 
-        assertThatThrownBy(() -> conversationService.addParticipant(1L, 2L))
+        assertThatThrownBy(() -> conversationService.addParticipant(1L, 1L, 2L))
                 .isInstanceOf(RuntimeException.class)
                 .hasMessage("User is already a participant");
     }
 
     @Test
     void testRemoveParticipant() {
-        when(participantRepository.existsById(any(ParticipantId.class))).thenReturn(true);
+        when(participantRepository.existsById(new ParticipantId(1L, 1L))).thenReturn(true);
 
-        conversationService.removeParticipant(1L, 1L);
+        conversationService.removeParticipant(1L, 1L, 1L);
 
         verify(participantRepository).deleteById(any(ParticipantId.class));
     }
 
     @Test
     void testGetConversationDetails() {
+        when(participantRepository.existsById(new ParticipantId(1L, 1L))).thenReturn(true);
         when(conversationRepository.findById(1L)).thenReturn(Optional.of(testConversation));
         when(messageRepository.findFirstByConversationIdOrderByCreatedAtDesc(1L)).thenReturn(Optional.empty());
         when(messageStatusRepository.countUnreadInConversation(1L, 1L, MessageStatusEnum.read)).thenReturn(3L);
@@ -130,6 +143,7 @@ class ConversationServiceTest {
 
     @Test
     void testGetConversationMessages() {
+        when(participantRepository.existsById(new ParticipantId(1L, 1L))).thenReturn(true);
         Pageable pageable = PageRequest.of(0, 10);
         Message message = Message.builder()
                 .id(1L)
@@ -143,7 +157,7 @@ class ConversationServiceTest {
         when(conversationRepository.existsById(1L)).thenReturn(true);
         when(messageRepository.findByConversationIdOrderByCreatedAtDesc(1L, pageable)).thenReturn(messagePage);
 
-        Page<MessageResponseDTO> result = conversationService.getConversationMessages(1L, pageable);
+        Page<MessageResponseDTO> result = conversationService.getConversationMessages(1L, 1L, pageable);
 
         assertThat(result.getContent()).hasSize(1);
         assertThat(result.getContent().get(0).getContent()).isEqualTo("Hello");

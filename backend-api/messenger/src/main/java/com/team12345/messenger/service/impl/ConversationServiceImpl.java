@@ -50,6 +50,9 @@ public class ConversationServiceImpl implements ConversationService {
     @Override
     @Transactional(readOnly = true)
     public ConversationResponseDTO getConversationDetails(Long conversationId, Long userId) {
+        if (!participantRepository.existsById(new ParticipantId(conversationId, userId))) {
+            throw new RuntimeException("User is not a participant of this conversation");
+        }
         Conversation conversation = conversationRepository.findById(conversationId)
                 .orElseThrow(() -> new RuntimeException("Conversation not found"));
         return mapToConversationResponseDTO(conversation, userId);
@@ -72,7 +75,10 @@ public class ConversationServiceImpl implements ConversationService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<MessageResponseDTO> getConversationMessages(Long conversationId, Pageable pageable) {
+    public Page<MessageResponseDTO> getConversationMessages(Long conversationId, Long userId, Pageable pageable) {
+        if (!participantRepository.existsById(new ParticipantId(conversationId, userId))) {
+            throw new RuntimeException("User is not a participant of this conversation");
+        }
         if (!conversationRepository.existsById(conversationId)) {
             throw new RuntimeException("Conversation not found");
         }
@@ -113,7 +119,17 @@ public class ConversationServiceImpl implements ConversationService {
 
     @Override
     @Transactional
-    public Conversation createConversation(String name, boolean isGroup, List<Long> participantIds) {
+    public Conversation createConversation(Long currentUserId, String name, boolean isGroup, List<Long> participantIds) {
+        if (!participantIds.contains(currentUserId)) {
+            participantIds.add(currentUserId);
+        }
+        if (!isGroup && participantIds.size() == 2) {
+            Optional<Conversation> existing = conversationRepository.findOneToOneConversation(participantIds.get(0), participantIds.get(1));
+            if (existing.isPresent()) {
+                return existing.get();
+            }
+        }
+        
         Conversation conversation = Conversation.builder()
                 .name(name)
                 .isGroup(isGroup)
@@ -130,6 +146,7 @@ public class ConversationServiceImpl implements ConversationService {
                     .id(new ParticipantId(conversation.getId(), userId))
                     .conversation(conversation)
                     .user(user)
+                    .role((isGroup && userId.equals(currentUserId)) ? com.team12345.messenger.entity.ParticipantRole.admin : com.team12345.messenger.entity.ParticipantRole.member)
                     .build();
             
             participantRepository.save(participant);
@@ -140,9 +157,38 @@ public class ConversationServiceImpl implements ConversationService {
 
     @Override
     @Transactional
-    public void addParticipant(Long conversationId, Long userId) {
+    public Conversation updateConversation(Long conversationId, Long currentUserId, String name, String avatarUrl) {
+        Participant currentParticipant = participantRepository.findById(new ParticipantId(conversationId, currentUserId))
+                .orElseThrow(() -> new RuntimeException("User is not a participant"));
+        
+        if (currentParticipant.getConversation().getIsGroup() && currentParticipant.getRole() != com.team12345.messenger.entity.ParticipantRole.admin) {
+             throw new RuntimeException("Only admins can update group info");
+        }
+
         Conversation conversation = conversationRepository.findById(conversationId)
                 .orElseThrow(() -> new RuntimeException("Conversation not found"));
+        
+        if (name != null) {
+            conversation.setName(name);
+        }
+        
+        // Handle avatarUrl if we had GroupSettingRepository or avatarUrl on Conversation.
+        // Assuming Conversation doesn't have avatarUrl field and we aren't creating a GroupSetting now.
+        return conversationRepository.save(conversation);
+    }
+
+    @Override
+    @Transactional
+    public void addParticipant(Long conversationId, Long currentUserId, Long userId) {
+        Conversation conversation = conversationRepository.findById(conversationId)
+                .orElseThrow(() -> new RuntimeException("Conversation not found"));
+        
+        Participant currentParticipant = participantRepository.findById(new ParticipantId(conversationId, currentUserId))
+                .orElseThrow(() -> new RuntimeException("User is not a participant"));
+
+        if (conversation.getIsGroup() && currentParticipant.getRole() != com.team12345.messenger.entity.ParticipantRole.admin) {
+            throw new RuntimeException("Only admins can add participants");
+        }
         
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
@@ -155,6 +201,7 @@ public class ConversationServiceImpl implements ConversationService {
                 .id(new ParticipantId(conversationId, userId))
                 .conversation(conversation)
                 .user(user)
+                .role(com.team12345.messenger.entity.ParticipantRole.member)
                 .build();
         
         participantRepository.save(participant);
@@ -162,11 +209,19 @@ public class ConversationServiceImpl implements ConversationService {
 
     @Override
     @Transactional
-    public void removeParticipant(Long conversationId, Long userId) {
-        ParticipantId participantId = new ParticipantId(conversationId, userId);
-        if (!participantRepository.existsById(participantId)) {
+    public void removeParticipant(Long conversationId, Long currentUserId, Long userId) {
+        ParticipantId targetId = new ParticipantId(conversationId, userId);
+        if (!participantRepository.existsById(targetId)) {
             throw new RuntimeException("Participant not found");
         }
-        participantRepository.deleteById(participantId);
+
+        if (!currentUserId.equals(userId)) {
+            Participant currentParticipant = participantRepository.findById(new ParticipantId(conversationId, currentUserId))
+                    .orElseThrow(() -> new RuntimeException("User is not a participant"));
+            if (currentParticipant.getConversation().getIsGroup() && currentParticipant.getRole() != com.team12345.messenger.entity.ParticipantRole.admin) {
+                throw new RuntimeException("Only admins can remove other participants");
+            }
+        }
+        participantRepository.deleteById(targetId);
     }
 }
