@@ -27,4 +27,19 @@ public class GlobalExceptionHandler {
     public ResponseEntity<String> handleInvalidCredentialsException(InvalidCredentialsException ex) {
         return new ResponseEntity<>(ex.getMessage(), HttpStatus.UNAUTHORIZED);
     }
+
+    @ExceptionHandler(CallNotFoundException.class)
+    public ResponseEntity<String> handleCallNotFoundException(CallNotFoundException ex) {
+        return new ResponseEntity<>(ex.getMessage(), HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(InvalidCallStateException.class)
+    public ResponseEntity<String> handleInvalidCallStateException(InvalidCallStateException ex) {
+        return new ResponseEntity<>(ex.getMessage(), HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(UnauthorizedCallAccessException.class)
+    public ResponseEntity<String> handleUnauthorizedCallAccessException(UnauthorizedCallAccessException ex) {
+        return new ResponseEntity<>(ex.getMessage(), HttpStatus.FORBIDDEN);
+    }
 }
