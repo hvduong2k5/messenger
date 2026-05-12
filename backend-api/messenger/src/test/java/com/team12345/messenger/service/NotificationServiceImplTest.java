@@ -102,4 +102,69 @@ class NotificationServiceImplTest {
         assertThat(result.getContent().get(0).getContent()).isEqualTo("Test Content");
         verify(notificationRepository, times(1)).findByUserIdOrderByCreatedAtDesc(1L, pageable);
     }
+
+    @Test
+    void testCountUnseenNotifications() {
+        when(notificationRepository.countByUserIdAndIsSeenFalse(1L)).thenReturn(3L);
+
+        long count = notificationService.countUnseenNotifications(1L);
+
+        assertThat(count).isEqualTo(3L);
+        verify(notificationRepository, times(1)).countByUserIdAndIsSeenFalse(1L);
+    }
+
+    @Test
+    void testMarkAsRead() {
+        Notification notification = Notification.builder()
+                .id(1L)
+                .user(user)
+                .isSeen(false)
+                .build();
+        when(notificationRepository.findById(1L)).thenReturn(java.util.Optional.of(notification));
+
+        notificationService.markAsRead(1L, 1L);
+
+        assertThat(notification.getIsSeen()).isTrue();
+        verify(notificationRepository, times(1)).save(notification);
+    }
+
+    @Test
+    void testMarkAsRead_NotAuthorized() {
+        Notification notification = Notification.builder()
+                .id(1L)
+                .user(User.builder().id(2L).build())
+                .isSeen(false)
+                .build();
+        when(notificationRepository.findById(1L)).thenReturn(java.util.Optional.of(notification));
+
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> notificationService.markAsRead(1L, 1L))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessage("Not authorized to modify this notification");
+    }
+
+    @Test
+    void testDeleteNotification() {
+        Notification notification = Notification.builder()
+                .id(1L)
+                .user(user)
+                .build();
+        when(notificationRepository.findById(1L)).thenReturn(java.util.Optional.of(notification));
+
+        notificationService.deleteNotification(1L, 1L);
+
+        verify(notificationRepository, times(1)).delete(notification);
+    }
+
+    @Test
+    void testDeleteNotification_NotAuthorized() {
+        Notification notification = Notification.builder()
+                .id(1L)
+                .user(User.builder().id(2L).build())
+                .build();
+        when(notificationRepository.findById(1L)).thenReturn(java.util.Optional.of(notification));
+
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> notificationService.deleteNotification(1L, 1L))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessage("Not authorized to modify this notification");
+    }
 }
