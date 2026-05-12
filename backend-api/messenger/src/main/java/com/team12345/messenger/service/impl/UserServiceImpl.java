@@ -2,11 +2,18 @@ package com.team12345.messenger.service.impl;
 
 import com.team12345.messenger.dto.response.UserProfileResponseDTO;
 import com.team12345.messenger.dto.response.UserResponseDTO;
+import com.team12345.messenger.dto.response.UserSearchResponseDTO;
 import com.team12345.messenger.entity.User;
+import com.team12345.messenger.entity.FriendRequest;
+import com.team12345.messenger.entity.FriendRequestStatus;
 import com.team12345.messenger.exception.ResourceNotFoundException;
 import com.team12345.messenger.repository.UserRepository;
+import com.team12345.messenger.repository.UserFriendRepository;
+import com.team12345.messenger.repository.FriendRequestRepository;
 import com.team12345.messenger.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,6 +25,8 @@ import java.util.stream.Collectors;
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
+    private final UserFriendRepository userFriendRepository;
+    private final FriendRequestRepository friendRequestRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -75,6 +84,34 @@ public class UserServiceImpl implements UserService {
                 .filter(u -> !u.getId().equals(excludeUserId))
                 .map(this::mapToUserResponse)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<UserSearchResponseDTO> searchUsers(String query, Pageable pageable, Long currentUserId) {
+        Page<User> users = userRepository.findByUsernameContainingIgnoreCaseOrEmailContainingIgnoreCase(query, query, pageable);
+        return users.map(user -> {
+            if (user.getId().equals(currentUserId)) {
+                return null; // sẽ filter sau
+            }
+            String status = "STRANGER";
+            if (userFriendRepository.existsById_UserIdAndId_FriendId(currentUserId, user.getId()) ||
+                userFriendRepository.existsById_UserIdAndId_FriendId(user.getId(), currentUserId)) {
+                status = "FRIEND";
+            } else if (friendRequestRepository.findById_SenderIdAndId_ReceiverId(currentUserId, user.getId())
+                    .filter(fr -> fr.getStatus() == FriendRequestStatus.pending).isPresent()) {
+                status = "SENDER_PENDING";
+            } else if (friendRequestRepository.findById_SenderIdAndId_ReceiverId(user.getId(), currentUserId)
+                    .filter(fr -> fr.getStatus() == FriendRequestStatus.pending).isPresent()) {
+                status = "RECEIVER_PENDING";
+            }
+            return UserSearchResponseDTO.builder()
+                    .id(user.getId())
+                    .username(user.getUsername())
+                    .avatarUrl(user.getAvatarUrl())
+                    .friendshipStatus(status)
+                    .build();
+        }).filter(dto -> dto != null);
     }
 
     private UserProfileResponseDTO mapToResponse(User user) {
