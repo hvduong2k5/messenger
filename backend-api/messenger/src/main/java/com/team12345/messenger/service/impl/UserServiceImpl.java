@@ -112,6 +112,8 @@ public class UserServiceImpl implements UserService {
                     .username(user.getUsername())
                     .avatarUrl(user.getAvatarUrl())
                     .friendshipStatus(status)
+                    .isOnline(user.getIsOnline())
+                    .lastSeen(user.getLastSeen())
                     .build();
         });
     }
@@ -133,6 +135,8 @@ public class UserServiceImpl implements UserService {
                 .email(user.getEmail())
                 .avatarUrl(user.getAvatarUrl())
                 .status(user.getStatus())
+                .isOnline(user.getIsOnline())
+                .lastSeen(user.getLastSeen())
                 .build();
     }
 }
