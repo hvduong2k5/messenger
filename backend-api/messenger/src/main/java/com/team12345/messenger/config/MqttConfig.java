@@ -96,7 +96,7 @@ public class MqttConfig {
         adapter.setConverter(new DefaultPahoMessageConverter());
         adapter.setQos(1);
         adapter.setOutputChannel(mqttInboundChannel());
-        adapter.setErrorChannel(errorChannel());
+        adapter.setErrorChannel(mqttErrorChannel());
         
         return adapter;
     }
@@ -104,12 +104,12 @@ public class MqttConfig {
     // --- Error Handling ---
     
     @Bean
-    public MessageChannel errorChannel() {
+    public MessageChannel mqttErrorChannel() {
         return new DirectChannel();
     }
 
     @Bean
-    @ServiceActivator(inputChannel = "errorChannel")
+    @ServiceActivator(inputChannel = "mqttErrorChannel")
     public MessageHandler mqttErrorHandler() {
         return message -> {
             log.error("Error sending/receiving MQTT message: {}", message.getPayload());
