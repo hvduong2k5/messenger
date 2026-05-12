@@ -3,6 +3,7 @@ package com.team12345.messenger.config;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.integration.annotation.IntegrationComponentScan;
@@ -20,6 +21,7 @@ import org.springframework.messaging.MessageHandler;
 @Configuration
 @IntegrationComponentScan(basePackages = "com.team12345.messenger")
 @Slf4j
+@ConditionalOnProperty(name = "mqtt.enabled", havingValue = "true", matchIfMissing = false)
 public class MqttConfig {
 
     @Value("${mqtt.broker.url}")
