@@ -43,12 +43,10 @@ class ParticipantRepositoryTest {
         Conversation conversation1 = Conversation.builder()
                 .name("Conversation 1")
                 .isGroup(false)
-                .updatedAt(LocalDateTime.now())
                 .build();
         Conversation conversation2 = Conversation.builder()
                 .name("Conversation 2")
                 .isGroup(false)
-                .updatedAt(LocalDateTime.now())
                 .build();
         entityManager.persistAndFlush(conversation1);
         entityManager.persistAndFlush(conversation2);
@@ -101,12 +99,10 @@ class ParticipantRepositoryTest {
         Conversation conversation1 = Conversation.builder()
                 .name("Conversation 1")
                 .isGroup(false)
-                .updatedAt(LocalDateTime.now())
                 .build();
         Conversation conversation2 = Conversation.builder()
                 .name("Conversation 2")
                 .isGroup(false)
-                .updatedAt(LocalDateTime.now())
                 .build();
         entityManager.persistAndFlush(conversation1);
         entityManager.persistAndFlush(conversation2);
