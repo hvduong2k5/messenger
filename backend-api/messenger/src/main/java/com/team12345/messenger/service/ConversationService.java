@@ -26,30 +26,44 @@ public interface ConversationService {
     /**
      * Creates a new conversation and adds initial participants.
      *
+     * @param currentUserId  the ID of the user creating the conversation
      * @param name           the name of the conversation (optional for 1-to-1 chats)
      * @param isGroup        true if it's a group conversation, false for 1-to-1
      * @param participantIds list of user IDs to be added as participants
      * @return the created Conversation entity
      */
-    Conversation createConversation(String name, boolean isGroup, List<Long> participantIds);
+    Conversation createConversation(Long currentUserId, String name, boolean isGroup, List<Long> participantIds);
 
     /**
      * Adds a new participant to an existing conversation.
      *
      * @param conversationId the ID of the conversation
+     * @param currentUserId  the ID of the user performing the action
      * @param userId         the ID of the user to be added
      * @throws RuntimeException if the conversation or user is not found, or if the user is already a participant
      */
-    void addParticipant(Long conversationId, Long userId);
+    void addParticipant(Long conversationId, Long currentUserId, Long userId);
 
     /**
      * Removes a participant from a conversation.
      *
      * @param conversationId the ID of the conversation
+     * @param currentUserId  the ID of the user performing the action
      * @param userId         the ID of the user to be removed
      * @throws RuntimeException if the participant record is not found
      */
-    void removeParticipant(Long conversationId, Long userId);
+    void removeParticipant(Long conversationId, Long currentUserId, Long userId);
+
+    /**
+     * Updates conversation info (e.g. name, avatarUrl).
+     *
+     * @param conversationId the ID of the conversation
+     * @param currentUserId  the ID of the user performing the update
+     * @param name           the new name
+     * @param avatarUrl      the new avatar url
+     * @return updated Conversation
+     */
+    Conversation updateConversation(Long conversationId, Long currentUserId, String name, String avatarUrl);
 
     /**
      * Retrieves detailed information about a single conversation for a specific user.
@@ -66,9 +80,10 @@ public interface ConversationService {
      * Messages are typically sorted by creation date in descending order.
      *
      * @param conversationId the ID of the conversation
+     * @param userId         the ID of the current user
      * @param pageable       pagination and sorting information
      * @return a page of DetailMessageResponseDTO objects
      * @throws RuntimeException if the conversation is not found
      */
-    Page<MessageResponseDTO> getConversationMessages(Long conversationId, Pageable pageable);
+    Page<MessageResponseDTO> getConversationMessages(Long conversationId, Long userId, Pageable pageable);
 }
