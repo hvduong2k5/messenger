@@ -25,6 +25,10 @@ public class CallSignaling {
     @JoinColumn(name = "sender_id")
     private User sender;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "call_id")
+    private Call call;
+
     @Size(max = 50)
     @Column(name = "signal_type", length = 50)
     private String signalType;
