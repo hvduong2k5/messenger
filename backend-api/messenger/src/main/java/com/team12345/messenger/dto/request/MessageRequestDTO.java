@@ -14,8 +14,10 @@ import java.util.List;
 @AllArgsConstructor
 public class MessageRequestDTO {
     private Long senderId;
+    @jakarta.validation.constraints.NotNull(message = "Conversation ID is required")
     private Long conversationId;
+    
     private String content;
     private String clientMessageId;
-    private List<MultipartFile> files; // For attachments
+    private List<MultipartFile> files;
 }

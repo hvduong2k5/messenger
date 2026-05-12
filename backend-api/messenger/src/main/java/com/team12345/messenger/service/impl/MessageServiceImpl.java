@@ -8,6 +8,7 @@ import com.team12345.messenger.exception.ResourceNotFoundException;
 import com.team12345.messenger.repository.*;
 import com.team12345.messenger.service.MediaService;
 import com.team12345.messenger.service.MessageService;
+import com.team12345.messenger.gateway.MqttGateway;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -32,6 +33,8 @@ public class MessageServiceImpl implements MessageService {
     private final ParticipantRepository participantRepository;
     private final MessageStatusRepository messageStatusRepository;
     private final MediaService mediaService;
+    private final MqttGateway mqttGateway;
+    private final com.fasterxml.jackson.databind.ObjectMapper objectMapper;
 
     @Override
     @Transactional
@@ -42,6 +45,10 @@ public class MessageServiceImpl implements MessageService {
 
         User sender = userRepository.findById(requestDTO.getSenderId())
                 .orElseThrow(() -> new ResourceNotFoundException("Sender not found"));
+
+        if (!participantRepository.existsById(new ParticipantId(requestDTO.getConversationId(), requestDTO.getSenderId()))) {
+            throw new org.springframework.security.access.AccessDeniedException("Not a participant in this conversation");
+        }
 
         // Map DTO -> Message entity
         Message message = Message.builder()
@@ -63,17 +70,37 @@ public class MessageServiceImpl implements MessageService {
         // Create message_status records for all participants except sender
         createMessageStatusRecords(savedMessage, conversation.getId(), sender.getId());
 
-        return mapToResponseDTO(savedMessage);
+        MessageResponseDTO responseDTO = mapToResponseDTO(savedMessage);
+        sendMqttNotification(responseDTO, "NEW_MESSAGE");
+
+        return responseDTO;
+    }
+
+    private void sendMqttNotification(MessageResponseDTO messageDto, String action) {
+        try {
+            String topic = "conversations/" + messageDto.getConversationId();
+            Map<String, Object> payload = Map.of(
+                "action", action,
+                "data", messageDto
+            );
+            String jsonPayload = objectMapper.writeValueAsString(payload);
+            mqttGateway.sendToMqtt(jsonPayload, topic);
+        } catch (Exception e) {
+            // Log error but don't fail the transaction
+            // log.error("Failed to send MQTT notification", e);
+        }
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Page<MessageResponseDTO> getMessagesByConversation(Long conversationId, Pageable pageable) {
-        // Default pagination: 20 messages, sorted by createdAt DESC
+    public Page<MessageResponseDTO> getMessagesByConversation(Long conversationId, Long userId, Pageable pageable) {
+        if (!participantRepository.existsById(new ParticipantId(conversationId, userId))) {
+            throw new org.springframework.security.access.AccessDeniedException("Not a participant in this conversation");
+        }
+
         Pageable actualPageable = pageable != null ? pageable :
                 PageRequest.of(0, 20, Sort.by(Sort.Direction.DESC, "createdAt"));
                 
-        // Ensure conversation exists
         if(!conversationRepository.existsById(conversationId)) {
             throw new ResourceNotFoundException("Conversation not found");
         }
@@ -130,9 +157,15 @@ public class MessageServiceImpl implements MessageService {
                     .collect(Collectors.toList());
         }
 
+        Boolean isDeleted = message.getIsDeleted() != null && message.getIsDeleted();
+        Boolean isEdited = message.getIsEdited() != null && message.getIsEdited();
+
+        String content = isDeleted ? "Tin nhắn đã bị thu hồi" : message.getContent();
+        List<AttachmentResponseDTO> finalAttachments = isDeleted ? new ArrayList<>() : attachmentDTOs;
+
         String type = "text";
-        if (!attachmentDTOs.isEmpty()) {
-             type = "media"; // basic logic, can be improved based on actual fileType
+        if (!finalAttachments.isEmpty()) {
+             type = "media";
         }
 
         return MessageResponseDTO.builder()
@@ -141,11 +174,76 @@ public class MessageServiceImpl implements MessageService {
                 .senderId(message.getSender().getId())
                 .senderUsername(message.getSender().getUsername())
                 .senderAvatarUrl(message.getSender().getAvatarUrl())
-                .content(message.getContent())
+                .content(content)
                 .type(type)
-                .status("SENT") // Should ideally be calculated based on MessageStatus table for the requesting user
+                .status("SENT")
                 .createdAt(message.getCreatedAt())
-                .attachments(attachmentDTOs)
+                .isDeleted(isDeleted)
+                .isEdited(isEdited)
+                .attachments(finalAttachments)
                 .build();
+    }
+
+    @Override
+    @Transactional
+    public void revokeMessage(Long messageId, Long userId) {
+        Message message = messageRepository.findById(messageId)
+                .orElseThrow(() -> new ResourceNotFoundException("Message not found"));
+
+        if (!message.getSender().getId().equals(userId)) {
+            throw new org.springframework.security.access.AccessDeniedException("Not authorized to revoke this message");
+        }
+
+        message.setIsDeleted(true);
+        messageRepository.save(message);
+        
+        sendMqttNotification(mapToResponseDTO(message), "REVOKE_MESSAGE");
+    }
+
+    @Override
+    @Transactional
+    public MessageResponseDTO editMessage(Long messageId, Long userId, String newContent) {
+        Message message = messageRepository.findById(messageId)
+                .orElseThrow(() -> new ResourceNotFoundException("Message not found"));
+
+        if (!message.getSender().getId().equals(userId)) {
+            throw new org.springframework.security.access.AccessDeniedException("Not authorized to edit this message");
+        }
+        
+        if (message.getIsDeleted() != null && message.getIsDeleted()) {
+            throw new IllegalArgumentException("Cannot edit a revoked message");
+        }
+
+        message.setContent(newContent);
+        message.setIsEdited(true);
+        Message updatedMessage = messageRepository.save(message);
+        
+        MessageResponseDTO responseDTO = mapToResponseDTO(updatedMessage);
+        sendMqttNotification(responseDTO, "EDIT_MESSAGE");
+        
+        return responseDTO;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<MessageResponseDTO> searchMessages(String keyword, Long conversationId, Long userId, Pageable pageable) {
+        Pageable actualPageable = pageable != null ? pageable :
+                PageRequest.of(0, 20, Sort.by(Sort.Direction.DESC, "createdAt"));
+        
+        Page<Message> messagePage;
+        if (conversationId != null) {
+            if (!participantRepository.existsById(new ParticipantId(conversationId, userId))) {
+                throw new org.springframework.security.access.AccessDeniedException("Not a participant in this conversation");
+            }
+            messagePage = messageRepository.findByConversationIdAndContentContainingIgnoreCaseOrderByCreatedAtDesc(
+                    conversationId, keyword, actualPageable);
+        } else {
+            // Note: If searching globally, we should ideally restrict to conversations the user is part of.
+            // A custom query in repository might be needed. For simplicity, we just search globally.
+            // But this would expose messages from other users! We MUST restrict it!
+            throw new UnsupportedOperationException("Global search across all conversations is not fully implemented yet.");
+        }
+        
+        return messagePage.map(this::mapToResponseDTO);
     }
 }

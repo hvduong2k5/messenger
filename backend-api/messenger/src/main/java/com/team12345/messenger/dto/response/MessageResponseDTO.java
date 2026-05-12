@@ -22,5 +22,7 @@ public class MessageResponseDTO {
     private String type; // Could be deduced from content vs attachments
     private String status; // Sent/Delivered/Read etc. (Derived logic typically)
     private LocalDateTime createdAt;
+    private Boolean isDeleted;
+    private Boolean isEdited;
     private List<AttachmentResponseDTO> attachments;
 }

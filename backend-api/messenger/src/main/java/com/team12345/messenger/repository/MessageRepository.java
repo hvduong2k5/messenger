@@ -17,4 +17,10 @@ public interface MessageRepository extends JpaRepository<Message, Long> {
 
     @EntityGraph(value = "Message.withSender")
     Optional<Message> findFirstByConversationIdOrderByCreatedAtDesc(Long conversationId);
+
+    @EntityGraph(value = "Message.withSender")
+    Page<Message> findByConversationIdAndContentContainingIgnoreCaseOrderByCreatedAtDesc(Long conversationId, String keyword, Pageable pageable);
+
+    @EntityGraph(value = "Message.withSender")
+    Page<Message> findByContentContainingIgnoreCaseOrderByCreatedAtDesc(String keyword, Pageable pageable);
 }
