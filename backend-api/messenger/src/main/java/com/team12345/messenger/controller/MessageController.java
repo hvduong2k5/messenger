@@ -42,7 +42,8 @@ public class MessageController {
             @Valid @ModelAttribute MessageRequestDTO requestDTO) {
         
         requestDTO.setSenderId(userDetails.getId());
-        MessageResponseDTO savedMessage = messageService.saveMessage(requestDTO);
+        var result = messageService.saveMessage(requestDTO);
+        MessageResponseDTO savedMessage = result.message();
         return ResponseEntity.status(HttpStatus.CREATED).body(savedMessage);
     }
 
