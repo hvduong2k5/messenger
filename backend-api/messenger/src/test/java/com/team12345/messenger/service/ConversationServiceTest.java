@@ -16,6 +16,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
+import java.lang.reflect.Field;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
@@ -29,22 +30,30 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class ConversationServiceTest {
 
-    @Mock
-    private ConversationRepository conversationRepository;
-    @Mock
-    private ParticipantRepository participantRepository;
-    @Mock
-    private MessageRepository messageRepository;
-    @Mock
-    private MessageStatusRepository messageStatusRepository;
-    @Mock
-    private UserRepository userRepository;
+    @Mock private ConversationRepository conversationRepository;
+    @Mock private ParticipantRepository participantRepository;
+    @Mock private MessageRepository messageRepository;
+    @Mock private MessageStatusRepository messageStatusRepository;
+    @Mock private UserRepository userRepository;
 
     @InjectMocks
     private ConversationServiceImpl conversationService;
 
     private User testUser;
     private Conversation testConversation;
+
+    private static void setAuditFields(BaseEntity entity) {
+        try {
+            LocalDateTime now = LocalDateTime.now();
+            for (String name : new String[]{"createdAt", "updatedAt"}) {
+                Field f = BaseEntity.class.getDeclaredField(name);
+                f.setAccessible(true);
+                f.set(entity, now);
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     @BeforeEach
     void setUp() {
@@ -53,8 +62,8 @@ class ConversationServiceTest {
                 .id(1L)
                 .name("Test Group")
                 .isGroup(true)
-                .updatedAt(LocalDateTime.now())
                 .build();
+        setAuditFields(testConversation);
     }
 
     @Test
@@ -150,8 +159,8 @@ class ConversationServiceTest {
                 .content("Hello")
                 .sender(testUser)
                 .conversation(testConversation)
-                .createdAt(LocalDateTime.now())
                 .build();
+        setAuditFields(message);
         Page<Message> messagePage = new PageImpl<>(Arrays.asList(message));
 
         when(conversationRepository.existsById(1L)).thenReturn(true);
