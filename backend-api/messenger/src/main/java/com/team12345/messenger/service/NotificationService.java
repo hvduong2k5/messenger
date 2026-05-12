@@ -40,4 +40,20 @@ public interface NotificationService {
      * @return the count of unseen notifications
      */
     long countUnseenNotifications(Long userId);
+
+    /**
+     * Mark a specific notification as read (seen).
+     *
+     * @param notificationId The ID of the notification
+     * @param userId         The ID of the user performing the action
+     */
+    void markAsRead(Long notificationId, Long userId);
+
+    /**
+     * Delete a specific notification.
+     *
+     * @param notificationId The ID of the notification
+     * @param userId         The ID of the user performing the action
+     */
+    void deleteNotification(Long notificationId, Long userId);
 }

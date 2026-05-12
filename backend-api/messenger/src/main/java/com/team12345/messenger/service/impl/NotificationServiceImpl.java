@@ -49,4 +49,31 @@ public class NotificationServiceImpl implements NotificationService {
     public long countUnseenNotifications(Long userId) {
         return notificationRepository.countByUserIdAndIsSeenFalse(userId);
     }
+
+    @Override
+    @Transactional
+    public void markAsRead(Long notificationId, Long userId) {
+        Notification notification = notificationRepository.findById(notificationId)
+                .orElseThrow(() -> new RuntimeException("Notification not found"));
+        
+        if (!notification.getUser().getId().equals(userId)) {
+            throw new RuntimeException("Not authorized to modify this notification");
+        }
+        
+        notification.setIsSeen(true);
+        notificationRepository.save(notification);
+    }
+
+    @Override
+    @Transactional
+    public void deleteNotification(Long notificationId, Long userId) {
+        Notification notification = notificationRepository.findById(notificationId)
+                .orElseThrow(() -> new RuntimeException("Notification not found"));
+        
+        if (!notification.getUser().getId().equals(userId)) {
+            throw new RuntimeException("Not authorized to modify this notification");
+        }
+        
+        notificationRepository.delete(notification);
+    }
 }
