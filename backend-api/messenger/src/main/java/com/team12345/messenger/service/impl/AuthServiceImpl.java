@@ -56,7 +56,9 @@ public class AuthServiceImpl implements AuthService {
                 savedUser.getUsername(),
                 savedUser.getEmail(),
                 savedUser.getAvatarUrl(),
-                savedUser.getStatus()
+                savedUser.getStatus(),
+                savedUser.getIsOnline(),
+                savedUser.getLastSeen()
         );
 
         return new AuthResponseDTO(jwt, userResponseDTO);
@@ -90,7 +92,9 @@ public class AuthServiceImpl implements AuthService {
                 user.getUsername(),
                 user.getEmail(),
                 user.getAvatarUrl(),
-                user.getStatus()
+                user.getStatus(),
+                user.getIsOnline(),
+                user.getLastSeen()
         );
 
         return new AuthResponseDTO(jwt, userResponseDTO);
