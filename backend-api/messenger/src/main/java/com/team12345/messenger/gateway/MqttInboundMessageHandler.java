@@ -14,6 +14,7 @@ import org.springframework.integration.annotation.ServiceActivator;
 import org.springframework.messaging.Message;
 import org.springframework.stereotype.Component;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
 
@@ -30,7 +31,7 @@ public class MqttInboundMessageHandler {
     @ServiceActivator(inputChannel = "mqttInboundChannel")
     public void handleInboundMessage(Message<byte[]> mqttMessage) {
         long start = System.currentTimeMillis();
-        String payload = new String(mqttMessage.getPayload());
+        String payload = new String(mqttMessage.getPayload(), StandardCharsets.UTF_8);
         MessageRequestDTO requestDTO;
         try {
             requestDTO = objectMapper.readValue(payload, MessageRequestDTO.class);
