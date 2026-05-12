@@ -2,10 +2,13 @@ package com.team12345.messenger.service.impl;
 
 import com.team12345.messenger.dto.request.MessageRequestDTO;
 import com.team12345.messenger.dto.response.MessageResponseDTO;
+import com.team12345.messenger.dto.response.SaveMessageResult;
 import com.team12345.messenger.entity.*;
 import com.team12345.messenger.exception.ResourceNotFoundException;
+import com.team12345.messenger.gateway.MqttGateway;
 import com.team12345.messenger.repository.*;
 import com.team12345.messenger.service.MediaService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -17,6 +20,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.security.access.AccessDeniedException;
 
 import java.util.*;
 
@@ -41,6 +45,10 @@ public class MessageServiceImplTest {
     private MessageStatusRepository messageStatusRepository;
     @Mock
     private MediaService mediaService;
+    @Mock
+    private MqttGateway mqttGateway;
+    @Mock
+    private ObjectMapper objectMapper;
 
     @InjectMocks
     private MessageServiceImpl messageService;
@@ -144,7 +152,123 @@ public class MessageServiceImplTest {
     }
 
     @Test
-    void getMessagesByConversation_shouldReturnPagedMessages() {
+    void saveMessage_whenSenderNotParticipant_shouldThrowIllegalArgument() {
+        when(participantRepository.findById_ConversationId(conversation.getId()))
+                .thenReturn(List.of(Participant.builder().user(receiver).build()));
+
+        assertThrows(IllegalArgumentException.class, () -> messageService.saveMessage(textMessageRequest));
+        verifyNoInteractions(messageRepository);
+    }
+
+    @Test
+    void saveMessage_shouldReturnParticipantsInResult() {
+        Participant senderP = Participant.builder().user(sender).build();
+        Participant receiverP = Participant.builder().user(receiver).build();
+        when(participantRepository.findById_ConversationId(conversation.getId()))
+                .thenReturn(List.of(senderP, receiverP));
+        when(conversationRepository.findById(conversation.getId())).thenReturn(Optional.of(conversation));
+        when(userRepository.findById(sender.getId())).thenReturn(Optional.of(sender));
+        when(messageRepository.save(any())).thenAnswer(inv -> {
+            Message m = inv.getArgument(0);
+            m.setId(1L);
+            return m;
+        });
+
+        SaveMessageResult result = messageService.saveMessage(textMessageRequest);
+
+        assertThat(result.participants()).hasSize(2);
+        assertThat(result.message()).isNotNull();
+    }
+
+    @Test
+    void revokeMessage_bySender_shouldMarkDeleted() {
+        Message message = Message.builder().id(1L).sender(sender).conversation(conversation)
+                .content("Hi").isDeleted(false).build();
+        when(messageRepository.findById(1L)).thenReturn(Optional.of(message));
+        when(messageRepository.save(any())).thenReturn(message);
+        when(participantRepository.findById_ConversationId(conversation.getId())).thenReturn(List.of());
+
+        messageService.revokeMessage(1L, sender.getId());
+
+        assertThat(message.getIsDeleted()).isTrue();
+        verify(messageRepository).save(message);
+    }
+
+    @Test
+    void revokeMessage_byNonSender_shouldThrowAccessDenied() {
+        Message message = Message.builder().id(1L).sender(sender).conversation(conversation).build();
+        when(messageRepository.findById(1L)).thenReturn(Optional.of(message));
+
+        assertThrows(AccessDeniedException.class, () -> messageService.revokeMessage(1L, receiver.getId()));
+        verify(messageRepository, never()).save(any());
+    }
+
+    @Test
+    void revokeMessage_whenNotFound_shouldThrow() {
+        when(messageRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class, () -> messageService.revokeMessage(99L, sender.getId()));
+    }
+
+    @Test
+    void editMessage_bySender_shouldUpdateContent() {
+        Message message = Message.builder().id(1L).sender(sender).conversation(conversation)
+                .content("old").isDeleted(false).isEdited(false).build();
+        when(messageRepository.findById(1L)).thenReturn(Optional.of(message));
+        when(messageRepository.save(any())).thenReturn(message);
+        when(participantRepository.findById_ConversationId(conversation.getId())).thenReturn(List.of());
+
+        MessageResponseDTO result = messageService.editMessage(1L, sender.getId(), "new content");
+
+        assertThat(result.getContent()).isEqualTo("new content");
+        assertThat(message.getIsEdited()).isTrue();
+    }
+
+    @Test
+    void editMessage_byNonSender_shouldThrowAccessDenied() {
+        Message message = Message.builder().id(1L).sender(sender).conversation(conversation).build();
+        when(messageRepository.findById(1L)).thenReturn(Optional.of(message));
+
+        assertThrows(AccessDeniedException.class,
+                () -> messageService.editMessage(1L, receiver.getId(), "new"));
+    }
+
+    @Test
+    void editMessage_onDeletedMessage_shouldThrowIllegalArgument() {
+        Message message = Message.builder().id(1L).sender(sender).conversation(conversation)
+                .isDeleted(true).build();
+        when(messageRepository.findById(1L)).thenReturn(Optional.of(message));
+
+        assertThrows(IllegalArgumentException.class,
+                () -> messageService.editMessage(1L, sender.getId(), "new"));
+    }
+
+    @Test
+    void searchMessages_whenNotParticipant_shouldThrowAccessDenied() {
+        when(participantRepository.existsById(new ParticipantId(conversation.getId(), sender.getId())))
+                .thenReturn(false);
+
+        assertThrows(AccessDeniedException.class,
+                () -> messageService.searchMessages("hello", conversation.getId(), sender.getId(), PageRequest.of(0, 10)));
+    }
+
+    @Test
+    void searchMessages_shouldReturnMatchingMessages() {
+        Message message = Message.builder().id(1L).sender(sender).conversation(conversation)
+                .content("hello world").isDeleted(false).isEdited(false).build();
+        Page<Message> page = new PageImpl<>(List.of(message));
+        when(participantRepository.existsById(new ParticipantId(conversation.getId(), sender.getId())))
+                .thenReturn(true);
+        when(messageRepository.findByConversationIdAndContentContainingIgnoreCaseOrderByCreatedAtDesc(
+                eq(conversation.getId()), eq("hello"), any()))
+                .thenReturn(page);
+
+        Page<MessageResponseDTO> result = messageService.searchMessages(
+                "hello", conversation.getId(), sender.getId(), PageRequest.of(0, 10));
+
+        assertThat(result.getContent()).hasSize(1);
+        assertThat(result.getContent().get(0).getContent()).isEqualTo("hello world");
+    }
         // Arrange
         Pageable pageable = PageRequest.of(0, 20);
         Message message = Message.builder().id(1L).sender(sender).conversation(conversation).content("Hi").build();
