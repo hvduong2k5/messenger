@@ -37,7 +37,6 @@ class AttachmentRepositoryTest {
         Conversation conversation = Conversation.builder()
                 .name("Test Conversation")
                 .isGroup(false)
-                .updatedAt(LocalDateTime.now())
                 .build();
         entityManager.persistAndFlush(conversation);
 
@@ -90,7 +89,6 @@ class AttachmentRepositoryTest {
         Conversation conversation = Conversation.builder()
                 .name("Test Conversation")
                 .isGroup(false)
-                .updatedAt(LocalDateTime.now())
                 .build();
         entityManager.persistAndFlush(conversation);
 
@@ -123,7 +121,6 @@ class AttachmentRepositoryTest {
         Conversation conversation = Conversation.builder()
                 .name("Test Conversation")
                 .isGroup(false)
-                .updatedAt(LocalDateTime.now())
                 .build();
         entityManager.persistAndFlush(conversation);
 
