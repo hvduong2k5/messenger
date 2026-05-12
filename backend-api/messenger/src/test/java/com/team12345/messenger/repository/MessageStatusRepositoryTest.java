@@ -39,7 +39,6 @@ class MessageStatusRepositoryTest {
         Conversation conversation = Conversation.builder()
                 .name("Test Conversation")
                 .isGroup(false)
-                .updatedAt(LocalDateTime.now())
                 .build();
         entityManager.persistAndFlush(conversation);
 
@@ -98,12 +97,10 @@ class MessageStatusRepositoryTest {
         Conversation conversation1 = Conversation.builder()
                 .name("Conversation 1")
                 .isGroup(false)
-                .updatedAt(LocalDateTime.now())
                 .build();
         Conversation conversation2 = Conversation.builder()
                 .name("Conversation 2")
                 .isGroup(false)
-                .updatedAt(LocalDateTime.now())
                 .build();
         entityManager.persistAndFlush(conversation1);
         entityManager.persistAndFlush(conversation2);
@@ -166,7 +163,6 @@ class MessageStatusRepositoryTest {
         Conversation conversation = Conversation.builder()
                 .name("Test Conversation")
                 .isGroup(false)
-                .updatedAt(LocalDateTime.now())
                 .build();
         entityManager.persistAndFlush(conversation);
 
@@ -218,7 +214,6 @@ class MessageStatusRepositoryTest {
         Conversation conversation = Conversation.builder()
                 .name("Test Conversation")
                 .isGroup(false)
-                .updatedAt(LocalDateTime.now())
                 .build();
         entityManager.persistAndFlush(conversation);
 
