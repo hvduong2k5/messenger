@@ -188,6 +188,8 @@ public class FriendshipServiceImpl implements FriendshipService {
                 .email(user.getEmail())
                 .avatarUrl(user.getAvatarUrl())
                 .status(user.getStatus())
+                .isOnline(user.getIsOnline())
+                .lastSeen(user.getLastSeen())
                 .build();
     }
 }
