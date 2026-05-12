@@ -50,27 +50,27 @@ class MessageRepositoryTest {
         entityManager.persistAndFlush(conversation);
 
         // Create messages with different timestamps
-        LocalDateTime baseTime = LocalDateTime.now().minusHours(5);
         Message message1 = Message.builder()
                 .conversation(conversation)
                 .sender(sender1)
                 .content("Message 1")
-                .createdAt(baseTime)
                 .build();
+        entityManager.persistAndFlush(message1);
+        try { Thread.sleep(10); } catch (InterruptedException e) {}
+
         Message message2 = Message.builder()
                 .conversation(conversation)
                 .sender(sender2)
                 .content("Message 2")
-                .createdAt(baseTime.plusHours(1))
                 .build();
+        entityManager.persistAndFlush(message2);
+        try { Thread.sleep(10); } catch (InterruptedException e) {}
+
         Message message3 = Message.builder()
                 .conversation(conversation)
                 .sender(sender1)
                 .content("Message 3")
-                .createdAt(baseTime.plusHours(2))
                 .build();
-        entityManager.persistAndFlush(message1);
-        entityManager.persistAndFlush(message2);
         entityManager.persistAndFlush(message3);
 
         // Test with pagination (page 0, size 2)
@@ -103,15 +103,14 @@ class MessageRepositoryTest {
         entityManager.persistAndFlush(conversation);
 
         // Create 5 messages
-        LocalDateTime baseTime = LocalDateTime.now().minusHours(5);
         for (int i = 1; i <= 5; i++) {
             Message message = Message.builder()
                     .conversation(conversation)
                     .sender(sender)
                     .content("Message " + i)
-                    .createdAt(baseTime.plusHours(i - 1))
                     .build();
             entityManager.persistAndFlush(message);
+            try { Thread.sleep(10); } catch (InterruptedException e) {}
         }
 
         // Test first page (page 0, size 2)
@@ -154,27 +153,27 @@ class MessageRepositoryTest {
         entityManager.persistAndFlush(conversation);
 
         // Create messages with different timestamps
-        LocalDateTime baseTime = LocalDateTime.now().minusHours(3);
         Message message1 = Message.builder()
                 .conversation(conversation)
                 .sender(sender)
                 .content("Message 1")
-                .createdAt(baseTime)
                 .build();
+        entityManager.persistAndFlush(message1);
+        try { Thread.sleep(10); } catch (InterruptedException e) {}
+
         Message message2 = Message.builder()
                 .conversation(conversation)
                 .sender(sender)
                 .content("Message 2")
-                .createdAt(baseTime.plusHours(1))
                 .build();
+        entityManager.persistAndFlush(message2);
+        try { Thread.sleep(10); } catch (InterruptedException e) {}
+
         Message message3 = Message.builder()
                 .conversation(conversation)
                 .sender(sender)
                 .content("Message 3 - Last")
-                .createdAt(baseTime.plusHours(2))
                 .build();
-        entityManager.persistAndFlush(message1);
-        entityManager.persistAndFlush(message2);
         entityManager.persistAndFlush(message3);
 
         // Test finding last message
@@ -250,43 +249,44 @@ class MessageRepositoryTest {
         entityManager.persistAndFlush(conversation2);
 
         // Create messages for conversation 1
-        LocalDateTime baseTime = LocalDateTime.now().minusHours(2);
         Message msg1c1 = Message.builder()
                 .conversation(conversation1)
                 .sender(sender1)
                 .content("Message 1 in Conv1")
-                .createdAt(baseTime)
                 .build();
+        entityManager.persistAndFlush(msg1c1);
+        try { Thread.sleep(10); } catch (InterruptedException e) {}
+
         Message msg2c1 = Message.builder()
                 .conversation(conversation1)
                 .sender(sender2)
                 .content("Message 2 in Conv1")
-                .createdAt(baseTime.plusHours(1))
                 .build();
-        entityManager.persistAndFlush(msg1c1);
         entityManager.persistAndFlush(msg2c1);
+        try { Thread.sleep(10); } catch (InterruptedException e) {}
 
         // Create messages for conversation 2
         Message msg1c2 = Message.builder()
                 .conversation(conversation2)
                 .sender(sender1)
                 .content("Message 1 in Conv2")
-                .createdAt(baseTime)
                 .build();
+        entityManager.persistAndFlush(msg1c2);
+        try { Thread.sleep(10); } catch (InterruptedException e) {}
+
         Message msg2c2 = Message.builder()
                 .conversation(conversation2)
                 .sender(sender2)
                 .content("Message 2 in Conv2")
-                .createdAt(baseTime.plusHours(1))
                 .build();
+        entityManager.persistAndFlush(msg2c2);
+        try { Thread.sleep(10); } catch (InterruptedException e) {}
+
         Message msg3c2 = Message.builder()
                 .conversation(conversation2)
                 .sender(sender1)
                 .content("Message 3 in Conv2")
-                .createdAt(baseTime.plusHours(2))
                 .build();
-        entityManager.persistAndFlush(msg1c2);
-        entityManager.persistAndFlush(msg2c2);
         entityManager.persistAndFlush(msg3c2);
 
         // Test conversation 1 - should have 2 messages
