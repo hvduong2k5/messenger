@@ -5,6 +5,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+
 @Data
 @Builder
 @NoArgsConstructor
@@ -15,4 +17,6 @@ public class UserResponseDTO {
     private String email;
     private String avatarUrl;
     private String status;
+    private Boolean isOnline;
+    private LocalDateTime lastSeen;
 }
