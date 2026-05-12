@@ -3,6 +3,7 @@ package com.team12345.messenger.service.impl;
 import com.team12345.messenger.dto.request.MessageRequestDTO;
 import com.team12345.messenger.dto.response.AttachmentResponseDTO;
 import com.team12345.messenger.dto.response.MessageResponseDTO;
+import com.team12345.messenger.dto.response.SaveMessageResult;
 import com.team12345.messenger.entity.*;
 import com.team12345.messenger.exception.ResourceNotFoundException;
 import com.team12345.messenger.repository.*;
@@ -38,8 +39,16 @@ public class MessageServiceImpl implements MessageService {
 
     @Override
     @Transactional
-    public MessageResponseDTO saveMessage(MessageRequestDTO requestDTO) {
-        // Validate conversation & sender
+    public SaveMessageResult saveMessage(MessageRequestDTO requestDTO) {
+        // Load participants once — used for membership validation, status records, and fan-out
+        List<Participant> participants = participantRepository.findById_ConversationId(requestDTO.getConversationId());
+
+        boolean isParticipant = participants.stream()
+                .anyMatch(p -> p.getUser().getId().equals(requestDTO.getSenderId()));
+        if (!isParticipant) {
+            throw new IllegalArgumentException("User " + requestDTO.getSenderId() + " is not a participant of conversation " + requestDTO.getConversationId());
+        }
+
         Conversation conversation = conversationRepository.findById(requestDTO.getConversationId())
                 .orElseThrow(() -> new ResourceNotFoundException("Conversation not found"));
 
@@ -58,17 +67,13 @@ public class MessageServiceImpl implements MessageService {
                 .clientMessageId(requestDTO.getClientMessageId())
                 .build();
 
-        // Save attachments if any
         if (requestDTO.getFiles() != null && !requestDTO.getFiles().isEmpty()) {
-            List<Attachment> attachments = processAttachments(requestDTO.getFiles(), message);
-            message.setAttachments(attachments);
+            message.setAttachments(processAttachments(requestDTO.getFiles(), message));
         }
 
-        // Save message into PostgreSQL
         Message savedMessage = messageRepository.save(message);
 
-        // Create message_status records for all participants except sender
-        createMessageStatusRecords(savedMessage, conversation.getId(), sender.getId());
+        createMessageStatusRecords(savedMessage, participants, sender.getId());
 
         MessageResponseDTO responseDTO = mapToResponseDTO(savedMessage);
         sendMqttNotification(responseDTO, "NEW_MESSAGE");
@@ -89,6 +94,7 @@ public class MessageServiceImpl implements MessageService {
             // Log error but don't fail the transaction
             // log.error("Failed to send MQTT notification", e);
         }
+        return new SaveMessageResult(mapToResponseDTO(savedMessage), participants);
     }
 
     @Override
@@ -101,6 +107,7 @@ public class MessageServiceImpl implements MessageService {
         Pageable actualPageable = pageable != null ? pageable :
                 PageRequest.of(0, 20, Sort.by(Sort.Direction.DESC, "createdAt"));
                 
+        // Ensure conversation exists
         if(!conversationRepository.existsById(conversationId)) {
             throw new ResourceNotFoundException("Conversation not found");
         }
@@ -126,8 +133,7 @@ public class MessageServiceImpl implements MessageService {
         return attachments;
     }
 
-    private void createMessageStatusRecords(Message message, Long conversationId, Long senderId) {
-        List<Participant> participants = participantRepository.findById_ConversationId(conversationId);
+    private void createMessageStatusRecords(Message message, List<Participant> participants, Long senderId) {
         
         List<MessageStatus> statusRecords = participants.stream()
                 .filter(p -> !p.getUser().getId().equals(senderId))
@@ -196,7 +202,7 @@ public class MessageServiceImpl implements MessageService {
 
         message.setIsDeleted(true);
         messageRepository.save(message);
-        
+
         sendMqttNotification(mapToResponseDTO(message), "REVOKE_MESSAGE");
     }
 
@@ -209,7 +215,7 @@ public class MessageServiceImpl implements MessageService {
         if (!message.getSender().getId().equals(userId)) {
             throw new org.springframework.security.access.AccessDeniedException("Not authorized to edit this message");
         }
-        
+
         if (message.getIsDeleted() != null && message.getIsDeleted()) {
             throw new IllegalArgumentException("Cannot edit a revoked message");
         }
@@ -217,10 +223,10 @@ public class MessageServiceImpl implements MessageService {
         message.setContent(newContent);
         message.setIsEdited(true);
         Message updatedMessage = messageRepository.save(message);
-        
+
         MessageResponseDTO responseDTO = mapToResponseDTO(updatedMessage);
         sendMqttNotification(responseDTO, "EDIT_MESSAGE");
-        
+
         return responseDTO;
     }
 
@@ -229,7 +235,7 @@ public class MessageServiceImpl implements MessageService {
     public Page<MessageResponseDTO> searchMessages(String keyword, Long conversationId, Long userId, Pageable pageable) {
         Pageable actualPageable = pageable != null ? pageable :
                 PageRequest.of(0, 20, Sort.by(Sort.Direction.DESC, "createdAt"));
-        
+
         Page<Message> messagePage;
         if (conversationId != null) {
             if (!participantRepository.existsById(new ParticipantId(conversationId, userId))) {
@@ -243,7 +249,7 @@ public class MessageServiceImpl implements MessageService {
             // But this would expose messages from other users! We MUST restrict it!
             throw new UnsupportedOperationException("Global search across all conversations is not fully implemented yet.");
         }
-        
+
         return messagePage.map(this::mapToResponseDTO);
     }
 }
