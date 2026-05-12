@@ -2,12 +2,9 @@ package com.team12345.messenger.gateway;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.team12345.messenger.dto.request.MessageRequestDTO;
-import com.team12345.messenger.dto.response.MessageResponseDTO;
-import com.team12345.messenger.entity.Conversation;
+import com.team12345.messenger.dto.response.SaveMessageResult;
 import com.team12345.messenger.entity.Participant;
 import com.team12345.messenger.entity.User;
-import com.team12345.messenger.repository.ConversationRepository;
-import com.team12345.messenger.repository.ParticipantRepository;
 import com.team12345.messenger.repository.UserRepository;
 import com.team12345.messenger.service.MessageService;
 import lombok.RequiredArgsConstructor;
@@ -26,8 +23,6 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class MqttInboundMessageHandler {
     private final ObjectMapper objectMapper;
-    private final ConversationRepository conversationRepository;
-    private final ParticipantRepository participantRepository;
     private final UserRepository userRepository;
     private final MessageService messageService;
     private final MqttGateway mqttGateway;
@@ -78,31 +73,24 @@ public class MqttInboundMessageHandler {
         }
 
         // Validate conversation
-        Optional<Conversation> conversationOpt = conversationRepository.findById(requestDTO.getConversationId());
-        if (conversationOpt.isEmpty()) {
-            log.error("[Inbound] Conversation {} not found", requestDTO.getConversationId());
-            // Optionally send error to sender
-            return;
-        }
-
         // Validate participant
-        List<Participant> participants = participantRepository.findById_ConversationId(requestDTO.getConversationId());
-        boolean isParticipant = participants.stream().anyMatch(p -> p.getUser().getId().equals(requestDTO.getSenderId()));
-        if (!isParticipant) {
-            log.error("[Inbound] User {} is not a participant of conversation {}", requestDTO.getSenderId(), requestDTO.getConversationId());
-            // Optionally send error to sender
+        // Save message — validates conversation, participant membership, and creates status records
+        SaveMessageResult result;
+        try {
+            result = messageService.saveMessage(requestDTO);
+        } catch (Exception e) {
+            log.error("[Inbound] Failed to save message from sender {}: {}", requestDTO.getSenderId(), e.getMessage());
             return;
         }
 
-        // Save message (returns MessageResponseDTO)
-        MessageResponseDTO responseDTO = messageService.saveMessage(requestDTO);
+        List<Participant> participants = result.participants();
 
         // Forward to all participants except sender
         for (Participant p : participants) {
             if (!p.getUser().getId().equals(requestDTO.getSenderId())) {
                 String topic = "user/" + p.getUser().getId() + "/messages";
                 try {
-                    mqttGateway.sendToMqtt(objectMapper.writeValueAsString(responseDTO), topic);
+                    mqttGateway.sendToMqtt(objectMapper.writeValueAsString(result.message()), topic);
                 } catch (Exception ex) {
                     log.error("[Inbound] Failed to send message to {}: {}", topic, ex.getMessage());
                 }
@@ -112,7 +100,7 @@ public class MqttInboundMessageHandler {
         // Send ACK to sender
         String ackTopic = "user/" + requestDTO.getSenderId() + "/ack";
         try {
-            mqttGateway.sendToMqtt("{\"ack\":true,\"messageId\":" + responseDTO.getMessageId() + "}", ackTopic);
+            mqttGateway.sendToMqtt("{\"ack\":true,\"messageId\":" + result.message().getMessageId() + "}", ackTopic);
         } catch (Exception ex) {
             log.error("[Inbound] Failed to send ACK to {}: {}", ackTopic, ex.getMessage());
         }
