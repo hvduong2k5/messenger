@@ -5,6 +5,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+
 @Data
 @Builder
 @NoArgsConstructor
@@ -13,6 +15,8 @@ public class UserSearchResponseDTO {
     private Long id;
     private String username;
     private String avatarUrl;
-    private String friendshipStatus; // FRIEND, STRANGER, SENDER_PENDING, RECEIVER_PENDING
+    private String friendshipStatus;
+    private Boolean isOnline;
+    private LocalDateTime lastSeen;
 }
 
