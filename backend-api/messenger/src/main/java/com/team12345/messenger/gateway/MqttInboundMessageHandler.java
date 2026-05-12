@@ -102,7 +102,7 @@ public class MqttInboundMessageHandler {
             if (!p.getUser().getId().equals(requestDTO.getSenderId())) {
                 String topic = "user/" + p.getUser().getId() + "/messages";
                 try {
-                    mqttGateway.sendToMqtt(objectToJson(responseDTO), topic);
+                    mqttGateway.sendToMqtt(objectMapper.writeValueAsString(responseDTO), topic);
                 } catch (Exception ex) {
                     log.error("[Inbound] Failed to send message to {}: {}", topic, ex.getMessage());
                 }
@@ -121,13 +121,5 @@ public class MqttInboundMessageHandler {
         log.info("[Inbound] User {} -> Conversation {}: \"{}\" (latency: {}ms)",
                 requestDTO.getSenderId(), requestDTO.getConversationId(), requestDTO.getContent(),
                 System.currentTimeMillis() - start);
-    }
-
-    private String objectToJson(Object obj) {
-        try {
-            return objectMapper.writeValueAsString(obj);
-        } catch (Exception e) {
-            return "{}";
-        }
     }
 }
