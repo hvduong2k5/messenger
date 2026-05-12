@@ -7,7 +7,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,7 +16,6 @@ import java.util.Map;
 @RestController
 @RequestMapping("/message-statuses")
 @RequiredArgsConstructor
-@PreAuthorize("hasRole('USER')")
 @Tag(name = "Message Status", description = "Endpoints for managing message read receipts and delivery statuses")
 public class MessageStatusController {
 
