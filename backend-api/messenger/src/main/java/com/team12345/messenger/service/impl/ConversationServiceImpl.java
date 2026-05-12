@@ -133,7 +133,6 @@ public class ConversationServiceImpl implements ConversationService {
         Conversation conversation = Conversation.builder()
                 .name(name)
                 .isGroup(isGroup)
-                .updatedAt(LocalDateTime.now())
                 .build();
         
         conversation = conversationRepository.save(conversation);
