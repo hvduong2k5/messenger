@@ -21,7 +21,7 @@ import java.util.List;
         @NamedAttributeNode("sender")
     }
 )
-public class Message {
+public class Message extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -42,9 +42,6 @@ public class Message {
     @Column(name = "client_message_id", length = 100)
     private String clientMessageId;
 
-    @CreationTimestamp
-    @Column(name = "created_at", updatable = false)
-    private LocalDateTime createdAt;
 
     @Builder.Default
     @Column(name = "is_deleted")
