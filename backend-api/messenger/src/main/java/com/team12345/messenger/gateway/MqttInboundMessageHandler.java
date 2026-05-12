@@ -100,8 +100,7 @@ public class MqttInboundMessageHandler {
         // Forward to all participants except sender
         for (Participant p : participants) {
             if (!p.getUser().getId().equals(requestDTO.getSenderId())) {
-                // Send to user's topic
-                String topic = "users/" + p.getUser().getUsername() + "/receive";
+                String topic = "user/" + p.getUser().getId() + "/messages";
                 try {
                     mqttGateway.sendToMqtt(objectToJson(responseDTO), topic);
                 } catch (Exception ex) {
@@ -111,7 +110,7 @@ public class MqttInboundMessageHandler {
         }
 
         // Send ACK to sender
-        String ackTopic = "users/" + requestDTO.getSenderId() + "/ack";
+        String ackTopic = "user/" + requestDTO.getSenderId() + "/ack";
         try {
             mqttGateway.sendToMqtt("{\"ack\":true,\"messageId\":" + responseDTO.getMessageId() + "}", ackTopic);
         } catch (Exception ex) {
