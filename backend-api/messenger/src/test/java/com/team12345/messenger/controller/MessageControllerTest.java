@@ -114,6 +114,7 @@ class MessageControllerTest {
     void editMessage_ShouldReturnUpdatedMessage() throws Exception {
         MessageRequestDTO requestDTO = new MessageRequestDTO();
         requestDTO.setContent("Updated content");
+        requestDTO.setConversationId(1L); // Bổ sung để qua validation
 
         MessageResponseDTO responseDTO = MessageResponseDTO.builder()
                 .messageId(1L)
