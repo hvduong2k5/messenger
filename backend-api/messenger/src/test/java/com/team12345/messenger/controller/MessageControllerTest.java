@@ -6,6 +6,7 @@ import com.team12345.messenger.dto.response.MessageResponseDTO;
 import com.team12345.messenger.entity.User;
 import com.team12345.messenger.security.CustomUserDetails;
 import com.team12345.messenger.service.MessageService;
+import com.team12345.messenger.dto.response.SaveMessageResult;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -86,8 +87,9 @@ class MessageControllerTest {
                 .messageId(1L)
                 .content("Test message")
                 .build();
+        SaveMessageResult saveResult = new SaveMessageResult(responseDTO, List.of());
 
-        when(messageService.saveMessage(any(MessageRequestDTO.class))).thenReturn(responseDTO);
+        when(messageService.saveMessage(any(MessageRequestDTO.class))).thenReturn(saveResult);
 
         mockMvc.perform(post("/messages")
                 .contentType(MediaType.MULTIPART_FORM_DATA)
