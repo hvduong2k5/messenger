@@ -36,12 +36,19 @@ public class Attachment {
     @Column(name="file_size")
     private Integer fileSize;
 
+    @Column(name="public_id", length=255)
+    private String publicId;
+
     @Column(name="uploaded_at")
     private LocalDateTime uploadedAt;
 
     @ManyToOne(fetch=FetchType.LAZY)
     @JoinColumn(name="message_id")
     private Message message;
+
+    @ManyToOne(fetch=FetchType.LAZY)
+    @JoinColumn(name="uploader_id")
+    private User uploader;
 
     @PrePersist
     protected void onCreate(){

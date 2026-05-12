@@ -9,4 +9,10 @@ public interface MediaService {
      * @return A map containing url, type (image, video, etc), and potentially size.
      */
     Map<String, Object> uploadFile(MultipartFile file);
+
+    /**
+     * Deletes a file from the cloud provider.
+     * @param publicId The public ID of the file to delete.
+     */
+    void deleteFile(String publicId);
 }

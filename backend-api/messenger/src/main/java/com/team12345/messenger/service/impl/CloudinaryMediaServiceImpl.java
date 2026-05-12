@@ -41,6 +41,10 @@ public class CloudinaryMediaServiceImpl implements MediaService {
             Integer bytes = (Integer) uploadResult.get("bytes");
             result.put("size", bytes);
 
+            // The public_id
+            String publicId = (String) uploadResult.get("public_id");
+            result.put("publicId", publicId);
+
             // Resource type from Cloudinary (image, video, raw)
             String resourceType = (String) uploadResult.get("resource_type");
             
@@ -53,6 +57,16 @@ public class CloudinaryMediaServiceImpl implements MediaService {
         } catch (IOException e) {
             log.error("Failed to upload file to Cloudinary: {}", e.getMessage());
             throw new RuntimeException("Failed to upload file", e);
+        }
+    }
+
+    @Override
+    public void deleteFile(String publicId) {
+        try {
+            cloudinary.uploader().destroy(publicId, ObjectUtils.emptyMap());
+        } catch (IOException e) {
+            log.error("Failed to delete file from Cloudinary: {}", e.getMessage());
+            throw new RuntimeException("Failed to delete file", e);
         }
     }
 
