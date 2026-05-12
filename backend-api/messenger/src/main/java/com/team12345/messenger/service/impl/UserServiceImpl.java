@@ -90,10 +90,12 @@ public class UserServiceImpl implements UserService {
     @Transactional(readOnly = true)
     public Page<UserSearchResponseDTO> searchUsers(String query, Pageable pageable, Long currentUserId) {
         Page<User> users = userRepository.findByUsernameContainingIgnoreCaseOrEmailContainingIgnoreCase(query, query, pageable);
-        return users.map(user -> {
-            if (user.getId().equals(currentUserId)) {
-                return null; // sẽ filter sau
-            }
+        // Loại bỏ bản thân khỏi kết quả bằng stream, rồi tạo lại Page
+        List<User> filteredList = users.getContent().stream()
+                .filter(u -> !u.getId().equals(currentUserId))
+                .collect(Collectors.toList());
+        Page<User> filtered = new org.springframework.data.domain.PageImpl<>(filteredList, pageable, users.getTotalElements() - 1);
+        return filtered.map(user -> {
             String status = "STRANGER";
             if (userFriendRepository.existsById_UserIdAndId_FriendId(currentUserId, user.getId()) ||
                 userFriendRepository.existsById_UserIdAndId_FriendId(user.getId(), currentUserId)) {
@@ -111,7 +113,7 @@ public class UserServiceImpl implements UserService {
                     .avatarUrl(user.getAvatarUrl())
                     .friendshipStatus(status)
                     .build();
-        }).filter(dto -> dto != null);
+        });
     }
 
     private UserProfileResponseDTO mapToResponse(User user) {
