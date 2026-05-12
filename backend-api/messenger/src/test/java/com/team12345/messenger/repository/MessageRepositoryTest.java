@@ -45,7 +45,6 @@ class MessageRepositoryTest {
         Conversation conversation = Conversation.builder()
                 .name("Test Conversation")
                 .isGroup(false)
-                .updatedAt(LocalDateTime.now())
                 .build();
         entityManager.persistAndFlush(conversation);
 
@@ -98,7 +97,6 @@ class MessageRepositoryTest {
         Conversation conversation = Conversation.builder()
                 .name("Test Conversation")
                 .isGroup(false)
-                .updatedAt(LocalDateTime.now())
                 .build();
         entityManager.persistAndFlush(conversation);
 
@@ -148,7 +146,6 @@ class MessageRepositoryTest {
         Conversation conversation = Conversation.builder()
                 .name("Test Conversation")
                 .isGroup(false)
-                .updatedAt(LocalDateTime.now())
                 .build();
         entityManager.persistAndFlush(conversation);
 
@@ -190,7 +187,6 @@ class MessageRepositoryTest {
         Conversation conversation = Conversation.builder()
                 .name("Empty Conversation")
                 .isGroup(false)
-                .updatedAt(LocalDateTime.now())
                 .build();
         entityManager.persistAndFlush(conversation);
 
@@ -206,7 +202,6 @@ class MessageRepositoryTest {
         Conversation conversation = Conversation.builder()
                 .name("Empty Conversation")
                 .isGroup(false)
-                .updatedAt(LocalDateTime.now())
                 .build();
         entityManager.persistAndFlush(conversation);
 
@@ -238,12 +233,10 @@ class MessageRepositoryTest {
         Conversation conversation1 = Conversation.builder()
                 .name("Conversation 1")
                 .isGroup(false)
-                .updatedAt(LocalDateTime.now())
                 .build();
         Conversation conversation2 = Conversation.builder()
                 .name("Conversation 2")
                 .isGroup(false)
-                .updatedAt(LocalDateTime.now())
                 .build();
         entityManager.persistAndFlush(conversation1);
         entityManager.persistAndFlush(conversation2);
