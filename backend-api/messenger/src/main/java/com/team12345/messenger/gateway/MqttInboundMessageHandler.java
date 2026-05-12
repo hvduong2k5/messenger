@@ -41,6 +41,16 @@ public class MqttInboundMessageHandler {
             return;
         }
 
+        // Validate required fields
+        if (requestDTO.getSenderId() == null || requestDTO.getConversationId() == null) {
+            log.error("[Inbound] Malformed payload - missing senderId or conversationId");
+            return;
+        }
+        if (requestDTO.getContent() == null || requestDTO.getContent().isBlank()) {
+            log.error("[Inbound] Malformed payload - missing content from sender {}", requestDTO.getSenderId());
+            return;
+        }
+
         // Validate conversation
         Optional<Conversation> conversationOpt = conversationRepository.findById(requestDTO.getConversationId());
         if (conversationOpt.isEmpty()) {
