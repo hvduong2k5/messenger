@@ -99,8 +99,8 @@ public class MqttConfigTest {
     }
 
     @Test
-    void errorChannel_ShouldReturnMessageChannel() {
-        MessageChannel channel = mqttConfig.errorChannel();
+    void mqttErrorChannel_ShouldReturnMessageChannel() {
+        MessageChannel channel = mqttConfig.mqttErrorChannel();
         assertNotNull(channel);
     }
 
