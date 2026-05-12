@@ -6,6 +6,8 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Table(name = "users", indexes = {
     @Index(name = "idx_username", columnList = "username"),
@@ -45,5 +47,12 @@ public class User extends BaseEntity {
     @Size(min = 60, max = 255)
     @Column(nullable = false, length = 255)
     private String password;
+
+    @Builder.Default
+    @Column(name = "is_online", nullable = false)
+    private Boolean isOnline = false;
+
+    @Column(name = "last_seen")
+    private LocalDateTime lastSeen;
 
 }
