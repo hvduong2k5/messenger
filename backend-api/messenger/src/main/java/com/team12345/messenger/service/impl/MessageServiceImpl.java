@@ -6,11 +6,13 @@ import com.team12345.messenger.dto.response.MessageResponseDTO;
 import com.team12345.messenger.dto.response.SaveMessageResult;
 import com.team12345.messenger.entity.*;
 import com.team12345.messenger.exception.ResourceNotFoundException;
+import com.team12345.messenger.gateway.MqttGateway;
 import com.team12345.messenger.repository.*;
 import com.team12345.messenger.service.MediaService;
 import com.team12345.messenger.service.MessageService;
-import com.team12345.messenger.gateway.MqttGateway;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -26,6 +28,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class MessageServiceImpl implements MessageService {
 
     private final MessageRepository messageRepository;
@@ -35,7 +38,7 @@ public class MessageServiceImpl implements MessageService {
     private final MessageStatusRepository messageStatusRepository;
     private final MediaService mediaService;
     private final MqttGateway mqttGateway;
-    private final com.fasterxml.jackson.databind.ObjectMapper objectMapper;
+    private final ObjectMapper objectMapper;
 
     @Override
     @Transactional
@@ -55,11 +58,6 @@ public class MessageServiceImpl implements MessageService {
         User sender = userRepository.findById(requestDTO.getSenderId())
                 .orElseThrow(() -> new ResourceNotFoundException("Sender not found"));
 
-        if (!participantRepository.existsById(new ParticipantId(requestDTO.getConversationId(), requestDTO.getSenderId()))) {
-            throw new org.springframework.security.access.AccessDeniedException("Not a participant in this conversation");
-        }
-
-        // Map DTO -> Message entity
         Message message = Message.builder()
                 .conversation(conversation)
                 .sender(sender)
@@ -75,25 +73,6 @@ public class MessageServiceImpl implements MessageService {
 
         createMessageStatusRecords(savedMessage, participants, sender.getId());
 
-        MessageResponseDTO responseDTO = mapToResponseDTO(savedMessage);
-        sendMqttNotification(responseDTO, "NEW_MESSAGE");
-
-        return responseDTO;
-    }
-
-    private void sendMqttNotification(MessageResponseDTO messageDto, String action) {
-        try {
-            String topic = "conversations/" + messageDto.getConversationId();
-            Map<String, Object> payload = Map.of(
-                "action", action,
-                "data", messageDto
-            );
-            String jsonPayload = objectMapper.writeValueAsString(payload);
-            mqttGateway.sendToMqtt(jsonPayload, topic);
-        } catch (Exception e) {
-            // Log error but don't fail the transaction
-            // log.error("Failed to send MQTT notification", e);
-        }
         return new SaveMessageResult(mapToResponseDTO(savedMessage), participants);
     }
 
@@ -203,7 +182,7 @@ public class MessageServiceImpl implements MessageService {
         message.setIsDeleted(true);
         messageRepository.save(message);
 
-        sendMqttNotification(mapToResponseDTO(message), "REVOKE_MESSAGE");
+        sendMqttNotification(message, "REVOKE_MESSAGE");
     }
 
     @Override
@@ -225,9 +204,22 @@ public class MessageServiceImpl implements MessageService {
         Message updatedMessage = messageRepository.save(message);
 
         MessageResponseDTO responseDTO = mapToResponseDTO(updatedMessage);
-        sendMqttNotification(responseDTO, "EDIT_MESSAGE");
+        sendMqttNotification(updatedMessage, "EDIT_MESSAGE");
 
         return responseDTO;
+    }
+
+    private void sendMqttNotification(Message message, String action) {
+        List<Participant> participants = participantRepository.findById_ConversationId(message.getConversation().getId());
+        MessageResponseDTO dto = mapToResponseDTO(message);
+        for (Participant p : participants) {
+            String topic = "user/" + p.getUser().getId() + "/messages";
+            try {
+                mqttGateway.sendToMqtt(objectMapper.writeValueAsString(Map.of("action", action, "data", dto)), topic);
+            } catch (Exception e) {
+                log.error("[MQTT] Failed to notify {} on {}: {}", p.getUser().getId(), topic, e.getMessage());
+            }
+        }
     }
 
     @Override
