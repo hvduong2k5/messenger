@@ -43,13 +43,13 @@ class ConversationRepositoryTest {
         Conversation c = Conversation.builder().name(name).isGroup(false).build();
         c = conversationRepository.saveAndFlush(c);
         
-        // Use native query to explicitly bypass JPA Auditing and enforce the exact updatedAt timestamp we want
+        // Use positional parameters to avoid 'Cannot resolve query parameter' issues in some Hibernate/H2 versions
         entityManager.getEntityManager()
-                .createNativeQuery("UPDATE conversations SET updated_at = :date WHERE id = :id")
-                .setParameter("date", updatedAt)
-                .setParameter("id", c.getId())
+                .createNativeQuery("UPDATE conversations SET updated_at = ?1 WHERE id = ?2")
+                .setParameter(1, updatedAt)
+                .setParameter(2, c.getId())
                 .executeUpdate();
-                
+
         entityManager.refresh(c);
         return c;
     }
