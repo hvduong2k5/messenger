@@ -23,6 +23,7 @@ import java.util.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -81,7 +82,8 @@ public class MessageServiceImplTest {
                 .thenReturn(Arrays.asList(senderParticipant, receiverParticipant));
 
         // Act
-        MessageResponseDTO response = messageService.saveMessage(textMessageRequest);
+        var result = messageService.saveMessage(textMessageRequest);
+        MessageResponseDTO response = result.message();
 
         // Assert
         assertThat(response).isNotNull();
@@ -116,7 +118,8 @@ public class MessageServiceImplTest {
                 .thenReturn(Arrays.asList(senderParticipant, receiverParticipant));
 
         // Act
-        MessageResponseDTO response = messageService.saveMessage(textMessageRequest);
+        var result = messageService.saveMessage(textMessageRequest);
+        MessageResponseDTO response = result.message();
 
         // Assert
         assertThat(response).isNotNull();
@@ -132,6 +135,9 @@ public class MessageServiceImplTest {
     void saveMessage_whenConversationNotFound_shouldThrowException() {
         // Arrange
         when(conversationRepository.findById(anyLong())).thenReturn(Optional.empty());
+        // Đảm bảo user là participant đúng conversationId để test đúng lỗi không tìm thấy hội thoại
+        when(participantRepository.findById_ConversationId(eq(textMessageRequest.getConversationId())))
+            .thenReturn(List.of(Participant.builder().user(sender).build()));
 
         // Act & Assert
         assertThrows(ResourceNotFoundException.class, () -> messageService.saveMessage(textMessageRequest));
@@ -145,11 +151,12 @@ public class MessageServiceImplTest {
         Page<Message> messagePage = new PageImpl<>(List.of(message), pageable, 1);
 
         when(conversationRepository.existsById(conversation.getId())).thenReturn(true);
+        when(participantRepository.existsById(new ParticipantId(conversation.getId(), sender.getId()))).thenReturn(true);
         when(messageRepository.findByConversationIdOrderByCreatedAtDesc(conversation.getId(), pageable))
                 .thenReturn(messagePage);
 
         // Act
-        Page<MessageResponseDTO> resultPage = messageService.getMessagesByConversation(conversation.getId(), pageable);
+        Page<MessageResponseDTO> resultPage = messageService.getMessagesByConversation(conversation.getId(), sender.getId(), pageable);
 
         // Assert
         assertThat(resultPage).isNotNull();
