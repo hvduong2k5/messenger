@@ -64,6 +64,15 @@ dependencies {
     // Security
     implementation(libs.security.crypto)
 
+    // Image loading
+    implementation("com.github.bumptech.glide:glide:4.15.1")
+
+    // CircleImageView
+    implementation("de.hdodenhof:circleimageview:3.1.0")
+
+    // SwipeRefresh
+    implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.2.0")
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
