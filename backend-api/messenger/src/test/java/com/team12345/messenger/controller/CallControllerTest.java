@@ -74,7 +74,7 @@ class CallControllerTest {
                 .receiverUsername("receiver")
                 .callType(CallType.audio)
                 .status(CallStatus.ringing)
-                .createdAt(LocalDateTime.now())
+                
                 .build();
 
         when(callService.initiateCall(eq(1L), any(InitiateCallRequestDTO.class))).thenReturn(response);
@@ -170,7 +170,7 @@ class CallControllerTest {
                 .senderUsername("testuser")
                 .signalType("offer")
                 .data("{\"sdp\":\"test-offer\"}")
-                .createdAt(LocalDateTime.now())
+                
                 .build();
 
         when(callService.saveSignaling(eq(1L), any(SignalingRequestDTO.class))).thenReturn(response);
@@ -203,7 +203,7 @@ class CallControllerTest {
                 .senderId(1L)
                 .signalType("offer")
                 .data("{\"sdp\":\"offer-data\"}")
-                .createdAt(LocalDateTime.now())
+                
                 .build();
 
         SignalingResponseDTO signaling2 = SignalingResponseDTO.builder()
@@ -211,7 +211,7 @@ class CallControllerTest {
                 .senderId(2L)
                 .signalType("answer")
                 .data("{\"sdp\":\"answer-data\"}")
-                .createdAt(LocalDateTime.now())
+                
                 .build();
 
         List<SignalingResponseDTO> response = List.of(signaling1, signaling2);
@@ -233,7 +233,7 @@ class CallControllerTest {
                 .receiverId(2L)
                 .callType(CallType.audio)
                 .status(CallStatus.ended)
-                .createdAt(LocalDateTime.now())
+                
                 .build();
 
         CallResponseDTO call2 = CallResponseDTO.builder()
@@ -242,7 +242,7 @@ class CallControllerTest {
                 .receiverId(1L)
                 .callType(CallType.video)
                 .status(CallStatus.missed)
-                .createdAt(LocalDateTime.now())
+                
                 .build();
 
         List<CallResponseDTO> response = List.of(call1, call2);
