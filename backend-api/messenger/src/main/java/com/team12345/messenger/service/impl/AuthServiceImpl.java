@@ -1,7 +1,9 @@
 package com.team12345.messenger.service.impl;
 
+import com.team12345.messenger.dto.request.ForgotPasswordRequestDTO;
 import com.team12345.messenger.dto.request.LoginRequestDTO;
 import com.team12345.messenger.dto.request.RegisterRequestDTO;
+import com.team12345.messenger.dto.request.ResetPasswordRequestDTO;
 import com.team12345.messenger.dto.response.AuthResponseDTO;
 import com.team12345.messenger.dto.response.UserResponseDTO;
 import com.team12345.messenger.entity.User;
@@ -15,7 +17,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -98,5 +102,61 @@ public class AuthServiceImpl implements AuthService {
         );
 
         return new AuthResponseDTO(jwt, userResponseDTO);
+    }
+
+    @Override
+    @Transactional
+    public void forgotPassword(ForgotPasswordRequestDTO forgotPasswordRequestDTO) {
+        // Find user by email
+        Optional<User> userOptional = userRepository.findByEmail(forgotPasswordRequestDTO.getEmail());
+        if (userOptional.isEmpty()) {
+            // For security reasons, don't reveal if email exists or not
+            return;
+        }
+
+        User user = userOptional.get();
+
+        // Generate reset token
+        String resetToken = UUID.randomUUID().toString();
+        LocalDateTime expiresAt = LocalDateTime.now().plusHours(24); // Token expires in 24 hours
+
+        // Save token to user
+        user.setPasswordResetToken(resetToken);
+        user.setPasswordResetExpiresAt(expiresAt);
+        userRepository.save(user);
+
+        // TODO: Send email with reset link
+        // For now, just log the token (in production, send email)
+        System.out.println("Password reset token for " + user.getEmail() + ": " + resetToken);
+    }
+
+    @Override
+    @Transactional
+    public void resetPassword(ResetPasswordRequestDTO resetPasswordRequestDTO) {
+        // Find user by reset token
+        Optional<User> userOptional = userRepository.findByPasswordResetToken(resetPasswordRequestDTO.getToken());
+        if (userOptional.isEmpty()) {
+            throw new InvalidCredentialsException("Invalid or expired reset token");
+        }
+
+        User user = userOptional.get();
+
+        // Check if token is expired
+        if (user.getPasswordResetExpiresAt().isBefore(LocalDateTime.now())) {
+            throw new InvalidCredentialsException("Reset token has expired");
+        }
+
+        // Update password
+        user.setPassword(passwordEncoder.encode(resetPasswordRequestDTO.getNewPassword()));
+        user.setPasswordResetToken(null);
+        user.setPasswordResetExpiresAt(null);
+        userRepository.save(user);
+    }
+
+    @Override
+    public void logout(Long userId) {
+        // Since JWT is stateless, logout is handled client-side by removing the token
+        // In a production system with token blacklisting, we would add the token to a blacklist here
+        // For now, just return (client will remove token from storage)
     }
 }
