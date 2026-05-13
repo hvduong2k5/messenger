@@ -70,7 +70,7 @@ class CallServiceImplTest {
                 .receiver(receiver)
                 .callType(CallType.audio)
                 .status(CallStatus.ringing)
-                .createdAt(LocalDateTime.now())
+                
                 .build();
 
         when(userRepository.findById(callerId)).thenReturn(Optional.of(caller));
@@ -268,7 +268,7 @@ class CallServiceImplTest {
                 .call(call)
                 .signalType("offer")
                 .data("{\"sdp\":\"test\"}")
-                .createdAt(LocalDateTime.now())
+                
                 .build();
 
         when(callRepository.findById(callId)).thenReturn(Optional.of(call));
@@ -309,7 +309,7 @@ class CallServiceImplTest {
                 .call(call)
                 .signalType("offer")
                 .data("{\"sdp\":\"test\"}")
-                .createdAt(LocalDateTime.now())
+                
                 .build();
 
         when(callRepository.findById(callId)).thenReturn(Optional.of(call));
@@ -337,7 +337,7 @@ class CallServiceImplTest {
                 .receiver(otherUser)
                 .callType(CallType.audio)
                 .status(CallStatus.ended)
-                .createdAt(LocalDateTime.now())
+                
                 .build();
 
         Call call2 = Call.builder()
@@ -346,7 +346,7 @@ class CallServiceImplTest {
                 .receiver(user)
                 .callType(CallType.video)
                 .status(CallStatus.missed)
-                .createdAt(LocalDateTime.now())
+                
                 .build();
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
