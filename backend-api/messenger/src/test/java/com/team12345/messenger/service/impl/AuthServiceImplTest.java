@@ -1,7 +1,9 @@
 package com.team12345.messenger.service.impl;
 
+import com.team12345.messenger.dto.request.ForgotPasswordRequestDTO;
 import com.team12345.messenger.dto.request.LoginRequestDTO;
 import com.team12345.messenger.dto.request.RegisterRequestDTO;
+import com.team12345.messenger.dto.request.ResetPasswordRequestDTO;
 import com.team12345.messenger.dto.response.AuthResponseDTO;
 import com.team12345.messenger.entity.User;
 import com.team12345.messenger.exception.InvalidCredentialsException;
@@ -16,6 +18,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -194,5 +197,122 @@ class AuthServiceImplTest {
         verify(userRepository).findByUsername("testuser");
         verify(passwordEncoder).matches("password123", "encodedPassword");
         verify(jwtUtils, never()).generateTokenFromUsername(anyString());
+    }
+
+    @Test
+    void testForgotPassword_UserExists() {
+        // Arrange
+        ForgotPasswordRequestDTO request = new ForgotPasswordRequestDTO();
+        request.setEmail("test@example.com");
+
+        when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(user));
+        when(userRepository.save(any(User.class))).thenReturn(user);
+
+        // Act
+        authService.forgotPassword(request);
+
+        // Assert
+        verify(userRepository).findByEmail("test@example.com");
+        verify(userRepository).save(any(User.class));
+    }
+
+    @Test
+    void testForgotPassword_UserNotExists() {
+        // Arrange
+        ForgotPasswordRequestDTO request = new ForgotPasswordRequestDTO();
+        request.setEmail("nonexistent@example.com");
+
+        when(userRepository.findByEmail("nonexistent@example.com")).thenReturn(Optional.empty());
+
+        // Act
+        authService.forgotPassword(request);
+
+        // Assert
+        verify(userRepository).findByEmail("nonexistent@example.com");
+        verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    void testResetPassword_Success() {
+        // Arrange
+        ResetPasswordRequestDTO request = new ResetPasswordRequestDTO();
+        request.setToken("reset-token-123");
+        request.setNewPassword("newpassword123");
+
+        User userWithToken = User.builder()
+                .id(1L)
+                .username("testuser")
+                .email("test@example.com")
+                .password("oldEncodedPassword")
+                .passwordResetToken("reset-token-123")
+                .passwordResetExpiresAt(LocalDateTime.now().plusHours(1))
+                .build();
+
+        when(userRepository.findByPasswordResetToken("reset-token-123")).thenReturn(Optional.of(userWithToken));
+        when(passwordEncoder.encode("newpassword123")).thenReturn("newEncodedPassword");
+        when(userRepository.save(any(User.class))).thenReturn(userWithToken);
+
+        // Act
+        authService.resetPassword(request);
+
+        // Assert
+        verify(userRepository).findByPasswordResetToken("reset-token-123");
+        verify(passwordEncoder).encode("newpassword123");
+        verify(userRepository).save(any(User.class));
+    }
+
+    @Test
+    void testResetPassword_InvalidToken() {
+        // Arrange
+        ResetPasswordRequestDTO request = new ResetPasswordRequestDTO();
+        request.setToken("invalid-token");
+        request.setNewPassword("newpassword123");
+
+        when(userRepository.findByPasswordResetToken("invalid-token")).thenReturn(Optional.empty());
+
+        // Act & Assert
+        assertThatThrownBy(() -> authService.resetPassword(request))
+                .isInstanceOf(InvalidCredentialsException.class)
+                .hasMessage("Invalid or expired reset token");
+
+        verify(userRepository).findByPasswordResetToken("invalid-token");
+        verify(passwordEncoder, never()).encode(anyString());
+        verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    void testResetPassword_ExpiredToken() {
+        // Arrange
+        ResetPasswordRequestDTO request = new ResetPasswordRequestDTO();
+        request.setToken("expired-token");
+        request.setNewPassword("newpassword123");
+
+        User userWithExpiredToken = User.builder()
+                .id(1L)
+                .username("testuser")
+                .email("test@example.com")
+                .password("oldEncodedPassword")
+                .passwordResetToken("expired-token")
+                .passwordResetExpiresAt(LocalDateTime.now().minusHours(1))
+                .build();
+
+        when(userRepository.findByPasswordResetToken("expired-token")).thenReturn(Optional.of(userWithExpiredToken));
+
+        // Act & Assert
+        assertThatThrownBy(() -> authService.resetPassword(request))
+                .isInstanceOf(InvalidCredentialsException.class)
+                .hasMessage("Reset token has expired");
+
+        verify(userRepository).findByPasswordResetToken("expired-token");
+        verify(passwordEncoder, never()).encode(anyString());
+        verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    void testLogout() {
+        // Act
+        authService.logout(1L);
+
+        // Assert - logout is a no-op for stateless JWT, just verify no exceptions
     }
 }
