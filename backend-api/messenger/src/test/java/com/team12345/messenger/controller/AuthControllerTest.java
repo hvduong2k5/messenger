@@ -4,12 +4,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.team12345.messenger.dto.request.ForgotPasswordRequestDTO;
 import com.team12345.messenger.dto.request.ResetPasswordRequestDTO;
 import com.team12345.messenger.entity.User;
+import com.team12345.messenger.repository.UserRepository;
 import com.team12345.messenger.security.CustomUserDetails;
 import com.team12345.messenger.service.AuthService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -18,11 +19,10 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(AuthController.class)
+@SpringBootTest
 @AutoConfigureMockMvc(addFilters = false)
 class AuthControllerTest {
 
@@ -34,6 +34,9 @@ class AuthControllerTest {
 
     @MockBean
     private AuthService authService;
+
+    @MockBean
+    private UserRepository userRepository;
 
     @Test
     void forgotPassword_ShouldReturnOk() throws Exception {
