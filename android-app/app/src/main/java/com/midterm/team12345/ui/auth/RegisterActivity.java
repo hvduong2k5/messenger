@@ -100,7 +100,7 @@ public class RegisterActivity extends AppCompatActivity {
 
         boolean isValid = !name.isEmpty() && 
                           Patterns.EMAIL_ADDRESS.matcher(email).matches() && 
-                          password.length() >= 6 && 
+                          password.length() >= 8 &&
                           confirm.equals(password);
 
         binding.btnRegister.setEnabled(isValid);
