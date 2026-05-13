@@ -2,7 +2,6 @@ package com.team12345.messenger.controller;
 
 import com.team12345.messenger.dto.request.UpdateProfileRequestDTO;
 import com.team12345.messenger.dto.response.UserProfileResponseDTO;
-import com.team12345.messenger.dto.response.UserResponseDTO;
 import com.team12345.messenger.dto.response.UserSearchResponseDTO;
 import com.team12345.messenger.security.CustomUserDetails;
 import com.team12345.messenger.service.MediaService;
@@ -17,7 +16,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -59,13 +57,7 @@ public class UserController {
         return ResponseEntity.ok(userService.updateAvatar(currentUserId, avatarUrl));
     }
 
-    @Operation(summary = "Search users")
-    @GetMapping("/search")
-    public ResponseEntity<List<UserResponseDTO>> searchUsers(@RequestParam("q") String query) {
-        Long currentUserId = getCurrentUserId();
-        return ResponseEntity.ok(userService.searchUsers(query, currentUserId));
-    }
-    
+    // Keep only one mapping for /users/search
     @Operation(summary = "Search users with friendship status")
     @GetMapping("/search")
     public ResponseEntity<Page<UserSearchResponseDTO>> searchUsersV2(
