@@ -36,7 +36,7 @@ public class AuthViewModel extends ViewModel {
     }
 
     public void register(String username, String email, String password, String fullName) {
-        RegisterRequest registerRequest = new RegisterRequest(username, email, password, fullName);
+        RegisterRequest registerRequest = new RegisterRequest(username, email, password);
         authRepository.register(registerRequest).observeForever(resource -> {
             _registerState.setValue(resource);
         });
