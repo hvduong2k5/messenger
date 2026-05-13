@@ -18,7 +18,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
-@Service
+@Service("mqttMessageProcessor")
 @RequiredArgsConstructor
 @Slf4j
 public class MqttInboundMessageHandler implements MessageHandler {
@@ -58,8 +58,6 @@ public class MqttInboundMessageHandler implements MessageHandler {
             }
 
             // 3. Persistence (Save to Database)
-            // The service handles validation of whether the conversation and user actually exist,
-            // updating the conversation's updatedAt, and creating message status records.
             SaveMessageResult savedMessageResult = messageService.saveMessage(requestDTO);
 
             // 4. Forwarding & Real-time Broadcast
