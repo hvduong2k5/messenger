@@ -59,7 +59,7 @@ public class UserController {
 
     // Keep only one mapping for /users/search
     @Operation(summary = "Search users with friendship status")
-    @GetMapping("/search")
+    @GetMapping("/search/paged")
     public ResponseEntity<Page<UserSearchResponseDTO>> searchUsersV2(
             @RequestParam("q") String query,
             @RequestParam(defaultValue = "0") int page,
