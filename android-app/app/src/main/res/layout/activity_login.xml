@@ -11,7 +11,6 @@
         android:id="@+id/login_main"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingHorizontal="32dp"
         tools:context=".ui.auth.LoginActivity">
 
         <!-- Logo -->
@@ -29,42 +28,67 @@
         <!-- Input Fields Container -->
         <LinearLayout
             android:id="@+id/ll_inputs"
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_marginHorizontal="32dp"
             android:layout_marginTop="60dp"
             android:orientation="vertical"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/iv_login_logo">
 
-            <EditText
-                android:id="@+id/et_email_phone"
+            <!-- Username/Email -->
+            <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="@null"
-                android:hint="@string/hint_email_phone"
-                android:importantForAutofill="no"
-                android:inputType="textEmailAddress"
-                android:paddingVertical="14dp"
-                android:textColor="@color/black"
-                android:textColorHint="@color/gray_text"
-                android:textSize="16sp" />
+                app:boxBackgroundMode="none"
+                app:hintEnabled="false">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/et_username_email"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@null"
+                    android:hint="@string/hint_username_email"
+                    android:importantForAutofill="no"
+                    android:inputType="textEmailAddress"
+                    android:paddingVertical="14dp"
+                    android:paddingStart="0dp"
+                    android:paddingEnd="0dp"
+                    android:textColor="@color/black"
+                    android:textColorHint="@color/gray_text"
+                    android:textSize="16sp" />
+            </com.google.android.material.textfield.TextInputLayout>
 
             <View
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
                 android:background="#EEEEEE" />
 
-            <EditText
-                android:id="@+id/et_password"
+            <!-- Password with Eye Toggle -->
+            <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="@null"
-                android:hint="@string/hint_password"
-                android:importantForAutofill="no"
-                android:inputType="textPassword"
-                android:paddingVertical="14dp"
-                android:textColor="@color/black"
-                android:textColorHint="@color/gray_text"
-                android:textSize="16sp" />
+                app:boxBackgroundMode="none"
+                app:hintEnabled="false"
+                app:endIconMode="password_toggle"
+                app:endIconTint="@color/gray_text">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/et_password"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@null"
+                    android:hint="@string/hint_password"
+                    android:importantForAutofill="no"
+                    android:inputType="textPassword"
+                    android:paddingVertical="14dp"
+                    android:paddingStart="0dp"
+                    android:paddingEnd="48dp"
+                    android:textColor="@color/black"
+                    android:textColorHint="@color/gray_text"
+                    android:textSize="16sp" />
+            </com.google.android.material.textfield.TextInputLayout>
 
             <View
                 android:layout_width="match_parent"
@@ -74,10 +98,13 @@
 
         <!-- Actions Container -->
         <LinearLayout
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_marginHorizontal="32dp"
             android:layout_marginTop="40dp"
             android:orientation="vertical"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/ll_inputs">
 
             <!-- Log In Button -->
@@ -138,6 +165,5 @@
                 android:textStyle="bold" />
 
         </LinearLayout>
-
     </androidx.constraintlayout.widget.ConstraintLayout>
 </ScrollView>
