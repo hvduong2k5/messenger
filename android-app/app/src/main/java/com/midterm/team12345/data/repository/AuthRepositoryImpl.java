@@ -27,7 +27,7 @@ public class AuthRepositoryImpl implements AuthRepository {
 
     public static synchronized AuthRepositoryImpl getInstance(Application application) {
         if (instance == null) {
-            AuthApiService apiService = RetrofitClient.getRetrofitInstance().create(AuthApiService.class);
+            AuthApiService apiService = RetrofitClient.getAuthApiService();
             TokenManager tokenManager = new TokenManager(application);
             instance = new AuthRepositoryImpl(apiService, tokenManager);
         }
