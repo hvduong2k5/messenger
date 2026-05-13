@@ -62,13 +62,13 @@ public class RegisterActivity extends AppCompatActivity {
             public void afterTextChanged(Editable s) {}
         };
 
-        binding.etFullName.addTextChangedListener(watcher);
+        binding.etUsername.addTextChangedListener(watcher);
         binding.etEmail.addTextChangedListener(watcher);
         binding.etPasswordReg.addTextChangedListener(watcher);
         binding.etConfirmPassword.addTextChangedListener(watcher);
 
         binding.btnRegister.setOnClickListener(v -> {
-            String name = binding.etFullName.getText().toString().trim();
+            String name = binding.etUsername.getText().toString().trim();
             String email = binding.etEmail.getText().toString().trim();
             String password = binding.etPasswordReg.getText().toString().trim();
             viewModel.register(email, email, password, name);
@@ -93,7 +93,7 @@ public class RegisterActivity extends AppCompatActivity {
     }
 
     private void validateForm() {
-        String name = binding.etFullName.getText().toString().trim();
+        String name = binding.etUsername.getText().toString().trim();
         String email = binding.etEmail.getText().toString().trim();
         String password = binding.etPasswordReg.getText().toString().trim();
         String confirm = binding.etConfirmPassword.getText().toString().trim();
