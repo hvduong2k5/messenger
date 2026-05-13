@@ -48,6 +48,12 @@ public class User extends BaseEntity {
     @Column(nullable = false, length = 255)
     private String password;
 
+    @Size(max = 255)
+    @Column(name = "password_reset_token", length = 255)
+    private String passwordResetToken;
+
+    @Column(name = "password_reset_expires_at")
+    private LocalDateTime passwordResetExpiresAt;
     @Builder.Default
     @Column(name = "is_online", nullable = false)
     private Boolean isOnline = false;
