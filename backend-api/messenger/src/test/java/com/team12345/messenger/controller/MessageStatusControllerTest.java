@@ -95,7 +95,7 @@ public class MessageStatusControllerTest {
                 .userId(2L)
                 .username("otheruser")
                 .status("READ")
-                .updatedAt(LocalDateTime.now())
+                
                 .build();
 
         when(messageStatusService.getMessageStatuses(1L)).thenReturn(Collections.singletonList(responseDTO));
