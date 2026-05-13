@@ -2,4 +2,15 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    <color name="messenger_blue">#0084FF</color>
+    <color name="messenger_purple">#A033FF</color>
+    <color name="messenger_pink">#FF5252</color>
+
+    <color name="brand_1">#0084FF</color>
+    <color name="brand_2">#00B2FF</color>
+    <color name="brand_3">#764BA2</color>
+    <color name="brand_4">#667EEA</color>
+    <color name="brand_5">#FF5252</color>
+
+    <color name="gray_text">#8E8E8E</color>
 </resources>
