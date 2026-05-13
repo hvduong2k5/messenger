@@ -1,27 +1,37 @@
 package com.midterm.team12345.data.repository;
 
+import android.app.Application;
 import androidx.annotation.NonNull;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
-
 import com.midterm.team12345.data.dto.AuthResponse;
 import com.midterm.team12345.data.dto.LoginRequest;
 import com.midterm.team12345.data.dto.RegisterRequest;
 import com.midterm.team12345.data.local.TokenManager;
 import com.midterm.team12345.data.remote.AuthApiService;
+import com.midterm.team12345.data.remote.RetrofitClient;
 import com.midterm.team12345.util.Resource;
-
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
 public class AuthRepositoryImpl implements AuthRepository {
+    private static AuthRepositoryImpl instance;
     private final AuthApiService authApiService;
     private final TokenManager tokenManager;
 
-    public AuthRepositoryImpl(AuthApiService authApiService, TokenManager tokenManager) {
+    private AuthRepositoryImpl(AuthApiService authApiService, TokenManager tokenManager) {
         this.authApiService = authApiService;
         this.tokenManager = tokenManager;
+    }
+
+    public static synchronized AuthRepositoryImpl getInstance(Application application) {
+        if (instance == null) {
+            AuthApiService apiService = RetrofitClient.getRetrofitInstance().create(AuthApiService.class);
+            TokenManager tokenManager = new TokenManager(application);
+            instance = new AuthRepositoryImpl(apiService, tokenManager);
+        }
+        return instance;
     }
 
     @Override
@@ -37,7 +47,13 @@ public class AuthRepositoryImpl implements AuthRepository {
                     tokenManager.saveToken(authResponse.getAccessToken());
                     result.setValue(Resource.success(authResponse));
                 } else {
-                    result.setValue(Resource.error("Login failed: " + response.message(), null));
+                    String errorMsg = "Login failed";
+                    if (response.code() == 401) {
+                        errorMsg = "Incorrect email or password";
+                    } else if (response.code() == 400) {
+                        errorMsg = "Invalid request data";
+                    }
+                    result.setValue(Resource.error(errorMsg, null));
                 }
             }
 
@@ -63,13 +79,19 @@ public class AuthRepositoryImpl implements AuthRepository {
                     tokenManager.saveToken(authResponse.getAccessToken());
                     result.setValue(Resource.success(authResponse));
                 } else {
-                    result.setValue(Resource.error("Registration failed: " + response.message(), null));
+                    String errorMsg = "Registration failed";
+                    if (response.code() == 409) {
+                        errorMsg = "User already exists";
+                    } else if (response.code() == 400) {
+                        errorMsg = "Registration data is invalid";
+                    }
+                    result.setValue(Resource.error(errorMsg, null));
                 }
             }
 
             @Override
             public void onFailure(@NonNull Call<AuthResponse> call, @NonNull Throwable t) {
-                result.setValue(Resource.error("Network error: " + t.getMessage(), null));
+                result.setValue(Resource.error("Network connection error", null));
             }
         });
 
