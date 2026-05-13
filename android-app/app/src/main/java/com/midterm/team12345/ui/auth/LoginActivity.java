@@ -60,11 +60,11 @@ public class LoginActivity extends AppCompatActivity {
             public void afterTextChanged(Editable s) {}
         };
 
-        binding.etEmailPhone.addTextChangedListener(loginWatcher);
+        binding.etUsernameEmail.addTextChangedListener(loginWatcher);
         binding.etPassword.addTextChangedListener(loginWatcher);
 
         binding.btnLogin.setOnClickListener(v -> {
-            String email = binding.etEmailPhone.getText().toString().trim();
+            String email = binding.etUsernameEmail.getText().toString().trim();
             String password = binding.etPassword.getText().toString().trim();
             viewModel.login(email, password);
         });
@@ -75,7 +75,7 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     private void validateForm() {
-        String email = binding.etEmailPhone.getText().toString().trim();
+        String email = binding.etUsernameEmail.getText().toString().trim();
         String password = binding.etPassword.getText().toString().trim();
         boolean isValid = !email.isEmpty() && password.length() >= 6;
 
@@ -110,7 +110,7 @@ public class LoginActivity extends AppCompatActivity {
         binding.progressBar.setVisibility(isLoading ? View.VISIBLE : View.GONE);
         binding.btnLogin.setEnabled(!isLoading);
         binding.btnLogin.setText(isLoading ? "" : getString(R.string.btn_login));
-        binding.etEmailPhone.setEnabled(!isLoading);
+        binding.etUsernameEmail.setEnabled(!isLoading);
         binding.etPassword.setEnabled(!isLoading);
         binding.btnCreateAccount.setEnabled(!isLoading);
     }
