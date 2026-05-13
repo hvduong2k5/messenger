@@ -4,13 +4,11 @@ public class RegisterRequest {
     private String username;
     private String email;
     private String password;
-    private String fullName;
 
-    public RegisterRequest(String username, String email, String password, String fullName) {
+    public RegisterRequest(String username, String email, String password) {
         this.username = username;
         this.email = email;
         this.password = password;
-        this.fullName = fullName;
     }
 
     // Getters and Setters
@@ -22,7 +20,4 @@ public class RegisterRequest {
 
     public String getPassword() { return password; }
     public void setPassword(String password) { this.password = password; }
-
-    public String getFullName() { return fullName; }
-    public void setFullName(String fullName) { this.fullName = fullName; }
 }
