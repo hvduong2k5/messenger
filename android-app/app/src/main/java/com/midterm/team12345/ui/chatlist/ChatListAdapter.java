@@ -14,7 +14,13 @@ import com.midterm.team12345.databinding.ItemConversationBinding;
 
 public class ChatListAdapter extends ListAdapter<ConversationResponse, ChatListAdapter.ViewHolder> {
 
-    protected ChatListAdapter() {
+    public interface OnItemClickListener {
+        void onItemClick(ConversationResponse conversation);
+    }
+
+    private OnItemClickListener listener;
+
+    protected ChatListAdapter(OnItemClickListener listener) {
         super(new DiffUtil.ItemCallback<ConversationResponse>() {
             @Override
             public boolean areItemsTheSame(@NonNull ConversationResponse oldItem, @NonNull ConversationResponse newItem) {
@@ -26,6 +32,7 @@ public class ChatListAdapter extends ListAdapter<ConversationResponse, ChatListA
                 return oldItem.equals(newItem);
             }
         });
+        this.listener = listener;
     }
 
     @NonNull
@@ -38,7 +45,8 @@ public class ChatListAdapter extends ListAdapter<ConversationResponse, ChatListA
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        holder.bind(getItem(position));
+        ConversationResponse item = getItem(position);
+        holder.bind(item, listener);
     }
 
     static class ViewHolder extends RecyclerView.ViewHolder {
@@ -49,7 +57,7 @@ public class ChatListAdapter extends ListAdapter<ConversationResponse, ChatListA
             this.binding = binding;
         }
 
-        public void bind(ConversationResponse conversation) {
+        public void bind(ConversationResponse conversation, OnItemClickListener listener) {
             binding.tvConversationName.setText(conversation.getConversationName());
             binding.tvLastMessage.setText(conversation.getLastMessage());
             binding.tvTimestamp.setText(conversation.getFormattedTimestamp());
@@ -61,14 +69,17 @@ public class ChatListAdapter extends ListAdapter<ConversationResponse, ChatListA
                 binding.badgeUnreadCount.setVisibility(View.GONE);
             }
 
-            // Placeholder for Presence logic
-            // binding.ivPresenceStatus.setVisibility(conversation.isOnline() ? View.VISIBLE : View.GONE);
-
             Glide.with(binding.ivConversationAvatar.getContext())
                     .load(conversation.getAvatarUrl())
                     .placeholder(R.drawable.ic_avatar_placeholder)
                     .error(R.drawable.ic_avatar_placeholder)
                     .into(binding.ivConversationAvatar);
+
+            itemView.setOnClickListener(v -> {
+                if (listener != null) {
+                    listener.onItemClick(conversation);
+                }
+            });
         }
     }
 }
