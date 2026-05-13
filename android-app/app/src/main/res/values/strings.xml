@@ -8,7 +8,7 @@
     <string name="brand_5">5</string>
 
     <!-- Login -->
-    <string name="hint_email_phone">Phone Number or Email</string>
+    <string name="hint_username_email">Username or Email</string>
     <string name="hint_password">Password</string>
     <string name="btn_login">LOG IN</string>
     <string name="btn_create_account">CREATE NEW ACCOUNT</string>
@@ -20,7 +20,7 @@
     <string name="welcome_title">Tham gia cùng chúng tôi</string>
     <string name="subtitle_sign_up">Get chatting with friends and family today by signing up for our chat app!</string>
 
-    <string name="label_your_name">Your name</string>
+    <string name="label_username">Username</string>
     <string name="label_your_email">Your email</string>
     <string name="label_password">Password</string>
     <string name="label_confirm_password">Confirm Password</string>
