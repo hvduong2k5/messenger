@@ -13,3 +13,6 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+# Allow gradle.properties even if root ignores *.properties
+!gradle.properties
