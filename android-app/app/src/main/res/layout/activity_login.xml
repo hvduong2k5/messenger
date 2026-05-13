@@ -75,21 +75,36 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/et_password" />
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btn_login"
+        <!-- Container cho nút Login và Progress -->
+        <FrameLayout
+            android:id="@+id/fl_login_container"
             android:layout_width="0dp"
-            android:layout_height="56dp"
+            android:layout_height="wrap_content"
             android:layout_marginTop="40dp"
-            android:text="@string/btn_login"
-            android:textColor="#C0C0C0"
-            android:textSize="14sp"
-            android:textStyle="bold"
-            app:backgroundTint="#F0F2F5"
-            app:cornerRadius="28dp"
-            app:elevation="0dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/view_line2" />
+            app:layout_constraintTop_toBottomOf="@id/view_line2">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_login"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:text="@string/btn_login"
+                android:textColor="#C0C0C0"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                app:backgroundTint="#F0F2F5"
+                app:cornerRadius="28dp"
+                app:elevation="0dp" />
+
+            <ProgressBar
+                android:id="@+id/progress_bar"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:layout_gravity="center"
+                android:visibility="gone"
+                android:indeterminateTint="@color/messenger_blue" />
+        </FrameLayout>
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_create_account"
@@ -105,7 +120,7 @@
             app:elevation="0dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/btn_login" />
+            app:layout_constraintTop_toBottomOf="@id/fl_login_container" />
 
         <TextView
             android:id="@+id/tv_forgot_password"
