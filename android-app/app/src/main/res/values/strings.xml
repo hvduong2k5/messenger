@@ -1,3 +1,9 @@
 <resources>
     <string name="app_name">team12345</string>
+    <string name="from">from</string>
+    <string name="brand_1">1</string>
+    <string name="brand_2">2</string>
+    <string name="brand_3">3</string>
+    <string name="brand_4">4</string>
+    <string name="brand_5">5</string>
 </resources>
