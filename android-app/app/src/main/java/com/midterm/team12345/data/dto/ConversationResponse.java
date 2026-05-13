@@ -1,12 +1,13 @@
 package com.midterm.team12345.data.dto;
 
+import java.io.Serializable;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.List;
 
-public class ConversationResponse {
+public class ConversationResponse implements Serializable {
     private Long conversationId;
     private String conversationName;
     private String lastMessage;
@@ -15,9 +16,10 @@ public class ConversationResponse {
     private Integer unreadCount;
     private Boolean isDeleted;
     private Boolean isEdited;
+    private Boolean isGroup;
     private List<Object> attachments;
 
-    public ConversationResponse(Long conversationId, String conversationName, String lastMessage, String avatarUrl, Long updatedAt, Integer unreadCount, Boolean isDeleted, Boolean isEdited) {
+    public ConversationResponse(Long conversationId, String conversationName, String lastMessage, String avatarUrl, Long updatedAt, Integer unreadCount, Boolean isDeleted, Boolean isEdited, Boolean isGroup) {
         this.conversationId = conversationId;
         this.conversationName = conversationName;
         this.lastMessage = lastMessage;
@@ -26,6 +28,7 @@ public class ConversationResponse {
         this.unreadCount = unreadCount;
         this.isDeleted = isDeleted;
         this.isEdited = isEdited;
+        this.isGroup = isGroup;
     }
 
     public Long getConversationId() {
@@ -58,6 +61,10 @@ public class ConversationResponse {
 
     public Boolean getEdited() {
         return isEdited;
+    }
+
+    public Boolean getGroup() {
+        return isGroup != null && isGroup;
     }
 
     public List<Object> getAttachments() { return attachments; }
