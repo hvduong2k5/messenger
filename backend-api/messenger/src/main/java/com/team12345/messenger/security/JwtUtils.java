@@ -52,6 +52,15 @@ public class JwtUtils {
                 .getSubject();
     }
 
+    public Date getExpirationDateFromJwtToken(String token) {
+        return Jwts.parserBuilder()
+                .setSigningKey(getSigningKey())
+                .build()
+                .parseClaimsJws(token)
+                .getBody()
+                .getExpiration();
+    }
+
     public boolean validateJwtToken(String authToken) {
         try {
             Jwts.parserBuilder()
