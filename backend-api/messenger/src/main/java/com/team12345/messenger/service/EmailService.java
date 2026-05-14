@@ -11,11 +11,11 @@ public class EmailService {
 
     private final JavaMailSender mailSender;
 
-    public void sendPasswordResetEmail(String to, String resetToken) {
+    public void sendPasswordResetEmail(String to, String otp) {
         SimpleMailMessage message = new SimpleMailMessage();
         message.setTo(to);
-        message.setSubject("Password Reset Request");
-        message.setText("Click the link to reset your password: http://localhost:8080/auth/reset-password?token=" + resetToken);
+        message.setSubject("Password Reset OTP");
+        message.setText("OTP to reset your password: " + otp);
         mailSender.send(message);
     }
 }
