@@ -5,20 +5,29 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 
+import com.bumptech.glide.Glide;
+import com.midterm.team12345.R;
 import com.midterm.team12345.data.local.TokenManager;
+import com.midterm.team12345.data.repository.ChatRepositoryImpl;
 import com.midterm.team12345.databinding.FragmentSettingsBinding;
 import com.midterm.team12345.databinding.ItemSettingsRowMainBinding;
 import com.midterm.team12345.ui.auth.LoginActivity;
+import com.midterm.team12345.ui.chatlist.ChatListViewModel;
+import com.midterm.team12345.ui.chatlist.ChatListViewModelFactory;
+import com.midterm.team12345.util.Resource;
 
 public class SettingsFragment extends Fragment {
 
     private FragmentSettingsBinding binding;
     private TokenManager tokenManager;
+    private ChatListViewModel viewModel;
 
     @Nullable
     @Override
@@ -31,13 +40,33 @@ public class SettingsFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         tokenManager = new TokenManager(requireContext());
+        
+        ChatListViewModelFactory factory = new ChatListViewModelFactory(ChatRepositoryImpl.getInstance(requireActivity().getApplication()));
+        viewModel = new ViewModelProvider(this, factory).get(ChatListViewModel.class);
 
         setupUI();
+        observeViewModel();
+        viewModel.fetchMyProfile();
+    }
+
+    private void observeViewModel() {
+        viewModel.profileState.observe(getViewLifecycleOwner(), resource -> {
+            if (resource == null) return;
+            
+            if (resource.status == Resource.Status.SUCCESS && resource.data != null) {
+                binding.tvUserName.setText(resource.data.getUsername());
+                Glide.with(this)
+                        .load(resource.data.getAvatarUrl())
+                        .placeholder(R.drawable.ic_avatar_placeholder)
+                        .error(R.drawable.ic_avatar_placeholder)
+                        .into(binding.ivUserAvatar);
+            } else if (resource.status == Resource.Status.ERROR) {
+                Toast.makeText(requireContext(), resource.message, Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     private void setupUI() {
-        binding.tvUserName.setText(tokenManager.getUsername() != null ? tokenManager.getUsername() : "Jacob West");
-
         // Dark Mode
         setupRow(binding.itemDarkMode, "Dark Mode", null, android.R.drawable.ic_menu_month, true);
         
