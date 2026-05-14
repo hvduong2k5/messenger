@@ -1,6 +1,5 @@
 package com.midterm.team12345.data.dto;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 public class MessageResponseDTO {
@@ -12,7 +11,7 @@ public class MessageResponseDTO {
     private String content;
     private String type;
     private String status;
-    private LocalDateTime createdAt;
+    private String createdAt; // Đổi từ LocalDateTime sang String
     private Boolean isDeleted;
     private Boolean isEdited;
     private List<Object> attachments;
@@ -25,7 +24,7 @@ public class MessageResponseDTO {
     public String getContent() { return content; }
     public String getType() { return type; }
     public String getStatus() { return status; }
-    public LocalDateTime getCreatedAt() { return createdAt; }
+    public String getCreatedAt() { return createdAt; }
     public Boolean getIsDeleted() { return isDeleted; }
     public Boolean getIsEdited() { return isEdited; }
     public List<Object> getAttachments() { return attachments; }
