@@ -96,7 +96,10 @@ public class LoginActivity extends AppCompatActivity {
             } else if (resource.status == Resource.Status.SUCCESS) {
                 setLoadingState(false);
                 Toast.makeText(this, "Login successful!", Toast.LENGTH_SHORT).show();
-                startActivity(new Intent(this, MainActivity.class));
+                
+                Intent intent = new Intent(this, MainActivity.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                startActivity(intent);
                 finish();
             } else if (resource.status == Resource.Status.ERROR) {
                 setLoadingState(false);
