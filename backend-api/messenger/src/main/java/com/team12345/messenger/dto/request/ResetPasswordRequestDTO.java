@@ -7,8 +7,8 @@ import lombok.Data;
 @Data
 public class ResetPasswordRequestDTO {
 
-    @NotBlank(message = "Token is required")
-    private String token;
+    @NotBlank(message = "OTP is required")
+    private String otp;
 
     @NotBlank(message = "New password is required")
     @Size(min = 6, message = "Password must be at least 6 characters")
