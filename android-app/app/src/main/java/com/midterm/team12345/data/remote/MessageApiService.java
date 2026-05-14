@@ -1,10 +1,8 @@
 package com.midterm.team12345.data.remote;
 
-import com.midterm.team12345.data.dto.MessageRequestDTO;
-import com.midterm.team12345.data.dto.MessageResponseDTO;
-import com.midterm.team12345.data.dto.PageResponse;
-
-import java.util.List;
+import com.midterm.team12345.data.dto.request.MessageRequestDTO;
+import com.midterm.team12345.data.dto.response.MessageResponseDTO;
+import com.midterm.team12345.data.dto.response.PageResponse;
 
 import retrofit2.Call;
 import retrofit2.http.Body;

@@ -4,9 +4,9 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
-import com.midterm.team12345.data.dto.AuthResponse;
-import com.midterm.team12345.data.dto.LoginRequest;
-import com.midterm.team12345.data.dto.RegisterRequest;
+import com.midterm.team12345.data.dto.response.AuthResponse;
+import com.midterm.team12345.data.dto.request.LoginRequest;
+import com.midterm.team12345.data.dto.request.RegisterRequest;
 import com.midterm.team12345.data.repository.AuthRepository;
 import com.midterm.team12345.util.Resource;
 

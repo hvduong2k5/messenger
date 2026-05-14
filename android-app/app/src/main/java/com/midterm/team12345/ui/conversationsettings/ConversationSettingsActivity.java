@@ -12,7 +12,7 @@ import androidx.lifecycle.ViewModelProvider;
 import com.bumptech.glide.Glide;
 import com.midterm.team12345.MainActivity;
 import com.midterm.team12345.R;
-import com.midterm.team12345.data.dto.ConversationResponse;
+import com.midterm.team12345.data.dto.response.ConversationResponse;
 import com.midterm.team12345.databinding.ActivityConversationSettingsBinding;
 import com.midterm.team12345.util.Resource;
 

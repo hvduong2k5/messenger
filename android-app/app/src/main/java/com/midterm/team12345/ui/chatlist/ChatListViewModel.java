@@ -3,10 +3,10 @@ package com.midterm.team12345.ui.chatlist;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
-import com.midterm.team12345.data.dto.ConversationResponse;
+import com.midterm.team12345.data.dto.response.ConversationResponse;
 import com.midterm.team12345.data.dto.MqttEventType;
 import com.midterm.team12345.data.dto.MqttMessageDTO;
-import com.midterm.team12345.data.dto.UserProfileResponseDTO;
+import com.midterm.team12345.data.dto.response.UserProfileResponseDTO;
 import com.midterm.team12345.data.repository.ChatRepository;
 import com.midterm.team12345.util.Resource;
 

@@ -1,4 +1,4 @@
-package com.midterm.team12345.data.dto;
+package com.midterm.team12345.data.dto.response;
 
 import java.util.List;
 
