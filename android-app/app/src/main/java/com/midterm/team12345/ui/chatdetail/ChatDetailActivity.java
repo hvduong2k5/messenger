@@ -14,7 +14,7 @@ public class ChatDetailActivity extends AppCompatActivity {
     private ActivityChatDetailBinding binding;
     private ChatDetailViewModel viewModel;
     private MessageAdapter adapter;
-    private Long currentUserId = 1L; // Fallback ID
+    private Long currentUserId = -1L; // Sẽ được cập nhật từ profile
     private Long conversationId;
 
     @Override
@@ -27,8 +27,11 @@ public class ChatDetailActivity extends AppCompatActivity {
         String partnerName = getIntent().getStringExtra("PARTNER_NAME");
 
         setupViewModel();
-        setupUI(partnerName);
         setupObservers();
+        
+        // Lấy profile của tôi trước để biết currentUserId là ai
+        viewModel.fetchMyProfile();
+        setupUI(partnerName);
         
         viewModel.loadMessages(conversationId);
     }
@@ -36,6 +39,7 @@ public class ChatDetailActivity extends AppCompatActivity {
     private void setupUI(String partnerName) {
         binding.tvPartnerName.setText(partnerName);
         
+        // Khởi tạo adapter với ID tạm thời, sẽ update sau khi có profile
         adapter = new MessageAdapter(currentUserId);
         binding.rvMessages.setAdapter(adapter);
 
@@ -43,9 +47,11 @@ public class ChatDetailActivity extends AppCompatActivity {
         
         binding.btnSend.setOnClickListener(v -> {
             String text = binding.etMessage.getText().toString();
-            if (!text.isEmpty()) {
+            if (!text.isEmpty() && currentUserId != -1L) {
                 viewModel.sendMessage(text, conversationId, currentUserId);
                 binding.etMessage.setText("");
+            } else if (currentUserId == -1L) {
+                Toast.makeText(this, "Đang tải thông tin người dùng...", Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -56,6 +62,18 @@ public class ChatDetailActivity extends AppCompatActivity {
     }
 
     private void setupObservers() {
+        // Observe profile để lấy currentUserId
+        viewModel.profileState.observe(this, resource -> {
+            if (resource != null && resource.status == Resource.Status.SUCCESS && resource.data != null) {
+                currentUserId = resource.data.getId();
+                // Cập nhật lại ID cho adapter
+                if (adapter != null) {
+                    adapter.setCurrentUserId(currentUserId);
+                    adapter.notifyDataSetChanged();
+                }
+            }
+        });
+
         viewModel.messageState.observe(this, resource -> {
             if (resource == null) return;
             
