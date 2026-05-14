@@ -9,6 +9,7 @@ import com.team12345.messenger.security.CustomUserDetails;
 import com.team12345.messenger.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -53,8 +54,17 @@ public class AuthController {
 
     @Operation(summary = "Đăng xuất", description = "Đăng xuất người dùng hiện tại")
     @PostMapping("/logout")
-    public ResponseEntity<Void> logout(@AuthenticationPrincipal CustomUserDetails userDetails) {
-        authService.logout(userDetails.getId());
+    public ResponseEntity<Void> logout(@AuthenticationPrincipal CustomUserDetails userDetails, HttpServletRequest request) {
+        String token = extractToken(request);
+        authService.logout(userDetails.getId(), token);
         return ResponseEntity.ok().build();
+    }
+
+    private String extractToken(HttpServletRequest request) {
+        String headerAuth = request.getHeader("Authorization");
+        if (headerAuth != null && headerAuth.startsWith("Bearer ")) {
+            return headerAuth.substring(7);
+        }
+        return null;
     }
 }
