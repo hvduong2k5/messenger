@@ -9,27 +9,24 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 import android.os.IBinder;
-import android.util.Log;
 
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
-import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
-import com.google.gson.Gson;
 import com.midterm.team12345.MainActivity;
 import com.midterm.team12345.R;
+import com.midterm.team12345.data.dto.MqttEventType;
 import com.midterm.team12345.data.dto.MqttMessageDTO;
 import com.midterm.team12345.data.local.TokenManager;
+import com.midterm.team12345.data.repository.ChatRepositoryImpl;
 
 public class MessagingService extends Service {
     private static final String TAG = "MessagingService";
     private static final String CHANNEL_ID = "MessagingServiceChannel";
-    public static final String ACTION_NEW_MESSAGE = "com.midterm.team12345.NEW_MESSAGE";
-    public static final String EXTRA_MESSAGE = "extra_message";
+    public static final String EXTRA_USERNAME = "extra_username";
 
     private MqttManager mqttManager;
     private TokenManager tokenManager;
-    private final Gson gson = new Gson();
 
     @Override
     public void onCreate() {
@@ -41,7 +38,9 @@ public class MessagingService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        String username = intent != null ? intent.getStringExtra("username") : null;
+        String username = intent != null ? intent.getStringExtra(EXTRA_USERNAME) : null;
+        if (username == null) username = tokenManager.getUsername();
+        
         String token = tokenManager.getToken();
 
         if (username != null && token != null) {
@@ -55,44 +54,45 @@ public class MessagingService extends Service {
     }
 
     private void connectMqtt(String username, String token) {
-        String brokerUrl = "tcp://10.0.2.2:1883"; // Change as needed
+        String brokerUrl = "tcp://10.0.2.2:1883";
         String clientId = "android_" + username + "_" + System.currentTimeMillis();
 
         mqttManager.init(this, brokerUrl, clientId, username, token, new MqttManager.MqttCallback() {
             @Override
             public void onMessageReceived(MqttMessageDTO message) {
-                broadcastMessage(message);
-                showPushNotification(message);
+                // Dispatch message to Repository Singleton
+                ChatRepositoryImpl.getInstance().emitRealTimeMessage(message);
+                
+                // Show notification if it's a new message
+                if (MqttEventType.NEW_MESSAGE.name().equals(message.getType())) {
+                    showPushNotification(message);
+                }
             }
 
             @Override
             public void onConnectionLost(Throwable cause) {
                 updateNotification("Connection lost. Retrying...");
+                ChatRepositoryImpl.getInstance().updateConnectionStatus(false);
             }
 
             @Override
             public void onConnectComplete(boolean reconnect, String serverURI) {
                 updateNotification("Connected to Messenger");
+                ChatRepositoryImpl.getInstance().updateConnectionStatus(true);
                 mqttManager.subscribe("users/" + username + "/receive");
                 mqttManager.subscribe("users/" + username + "/presence");
             }
         });
     }
 
-    private void broadcastMessage(MqttMessageDTO message) {
-        Intent intent = new Intent(ACTION_NEW_MESSAGE);
-        intent.putExtra(EXTRA_MESSAGE, gson.toJson(message));
-        LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
-    }
-
     private void showPushNotification(MqttMessageDTO message) {
-        // Only show if not in background or logic to check if ChatDetail is open
         NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setContentTitle(message.getSender())
                 .setContentText(message.getPayload())
                 .setSmallIcon(R.drawable.ic_messenger_logo)
                 .setAutoCancel(true)
+                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
                 .build();
         notificationManager.notify((int) System.currentTimeMillis(), notification);
     }
@@ -105,7 +105,9 @@ public class MessagingService extends Service {
                     NotificationManager.IMPORTANCE_LOW
             );
             NotificationManager manager = getSystemService(NotificationManager.class);
-            manager.createNotificationChannel(serviceChannel);
+            if (manager != null) {
+                manager.createNotificationChannel(serviceChannel);
+            }
         }
     }
 
@@ -124,11 +126,14 @@ public class MessagingService extends Service {
 
     private void updateNotification(String text) {
         NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-        notificationManager.notify(1, getNotification(text));
+        if (notificationManager != null) {
+            notificationManager.notify(1, getNotification(text));
+        }
     }
 
     @Override
     public void onDestroy() {
+        ChatRepositoryImpl.getInstance().updateConnectionStatus(false);
         mqttManager.disconnect();
         super.onDestroy();
     }
