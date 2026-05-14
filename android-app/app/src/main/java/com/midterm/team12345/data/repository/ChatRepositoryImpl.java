@@ -13,6 +13,7 @@ import com.midterm.team12345.data.dto.MessageResponse;
 import com.midterm.team12345.data.dto.MessageResponseDTO;
 import com.midterm.team12345.data.dto.MqttMessageDTO;
 import com.midterm.team12345.data.dto.UserDTO;
+import com.midterm.team12345.data.dto.UserProfileResponseDTO;
 import com.midterm.team12345.data.remote.ConversationApiService;
 import com.midterm.team12345.data.remote.MessageApiService;
 import com.midterm.team12345.data.remote.RetrofitClient;
@@ -80,7 +81,6 @@ public class ChatRepositoryImpl implements ChatRepository {
 
             @Override
             public void onFailure(@NonNull Call<List<ConversationResponseDTO>> call, @NonNull Throwable t) {
-                // Xử lý lỗi parse JSON khi server trả về object thay vì array lúc trống
                 if (t.getMessage() != null && t.getMessage().contains("BEGIN_ARRAY but was BEGIN_OBJECT")) {
                     data.setValue(Resource.success(new ArrayList<>()));
                 } else {
@@ -214,6 +214,30 @@ public class ChatRepositoryImpl implements ChatRepository {
         });
 
         return data;
+    }
+
+    @Override
+    public LiveData<Resource<UserProfileResponseDTO>> getMyProfile() {
+        MutableLiveData<Resource<UserProfileResponseDTO>> result = new MutableLiveData<>();
+        result.setValue(Resource.loading(null));
+
+        userApiService.getMyProfile().enqueue(new Callback<UserProfileResponseDTO>() {
+            @Override
+            public void onResponse(@NonNull Call<UserProfileResponseDTO> call, @NonNull Response<UserProfileResponseDTO> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    result.setValue(Resource.success(response.body()));
+                } else {
+                    result.setValue(Resource.error("Failed to fetch profile", null));
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<UserProfileResponseDTO> call, @NonNull Throwable t) {
+                result.setValue(Resource.error("Network error: " + t.getMessage(), null));
+            }
+        });
+
+        return result;
     }
 
     private MessageResponse mapMessageToDomain(MessageResponseDTO dto) {
