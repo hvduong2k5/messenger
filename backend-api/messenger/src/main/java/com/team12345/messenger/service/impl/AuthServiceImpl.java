@@ -77,21 +77,18 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public AuthResponseDTO login(LoginRequestDTO loginRequestDTO) {
-        // Find user by username or email
-        Optional<User> userOptional = userRepository.findByUsername(loginRequestDTO.getUsernameOrEmail());
-        if (userOptional.isEmpty()) {
-            userOptional = userRepository.findByEmail(loginRequestDTO.getUsernameOrEmail());
-        }
+        // Find user by email only
+        Optional<User> userOptional = userRepository.findByEmail(loginRequestDTO.getEmail());
 
         if (userOptional.isEmpty()) {
-            throw new InvalidCredentialsException("Invalid username/email or password");
+            throw new InvalidCredentialsException("Invalid email or password");
         }
 
         User user = userOptional.get();
 
         // Verify password
         if (!passwordEncoder.matches(loginRequestDTO.getPassword(), user.getPassword())) {
-            throw new InvalidCredentialsException("Invalid username/email or password");
+            throw new InvalidCredentialsException("Invalid email or password");
         }
 
         // Generate JWT token
