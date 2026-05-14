@@ -40,10 +40,10 @@ public class ChatDetailActivity extends AppCompatActivity {
         binding.btnBack.setOnClickListener(v -> finish());
         
         binding.btnSend.setOnClickListener(v -> {
-            String text = binding.et_message.getText().toString();
+            String text = binding.etMessage.getText().toString();
             if (!text.isEmpty()) {
                 viewModel.sendMessage(text, currentUserId);
-                binding.et_message.setText("");
+                binding.etMessage.setText("");
             }
         });
     }
