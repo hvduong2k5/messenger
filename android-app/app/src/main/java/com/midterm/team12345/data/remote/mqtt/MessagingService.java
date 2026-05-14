@@ -61,7 +61,7 @@ public class MessagingService extends Service {
             @Override
             public void onMessageReceived(MqttMessageDTO message) {
                 // Dispatch message to Repository Singleton
-                ChatRepositoryImpl.getInstance().emitRealTimeMessage(message);
+                ChatRepositoryImpl.getInstance(getApplication()).emitRealTimeMessage(message);
                 
                 // Show notification if it's a new message
                 if (MqttEventType.NEW_MESSAGE.name().equals(message.getType())) {
@@ -72,13 +72,13 @@ public class MessagingService extends Service {
             @Override
             public void onConnectionLost(Throwable cause) {
                 updateNotification("Connection lost. Retrying...");
-                ChatRepositoryImpl.getInstance().updateConnectionStatus(false);
+                ChatRepositoryImpl.getInstance(getApplication()).updateConnectionStatus(false);
             }
 
             @Override
             public void onConnectComplete(boolean reconnect, String serverURI) {
                 updateNotification("Connected to Messenger");
-                ChatRepositoryImpl.getInstance().updateConnectionStatus(true);
+                ChatRepositoryImpl.getInstance(getApplication()).updateConnectionStatus(true);
                 mqttManager.subscribe("users/" + username + "/receive");
                 mqttManager.subscribe("users/" + username + "/presence");
             }
@@ -133,7 +133,7 @@ public class MessagingService extends Service {
 
     @Override
     public void onDestroy() {
-        ChatRepositoryImpl.getInstance().updateConnectionStatus(false);
+        ChatRepositoryImpl.getInstance(getApplication()).updateConnectionStatus(false);
         mqttManager.disconnect();
         super.onDestroy();
     }
