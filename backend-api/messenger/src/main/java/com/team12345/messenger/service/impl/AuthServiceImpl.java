@@ -40,6 +40,11 @@ public class AuthServiceImpl implements AuthService {
     @Transactional
     public AuthResponseDTO register(RegisterRequestDTO registerRequestDTO) {
         // Check if email already exists
+        if (userRepository.existsByUsername(registerRequestDTO.getUsername())) {
+            throw new UserAlreadyExistsException("Name is already registered: " + registerRequestDTO.getUsername());
+        }
+
+        // Check if email already exists
         if (userRepository.existsByEmail(registerRequestDTO.getEmail())) {
             throw new UserAlreadyExistsException("Email is already registered: " + registerRequestDTO.getEmail());
         }
