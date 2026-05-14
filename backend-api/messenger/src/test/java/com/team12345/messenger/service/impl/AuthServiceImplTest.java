@@ -311,7 +311,7 @@ class AuthServiceImplTest {
     @Test
     void testLogout() {
         // Act
-        authService.logout(1L);
+        authService.logout(1L, "");
 
         // Assert - logout is a no-op for stateless JWT, just verify no exceptions
     }
