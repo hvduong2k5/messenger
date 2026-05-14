@@ -3,20 +3,20 @@ package com.midterm.team12345.ui.chatdetail;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
+import com.midterm.team12345.data.dto.MessageRequestDTO;
 import com.midterm.team12345.data.dto.MessageResponse;
 import com.midterm.team12345.data.dto.MqttMessageDTO;
 import com.midterm.team12345.data.repository.ChatRepository;
 import com.midterm.team12345.util.Resource;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 public class ChatDetailViewModel extends ViewModel {
 
     private final ChatRepository repository;
     private final MutableLiveData<Resource<List<MessageResponse>>> _messageState = new MutableLiveData<>();
     public final LiveData<Resource<List<MessageResponse>>> messageState = _messageState;
-
-    private final List<MessageResponse> messages = new ArrayList<>();
 
     public ChatDetailViewModel(ChatRepository repository) {
         this.repository = repository;
@@ -26,42 +26,55 @@ public class ChatDetailViewModel extends ViewModel {
     private void observeRealTimeMessages() {
         repository.getRealTimeMessages().observeForever(mqttMessage -> {
             if (mqttMessage != null && "NEW_MESSAGE".equals(mqttMessage.getType())) {
-                MessageResponse newMessage = new MessageResponse(
-                        System.currentTimeMillis(), // Mock ID
-                        Long.parseLong(mqttMessage.getSender()), // Assuming sender is ID
-                        mqttMessage.getPayload(),
-                        System.currentTimeMillis()
-                );
-                messages.add(newMessage);
-                _messageState.setValue(Resource.success(new ArrayList<>(messages)));
+                Resource<List<MessageResponse>> currentState = _messageState.getValue();
+                List<MessageResponse> currentMessages = new ArrayList<>();
+                if (currentState != null && currentState.data != null) {
+                    currentMessages.addAll(currentState.data);
+                }
+                
+                // Tránh thêm tin nhắn trùng lặp nếu nó đã được thêm qua API callback
+                boolean exists = currentMessages.stream()
+                        .anyMatch(m -> mqttMessage.getPayload().equals(m.getContent()) && 
+                                     Math.abs(System.currentTimeMillis() - m.getCreatedAt()) < 2000);
+                
+                if (!exists) {
+                    MessageResponse newMessage = new MessageResponse(
+                            System.currentTimeMillis(), // Temporary ID
+                            Long.parseLong(mqttMessage.getSender()),
+                            mqttMessage.getPayload(),
+                            System.currentTimeMillis()
+                    );
+                    currentMessages.add(newMessage);
+                    _messageState.setValue(Resource.success(currentMessages));
+                }
             }
         });
     }
 
     public void loadMessages(Long conversationId) {
         _messageState.setValue(Resource.loading(null));
-        
-        // Mock data
-        messages.clear();
-        messages.add(new MessageResponse(1L, 100L, "Hello, Jacob!", System.currentTimeMillis() - 10000));
-        messages.add(new MessageResponse(2L, 100L, "How are you doing?", System.currentTimeMillis() - 5000));
-        messages.add(new MessageResponse(3L, 1L, "I'm doing great! How about you?", System.currentTimeMillis()));
-
-        _messageState.setValue(Resource.success(new ArrayList<>(messages)));
+        repository.getMessages(conversationId).observeForever(resource -> {
+            _messageState.setValue(resource);
+        });
     }
 
-    public void sendMessage(String text, Long senderId) {
+    public void sendMessage(String text, Long conversationId, Long senderId) {
         if (text == null || text.trim().isEmpty()) return;
-
-        MessageResponse newMessage = new MessageResponse(
-                (long) (messages.size() + 1),
-                senderId,
-                text,
-                System.currentTimeMillis()
-        );
-        messages.add(newMessage);
-        _messageState.setValue(Resource.success(new ArrayList<>(messages)));
         
-        // In a real app, you'd also publish via MqttManager or an API call
+        String clientMsgId = UUID.randomUUID().toString();
+        MessageRequestDTO request = new MessageRequestDTO(senderId, conversationId, text, clientMsgId);
+        
+        repository.sendMessage(request).observeForever(resource -> {
+            if (resource.status == Resource.Status.SUCCESS && resource.data != null) {
+                // Cập nhật UI với tin nhắn mới từ server
+                Resource<List<MessageResponse>> currentState = _messageState.getValue();
+                List<MessageResponse> currentMessages = new ArrayList<>();
+                if (currentState != null && currentState.data != null) {
+                    currentMessages.addAll(currentState.data);
+                }
+                currentMessages.add(resource.data);
+                _messageState.setValue(Resource.success(currentMessages));
+            }
+        });
     }
 }
