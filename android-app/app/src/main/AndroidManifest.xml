@@ -3,6 +3,11 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <application
         android:allowBackup="true"
@@ -43,6 +48,20 @@
             android:name=".ui.chatdetail.ChatDetailActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
+
+        <activity
+            android:name=".ui.creategroup.CreateGroupActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.conversationsettings.ConversationSettingsActivity"
+            android:exported="false" />
+
+        <service
+            android:name=".data.remote.mqtt.MessagingService"
+            android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="dataSync" />
 
     </application>
 
