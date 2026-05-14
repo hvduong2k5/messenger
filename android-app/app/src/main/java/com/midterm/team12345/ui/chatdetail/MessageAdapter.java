@@ -17,7 +17,7 @@ public class MessageAdapter extends ListAdapter<MessageResponse, RecyclerView.Vi
 
     private static final int TYPE_SENT = 1;
     private static final int TYPE_RECEIVED = 2;
-    private final Long currentUserId;
+    private Long currentUserId;
 
     public MessageAdapter(Long currentUserId) {
         super(new DiffUtil.ItemCallback<MessageResponse>() {
@@ -31,6 +31,10 @@ public class MessageAdapter extends ListAdapter<MessageResponse, RecyclerView.Vi
                 return oldItem.equals(newItem);
             }
         });
+        this.currentUserId = currentUserId;
+    }
+
+    public void setCurrentUserId(Long currentUserId) {
         this.currentUserId = currentUserId;
     }
 
@@ -106,6 +110,7 @@ public class MessageAdapter extends ListAdapter<MessageResponse, RecyclerView.Vi
             Glide.with(binding.ivAvatar.getContext())
                     .load(message.getSenderAvatarUrl())
                     .placeholder(R.drawable.ic_avatar_placeholder)
+                    .error(R.drawable.ic_avatar_placeholder)
                     .into(binding.ivAvatar);
         }
     }
