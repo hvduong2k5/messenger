@@ -19,4 +19,3 @@ public class UserSearchResponseDTO {
     private Boolean isOnline;
     private LocalDateTime lastSeen;
 }
-
