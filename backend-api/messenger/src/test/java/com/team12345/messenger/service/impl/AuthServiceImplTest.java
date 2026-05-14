@@ -222,7 +222,7 @@ class AuthServiceImplTest {
     void testResetPassword_Success() {
         // Arrange
         ResetPasswordRequestDTO request = new ResetPasswordRequestDTO();
-        request.setToken("reset-token-123");
+        request.setOtp("reset-token-123");
         request.setNewPassword("newpassword123");
 
         User userWithToken = User.builder()
@@ -230,7 +230,7 @@ class AuthServiceImplTest {
                 .username("testuser")
                 .email("test@example.com")
                 .password("oldEncodedPassword")
-                .passwordResetToken("reset-token-123")
+                .password("reset-token-123")
                 .passwordResetExpiresAt(LocalDateTime.now().plusHours(1))
                 .build();
 
