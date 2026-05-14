@@ -12,6 +12,7 @@ import java.security.GeneralSecurityException;
 public class TokenManager {
     private static final String PREF_NAME = "auth_prefs";
     private static final String KEY_ACCESS_TOKEN = "access_token";
+    private static final String KEY_USERNAME = "username";
     private SharedPreferences sharedPreferences;
 
     public TokenManager(Context context) {
@@ -39,9 +40,19 @@ public class TokenManager {
         return sharedPreferences != null ? sharedPreferences.getString(KEY_ACCESS_TOKEN, null) : null;
     }
 
-    public void clearToken() {
+    public void saveUsername(String username) {
         if (sharedPreferences != null) {
-            sharedPreferences.edit().remove(KEY_ACCESS_TOKEN).apply();
+            sharedPreferences.edit().putString(KEY_USERNAME, username).apply();
+        }
+    }
+
+    public String getUsername() {
+        return sharedPreferences != null ? sharedPreferences.getString(KEY_USERNAME, null) : null;
+    }
+
+    public void clear() {
+        if (sharedPreferences != null) {
+            sharedPreferences.edit().clear().apply();
         }
     }
 }
