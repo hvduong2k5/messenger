@@ -79,7 +79,7 @@ class AuthControllerTest {
             new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities())
         );
 
-        doNothing().when(authService).logout(1L);
+        doNothing().when(authService).logout(1L, "");
 
         mockMvc.perform(post("/auth/logout"))
                 .andExpect(status().isOk());
