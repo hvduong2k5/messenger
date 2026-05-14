@@ -24,7 +24,6 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
 import java.util.Optional;
-import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -39,9 +38,9 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional
     public AuthResponseDTO register(RegisterRequestDTO registerRequestDTO) {
-        // Check if email already exists
+        // Check if username already exists
         if (userRepository.existsByUsername(registerRequestDTO.getUsername())) {
-            throw new UserAlreadyExistsException("Name is already registered: " + registerRequestDTO.getUsername());
+            throw new UserAlreadyExistsException("Username is already registered: " + registerRequestDTO.getUsername());
         }
 
         // Check if email already exists
@@ -120,39 +119,40 @@ public class AuthServiceImpl implements AuthService {
 
         User user = userOptional.get();
 
-        // Generate reset token
-        String resetToken = UUID.randomUUID().toString();
-        LocalDateTime expiresAt = LocalDateTime.now().plusMinutes(5); // Token expires in 5 minutes
+        // Generate 6-digit OTP
+        String otp = String.format("%06d", new java.util.Random().nextInt(999999));
 
-        // Save token to user
-        user.setPasswordResetToken(resetToken);
-        user.setPasswordResetExpiresAt(expiresAt);
+        LocalDateTime expiresAt = LocalDateTime.now().plusMinutes(5); // OTP expires in 5 minutes
+
+        // Save OTP to user
+        user.setOtp(otp);
+        user.setOtpExpiresAt(expiresAt);
         userRepository.save(user);
 
-        // Send email with reset link
-        emailService.sendPasswordResetEmail(user.getEmail(), resetToken);
+        // Send email with OTP
+        emailService.sendPasswordResetEmail(user.getEmail(), otp);
     }
 
     @Override
     @Transactional
     public void resetPassword(ResetPasswordRequestDTO resetPasswordRequestDTO) {
-        // Find user by reset token
-        Optional<User> userOptional = userRepository.findByPasswordResetToken(resetPasswordRequestDTO.getToken());
+        // Find user by OTP
+        Optional<User> userOptional = userRepository.findByOtp(resetPasswordRequestDTO.getOtp());
         if (userOptional.isEmpty()) {
-            throw new InvalidCredentialsException("Invalid or expired reset token");
+            throw new InvalidCredentialsException("Invalid or expired OTP");
         }
 
         User user = userOptional.get();
 
-        // Check if token is expired
-        if (user.getPasswordResetExpiresAt().isBefore(LocalDateTime.now())) {
-            throw new InvalidCredentialsException("Reset token has expired");
+        // Check if OTP is expired
+        if (user.getOtpExpiresAt().isBefore(LocalDateTime.now())) {
+            throw new InvalidCredentialsException("OTP has expired");
         }
 
         // Update password
         user.setPassword(passwordEncoder.encode(resetPasswordRequestDTO.getNewPassword()));
-        user.setPasswordResetToken(null);
-        user.setPasswordResetExpiresAt(null);
+        user.setOtp(null);
+        user.setOtpExpiresAt(null);
         userRepository.save(user);
     }
 
