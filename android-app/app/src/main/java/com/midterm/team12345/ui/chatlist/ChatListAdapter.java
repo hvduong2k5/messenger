@@ -14,13 +14,13 @@ import com.midterm.team12345.databinding.ItemConversationBinding;
 
 public class ChatListAdapter extends ListAdapter<ConversationResponse, ChatListAdapter.ViewHolder> {
 
-    public interface OnItemClickListener {
-        void onItemClick(ConversationResponse conversation);
+    private final OnConversationClickListener listener;
+
+    public interface OnConversationClickListener {
+        void onConversationClick(ConversationResponse conversation);
     }
 
-    private OnItemClickListener listener;
-
-    protected ChatListAdapter(OnItemClickListener listener) {
+    public ChatListAdapter(OnConversationClickListener listener) {
         super(new DiffUtil.ItemCallback<ConversationResponse>() {
             @Override
             public boolean areItemsTheSame(@NonNull ConversationResponse oldItem, @NonNull ConversationResponse newItem) {
@@ -45,8 +45,7 @@ public class ChatListAdapter extends ListAdapter<ConversationResponse, ChatListA
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        ConversationResponse item = getItem(position);
-        holder.bind(item, listener);
+        holder.bind(getItem(position), listener);
     }
 
     static class ViewHolder extends RecyclerView.ViewHolder {
@@ -57,17 +56,20 @@ public class ChatListAdapter extends ListAdapter<ConversationResponse, ChatListA
             this.binding = binding;
         }
 
-        public void bind(ConversationResponse conversation, OnItemClickListener listener) {
+        public void bind(ConversationResponse conversation, OnConversationClickListener listener) {
             binding.tvConversationName.setText(conversation.getConversationName());
             binding.tvLastMessage.setText(conversation.getLastMessage());
             binding.tvTimestamp.setText(conversation.getFormattedTimestamp());
 
             if (conversation.getUnreadCount() != null && conversation.getUnreadCount() > 0) {
-                binding.badgeUnreadCount.setVisibility(View.VISIBLE);
                 binding.badgeUnreadCount.setText(String.valueOf(conversation.getUnreadCount()));
+                binding.badgeUnreadCount.setVisibility(View.VISIBLE);
             } else {
                 binding.badgeUnreadCount.setVisibility(View.GONE);
             }
+
+            // ivPresenceStatus is for Issue #142
+            binding.ivPresenceStatus.setVisibility(View.GONE); 
 
             Glide.with(binding.ivConversationAvatar.getContext())
                     .load(conversation.getAvatarUrl())
@@ -75,11 +77,7 @@ public class ChatListAdapter extends ListAdapter<ConversationResponse, ChatListA
                     .error(R.drawable.ic_avatar_placeholder)
                     .into(binding.ivConversationAvatar);
 
-            itemView.setOnClickListener(v -> {
-                if (listener != null) {
-                    listener.onItemClick(conversation);
-                }
-            });
+            binding.getRoot().setOnClickListener(v -> listener.onConversationClick(conversation));
         }
     }
 }
