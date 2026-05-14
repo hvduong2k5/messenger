@@ -13,4 +13,5 @@ public interface ChatRepository {
     LiveData<Resource<List<UserDTO>>> getFriends();
     LiveData<Resource<ConversationResponse>> createConversation(ConversationRequestDTO request);
     LiveData<MqttMessageDTO> getRealTimeMessages();
+    LiveData<Boolean> getConnectionStatus();
 }
