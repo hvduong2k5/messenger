@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/white">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_horizontal"
+        android:orientation="vertical"
+        android:paddingBottom="32dp">
+
+        <!-- Profile Header -->
+        <FrameLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="40dp">
+
+            <!-- Placeholder for QR-style border -->
+            <View
+                android:layout_width="160dp"
+                android:layout_height="160dp"
+                android:layout_gravity="center"
+                android:background="@drawable/ic_check_circle"
+                android:alpha="0.1"
+                app:tint="@color/messenger_blue" />
+
+            <de.hdodenhof.circleimageview.CircleImageView
+                android:id="@+id/ivUserAvatar"
+                android:layout_width="100dp"
+                android:layout_height="100dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_avatar_placeholder" />
+        </FrameLayout>
+
+        <TextView
+            android:id="@+id/tvUserName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="Jacob West"
+            android:textColor="@color/black"
+            android:textSize="24sp"
+            android:textStyle="bold" />
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="32dp" />
+
+        <!-- Settings List -->
+        <include
+            android:id="@+id/itemDarkMode"
+            layout="@layout/item_settings_row_main" />
+
+        <include
+            android:id="@+id/itemActiveStatus"
+            layout="@layout/item_settings_row_main" />
+
+        <include
+            android:id="@+id/itemEditProfile"
+            layout="@layout/item_settings_row_main" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingHorizontal="16dp"
+            android:paddingTop="24dp"
+            android:paddingBottom="8dp"
+            android:text="PREFERENCES"
+            android:textColor="@color/gray_text"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+
+        <include
+            android:id="@+id/itemNotifications"
+            layout="@layout/item_settings_row_main" />
+
+        <include
+            android:id="@+id/itemPeople"
+            layout="@layout/item_settings_row_main" />
+
+        <include
+            android:id="@+id/itemMessaging"
+            layout="@layout/item_settings_row_main" />
+
+        <Button
+            android:id="@+id/btnLogout"
+            style="@style/Widget.MaterialComponents.Button.TextButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:text="Log Out"
+            android:textColor="@android:color/holo_red_dark" />
+
+    </LinearLayout>
+</androidx.core.widget.NestedScrollView>
