@@ -105,15 +105,14 @@
 
             <!-- Empty State -->
             <LinearLayout
-                android:id="@+id/tv_empty_state"
-                android:layout_width="wrap_content"
+                android:id="@+id/empty_state_layout"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center"
                 android:orientation="vertical"
+                android:padding="32dp"
                 android:visibility="gone"
                 app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent">
 
                 <TextView
@@ -121,16 +120,25 @@
                     android:layout_height="wrap_content"
                     android:text="Get Started"
                     android:textColor="@color/black"
-                    android:textSize="22sp"
+                    android:textSize="24sp"
                     android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:gravity="center"
+                    android:text="Tap ✎ to send a messege."
+                    android:textColor="@color/black"
+                    android:textSize="16sp" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
                     android:gravity="center"
-                    android:text="Tap ✎ to send a message.\nTap 👥 to find people"
-                    android:textColor="@color/gray_text"
+                    android:text="Tap 👥 to find people"
+                    android:textColor="@color/black"
                     android:textSize="16sp" />
             </LinearLayout>
 
