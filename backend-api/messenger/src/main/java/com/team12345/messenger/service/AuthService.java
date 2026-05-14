@@ -16,5 +16,5 @@ public interface AuthService {
 
     void resetPassword(ResetPasswordRequestDTO resetPasswordRequestDTO);
 
-    void logout(Long userId);
+    void logout(Long userId, String token);
 }
