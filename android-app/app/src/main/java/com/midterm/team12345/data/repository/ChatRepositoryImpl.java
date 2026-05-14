@@ -1,15 +1,33 @@
 package com.midterm.team12345.data.repository;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+
+import com.google.gson.Gson;
 import com.midterm.team12345.data.dto.ConversationResponse;
 import com.midterm.team12345.data.dto.ConversationRequestDTO;
+import com.midterm.team12345.data.dto.MqttMessageDTO;
 import com.midterm.team12345.data.dto.UserDTO;
+import com.midterm.team12345.data.remote.mqtt.MessagingService;
 import com.midterm.team12345.util.Resource;
 import java.util.ArrayList;
 import java.util.List;
 
 public class ChatRepositoryImpl implements ChatRepository {
+
+    private final Context context;
+    private final Gson gson = new Gson();
+    private MutableLiveData<MqttMessageDTO> realTimeMessages;
+
+    public ChatRepositoryImpl(Context context) {
+        this.context = context;
+    }
 
     @Override
     public LiveData<Resource<List<ConversationResponse>>> getConversations() {
@@ -60,5 +78,23 @@ public class ChatRepositoryImpl implements ChatRepository {
         }, 1500);
 
         return data;
+    }
+
+    @Override
+    public LiveData<MqttMessageDTO> getRealTimeMessages() {
+        if (realTimeMessages == null) {
+            realTimeMessages = new MutableLiveData<>();
+            LocalBroadcastManager.getInstance(context).registerReceiver(new BroadcastReceiver() {
+                @Override
+                public void onReceive(Context context, Intent intent) {
+                    String json = intent.getStringExtra(MessagingService.EXTRA_MESSAGE);
+                    if (json != null) {
+                        MqttMessageDTO message = gson.fromJson(json, MqttMessageDTO.class);
+                        realTimeMessages.postValue(message);
+                    }
+                }
+            }, new IntentFilter(MessagingService.ACTION_NEW_MESSAGE));
+        }
+        return realTimeMessages;
     }
 }
