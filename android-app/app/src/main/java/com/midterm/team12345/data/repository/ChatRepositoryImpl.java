@@ -1,32 +1,29 @@
 package com.midterm.team12345.data.repository;
 
-import android.content.BroadcastReceiver;
-import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
-
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
-import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
-import com.google.gson.Gson;
 import com.midterm.team12345.data.dto.ConversationResponse;
 import com.midterm.team12345.data.dto.ConversationRequestDTO;
 import com.midterm.team12345.data.dto.MqttMessageDTO;
 import com.midterm.team12345.data.dto.UserDTO;
-import com.midterm.team12345.data.remote.mqtt.MessagingService;
 import com.midterm.team12345.util.Resource;
 import java.util.ArrayList;
 import java.util.List;
 
 public class ChatRepositoryImpl implements ChatRepository {
 
-    private final Context context;
-    private final Gson gson = new Gson();
-    private MutableLiveData<MqttMessageDTO> realTimeMessages;
+    private static ChatRepositoryImpl instance;
+    private final MutableLiveData<MqttMessageDTO> realTimeMessages = new MutableLiveData<>();
+    private final MutableLiveData<Boolean> connectionStatus = new MutableLiveData<>(false);
 
-    public ChatRepositoryImpl(Context context) {
-        this.context = context;
+    private ChatRepositoryImpl() {}
+
+    public static synchronized ChatRepositoryImpl getInstance() {
+        if (instance == null) {
+            instance = new ChatRepositoryImpl();
+        }
+        return instance;
     }
 
     @Override
@@ -69,7 +66,6 @@ public class ChatRepositoryImpl implements ChatRepository {
         MutableLiveData<Resource<ConversationResponse>> data = new MutableLiveData<>();
         data.setValue(Resource.loading(null));
 
-        // Mock success
         new android.os.Handler().postDelayed(() -> {
             ConversationResponse response = new ConversationResponse(
                 100L, request.getName(), "Group created", null, System.currentTimeMillis(), 0, false, false, request.getIsGroup()
@@ -82,19 +78,19 @@ public class ChatRepositoryImpl implements ChatRepository {
 
     @Override
     public LiveData<MqttMessageDTO> getRealTimeMessages() {
-        if (realTimeMessages == null) {
-            realTimeMessages = new MutableLiveData<>();
-            LocalBroadcastManager.getInstance(context).registerReceiver(new BroadcastReceiver() {
-                @Override
-                public void onReceive(Context context, Intent intent) {
-                    String json = intent.getStringExtra(MessagingService.EXTRA_MESSAGE);
-                    if (json != null) {
-                        MqttMessageDTO message = gson.fromJson(json, MqttMessageDTO.class);
-                        realTimeMessages.postValue(message);
-                    }
-                }
-            }, new IntentFilter(MessagingService.ACTION_NEW_MESSAGE));
-        }
         return realTimeMessages;
+    }
+
+    @Override
+    public LiveData<Boolean> getConnectionStatus() {
+        return connectionStatus;
+    }
+
+    public void emitRealTimeMessage(MqttMessageDTO message) {
+        realTimeMessages.postValue(message);
+    }
+
+    public void updateConnectionStatus(boolean connected) {
+        connectionStatus.postValue(connected);
     }
 }
