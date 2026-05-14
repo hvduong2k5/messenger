@@ -1,8 +1,8 @@
 package com.midterm.team12345.data.remote;
 
-import com.midterm.team12345.data.dto.AuthResponse;
-import com.midterm.team12345.data.dto.LoginRequest;
-import com.midterm.team12345.data.dto.RegisterRequest;
+import com.midterm.team12345.data.dto.response.AuthResponse;
+import com.midterm.team12345.data.dto.request.LoginRequest;
+import com.midterm.team12345.data.dto.request.RegisterRequest;
 
 import retrofit2.Call;
 import retrofit2.http.Body;

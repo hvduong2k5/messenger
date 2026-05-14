@@ -1,6 +1,5 @@
-package com.midterm.team12345.data.dto;
+package com.midterm.team12345.data.dto.response;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 

@@ -4,9 +4,9 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
-import com.midterm.team12345.data.dto.ConversationRequestDTO;
-import com.midterm.team12345.data.dto.ConversationResponse;
-import com.midterm.team12345.data.dto.UserDTO;
+import com.midterm.team12345.data.dto.request.ConversationRequestDTO;
+import com.midterm.team12345.data.dto.response.ConversationResponse;
+import com.midterm.team12345.data.dto.response.UserDTO;
 import com.midterm.team12345.data.repository.ChatRepository;
 import com.midterm.team12345.util.Resource;
 

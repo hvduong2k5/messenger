@@ -1,7 +1,7 @@
 package com.midterm.team12345.data.remote;
 
-import com.midterm.team12345.data.dto.UserProfileResponseDTO;
-import com.midterm.team12345.data.dto.UserDTO;
+import com.midterm.team12345.data.dto.response.UserProfileResponseDTO;
+import com.midterm.team12345.data.dto.response.UserDTO;
 
 import java.util.List;
 
