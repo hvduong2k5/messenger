@@ -6,18 +6,23 @@ import com.team12345.messenger.dto.request.RegisterRequestDTO;
 import com.team12345.messenger.dto.request.ResetPasswordRequestDTO;
 import com.team12345.messenger.dto.response.AuthResponseDTO;
 import com.team12345.messenger.dto.response.UserResponseDTO;
+import com.team12345.messenger.entity.BlacklistedToken;
 import com.team12345.messenger.entity.User;
 import com.team12345.messenger.exception.InvalidCredentialsException;
 import com.team12345.messenger.exception.UserAlreadyExistsException;
+import com.team12345.messenger.repository.BlacklistedTokenRepository;
 import com.team12345.messenger.repository.UserRepository;
 import com.team12345.messenger.security.JwtUtils;
 import com.team12345.messenger.service.AuthService;
+import com.team12345.messenger.service.EmailService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.Date;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -28,6 +33,8 @@ public class AuthServiceImpl implements AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtils jwtUtils;
+    private final EmailService emailService;
+    private final BlacklistedTokenRepository blacklistedTokenRepository;
 
     @Override
     @Transactional
@@ -118,16 +125,15 @@ public class AuthServiceImpl implements AuthService {
 
         // Generate reset token
         String resetToken = UUID.randomUUID().toString();
-        LocalDateTime expiresAt = LocalDateTime.now().plusHours(24); // Token expires in 24 hours
+        LocalDateTime expiresAt = LocalDateTime.now().plusMinutes(5); // Token expires in 5 minutes
 
         // Save token to user
         user.setPasswordResetToken(resetToken);
         user.setPasswordResetExpiresAt(expiresAt);
         userRepository.save(user);
 
-        // TODO: Send email with reset link
-        // For now, just log the token (in production, send email)
-        System.out.println("Password reset token for " + user.getEmail() + ": " + resetToken);
+        // Send email with reset link
+        emailService.sendPasswordResetEmail(user.getEmail(), resetToken);
     }
 
     @Override
@@ -154,9 +160,18 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public void logout(Long userId) {
-        // Since JWT is stateless, logout is handled client-side by removing the token
-        // In a production system with token blacklisting, we would add the token to a blacklist here
-        // For now, just return (client will remove token from storage)
+    @Transactional
+    public void logout(Long userId, String token) {
+        if (token != null) {
+            // Calculate expiration time of the token
+            Date expirationDate = jwtUtils.getExpirationDateFromJwtToken(token);
+            LocalDateTime expiresAt = expirationDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
+            // Add to blacklist
+            BlacklistedToken blacklistedToken = BlacklistedToken.builder()
+                    .token(token)
+                    .expiresAt(expiresAt)
+                    .build();
+            blacklistedTokenRepository.save(blacklistedToken);
+        }
     }
 }
