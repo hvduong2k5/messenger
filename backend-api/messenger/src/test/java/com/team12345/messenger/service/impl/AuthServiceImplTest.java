@@ -8,8 +8,10 @@ import com.team12345.messenger.dto.response.AuthResponseDTO;
 import com.team12345.messenger.entity.User;
 import com.team12345.messenger.exception.InvalidCredentialsException;
 import com.team12345.messenger.exception.UserAlreadyExistsException;
+import com.team12345.messenger.repository.BlacklistedTokenRepository;
 import com.team12345.messenger.repository.UserRepository;
 import com.team12345.messenger.security.JwtUtils;
+import com.team12345.messenger.service.EmailService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -25,6 +27,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -38,6 +41,12 @@ class AuthServiceImplTest {
 
     @Mock
     private JwtUtils jwtUtils;
+
+    @Mock
+    private EmailService emailService;
+
+    @Mock
+    private BlacklistedTokenRepository blacklistedTokenRepository;
 
     @InjectMocks
     private AuthServiceImpl authService;
@@ -54,7 +63,7 @@ class AuthServiceImplTest {
         registerRequestDTO.setPassword("password123");
 
         loginRequestDTO = new LoginRequestDTO();
-        loginRequestDTO.setUsernameOrEmail("testuser");
+        loginRequestDTO.setEmail("test@example.com");
         loginRequestDTO.setPassword("password123");
 
         user = User.builder()
@@ -126,9 +135,9 @@ class AuthServiceImplTest {
     }
 
     @Test
-    void testLogin_Success_WithUsername() {
+    void testLogin_Success() {
         // Arrange
-        when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(user));
+        when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(user));
         when(passwordEncoder.matches("password123", "encodedPassword")).thenReturn(true);
         when(jwtUtils.generateTokenFromUsername("testuser")).thenReturn("jwtToken");
 
@@ -140,61 +149,37 @@ class AuthServiceImplTest {
         assertThat(response.getAccessToken()).isEqualTo("jwtToken");
         assertThat(response.getUser().getUsername()).isEqualTo("testuser");
 
-        verify(userRepository).findByUsername("testuser");
-        verify(userRepository, never()).findByEmail(anyString());
+        verify(userRepository).findByEmail("test@example.com");
         verify(passwordEncoder).matches("password123", "encodedPassword");
         verify(jwtUtils).generateTokenFromUsername("testuser");
     }
 
     @Test
-    void testLogin_Success_WithEmail() {
-        // Arrange
-        loginRequestDTO.setUsernameOrEmail("test@example.com");
-        when(userRepository.findByUsername("test@example.com")).thenReturn(Optional.empty());
-        when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(user));
-        when(passwordEncoder.matches("password123", "encodedPassword")).thenReturn(true);
-        when(jwtUtils.generateTokenFromUsername("testuser")).thenReturn("jwtToken");
-
-        // Act
-        AuthResponseDTO response = authService.login(loginRequestDTO);
-
-        // Assert
-        assertThat(response).isNotNull();
-        assertThat(response.getAccessToken()).isEqualTo("jwtToken");
-
-        verify(userRepository).findByUsername("test@example.com");
-        verify(userRepository).findByEmail("test@example.com");
-        verify(passwordEncoder).matches("password123", "encodedPassword");
-    }
-
-    @Test
     void testLogin_UserNotFound() {
         // Arrange
-        when(userRepository.findByUsername("testuser")).thenReturn(Optional.empty());
-        when(userRepository.findByEmail("testuser")).thenReturn(Optional.empty());
+        when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.empty());
 
         // Act & Assert
         assertThatThrownBy(() -> authService.login(loginRequestDTO))
                 .isInstanceOf(InvalidCredentialsException.class)
-                .hasMessage("Invalid username/email or password");
+                .hasMessage("Invalid email or password");
 
-        verify(userRepository).findByUsername("testuser");
-        verify(userRepository).findByEmail("testuser");
+        verify(userRepository).findByEmail("test@example.com");
         verify(passwordEncoder, never()).matches(anyString(), anyString());
     }
 
     @Test
     void testLogin_InvalidPassword() {
         // Arrange
-        when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(user));
+        when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(user));
         when(passwordEncoder.matches("password123", "encodedPassword")).thenReturn(false);
 
         // Act & Assert
         assertThatThrownBy(() -> authService.login(loginRequestDTO))
                 .isInstanceOf(InvalidCredentialsException.class)
-                .hasMessage("Invalid username/email or password");
+                .hasMessage("Invalid email or password");
 
-        verify(userRepository).findByUsername("testuser");
+        verify(userRepository).findByEmail("test@example.com");
         verify(passwordEncoder).matches("password123", "encodedPassword");
         verify(jwtUtils, never()).generateTokenFromUsername(anyString());
     }
@@ -214,6 +199,7 @@ class AuthServiceImplTest {
         // Assert
         verify(userRepository).findByEmail("test@example.com");
         verify(userRepository).save(any(User.class));
+        verify(emailService).sendPasswordResetEmail(eq("test@example.com"), anyString());
     }
 
     @Test
@@ -310,9 +296,24 @@ class AuthServiceImplTest {
 
     @Test
     void testLogout() {
-        // Act
-        authService.logout(1L, "");
+        // Arrange
+        when(jwtUtils.getExpirationDateFromJwtToken("test-token")).thenReturn(new java.util.Date());
 
-        // Assert - logout is a no-op for stateless JWT, just verify no exceptions
+        // Act
+        authService.logout(1L, "test-token");
+
+        // Assert
+        verify(jwtUtils).getExpirationDateFromJwtToken("test-token");
+        verify(blacklistedTokenRepository).save(any());
+    }
+
+    @Test
+    void testLogout_NullToken() {
+        // Act
+        authService.logout(1L, null);
+
+        // Assert - logout is a no-op for null token
+        verify(jwtUtils, never()).getExpirationDateFromJwtToken(anyString());
+        verify(blacklistedTokenRepository, never()).save(any());
     }
 }
