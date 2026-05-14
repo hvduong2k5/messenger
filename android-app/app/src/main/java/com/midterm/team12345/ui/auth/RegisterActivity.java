@@ -82,8 +82,11 @@ public class RegisterActivity extends AppCompatActivity {
             } else if (resource.status == Resource.Status.SUCCESS) {
                 showLoading(false);
                 Toast.makeText(this, "Account created successfully!", Toast.LENGTH_SHORT).show();
-                startActivity(new Intent(this, MainActivity.class));
-                finishAffinity();
+                
+                Intent intent = new Intent(this, MainActivity.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                startActivity(intent);
+                finish();
             } else if (resource.status == Resource.Status.ERROR) {
                 showLoading(false);
                 String errorMsg = resource.message != null ? resource.message : "Registration failed";
