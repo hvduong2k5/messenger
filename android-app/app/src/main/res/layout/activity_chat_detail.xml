@@ -85,6 +85,16 @@
         app:layout_constraintTop_toBottomOf="@id/toolbar_chat"
         app:stackFromEnd="true" />
 
+    <ProgressBar
+        android:id="@+id/loading_progress_bar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
     <!-- Input Area -->
     <LinearLayout
         android:id="@+id/input_area"
