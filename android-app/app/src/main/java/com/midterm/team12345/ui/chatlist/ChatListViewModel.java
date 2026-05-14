@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel;
 import com.midterm.team12345.data.dto.ConversationResponse;
 import com.midterm.team12345.data.dto.MqttEventType;
 import com.midterm.team12345.data.dto.MqttMessageDTO;
+import com.midterm.team12345.data.dto.UserProfileResponseDTO;
 import com.midterm.team12345.data.repository.ChatRepository;
 import com.midterm.team12345.util.Resource;
 
@@ -14,8 +15,12 @@ import java.util.List;
 
 public class ChatListViewModel extends ViewModel {
     private final ChatRepository chatRepository;
+    
     private final MutableLiveData<Resource<List<ConversationResponse>>> _conversationState = new MutableLiveData<>();
     public final LiveData<Resource<List<ConversationResponse>>> conversationState = _conversationState;
+
+    private final MutableLiveData<Resource<UserProfileResponseDTO>> _profileState = new MutableLiveData<>();
+    public final LiveData<Resource<UserProfileResponseDTO>> profileState = _profileState;
 
     public LiveData<Boolean> getConnectionStatus() {
         return chatRepository.getConnectionStatus();
@@ -47,7 +52,6 @@ public class ChatListViewModel extends ViewModel {
             
             int foundIndex = -1;
             for (int i = 0; i < list.size(); i++) {
-                // In this mock, we assume senderId is the conversationId for 1-1 chats
                 if (list.get(i).getConversationId().equals(senderId)) {
                     foundIndex = i;
                     break;
@@ -69,8 +73,6 @@ public class ChatListViewModel extends ViewModel {
                 );
                 list.add(0, updated);
             } else {
-                // If conversation not in current list, we might want to fetch it or create a temporary entry
-                // For now, let's just re-fetch to keep it simple and accurate
                 fetchConversations();
                 return;
             }
@@ -82,6 +84,13 @@ public class ChatListViewModel extends ViewModel {
         _conversationState.setValue(Resource.loading(null));
         chatRepository.getConversations().observeForever(resource -> {
             _conversationState.setValue(resource);
+        });
+    }
+
+    public void fetchMyProfile() {
+        _profileState.setValue(Resource.loading(null));
+        chatRepository.getMyProfile().observeForever(resource -> {
+            _profileState.setValue(resource);
         });
     }
 }
