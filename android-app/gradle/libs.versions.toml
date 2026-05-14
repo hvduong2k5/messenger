@@ -16,6 +16,7 @@ security = "1.1.0-alpha06"
 glide = "4.15.1"
 circleimageview = "3.1.0"
 swiperefresh = "1.2.0"
+mqtt-client = "1.2.5"
 
 [libraries]
 junit = { group = "junit", name = "junit", version.ref = "junit" }
@@ -36,6 +37,7 @@ glide = { group = "com.github.bumptech.glide", name = "glide", version.ref = "gl
 glide-compiler = { group = "com.github.bumptech.glide", name = "compiler", version.ref = "glide" }
 circleimageview = { group = "de.hdodenhof", name = "circleimageview", version.ref = "circleimageview" }
 swiperefreshlayout = { group = "androidx.swiperefreshlayout", name = "swiperefreshlayout", version.ref = "swiperefresh" }
+mqtt-paho = { group = "org.eclipse.paho", name = "org.eclipse.paho.client.mqttv3", version.ref = "mqtt-client" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
