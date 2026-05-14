@@ -29,7 +29,7 @@ public class CreateGroupActivity extends AppCompatActivity {
         binding = ActivityCreateGroupBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
-        CreateGroupViewModelFactory factory = new CreateGroupViewModelFactory( ChatRepositoryImpl.getInstance());
+        CreateGroupViewModelFactory factory = new CreateGroupViewModelFactory( ChatRepositoryImpl.getInstance(getApplication()));
         viewModel = new ViewModelProvider(this, factory).get(CreateGroupViewModel.class);
 
         setupRecyclerViews();
