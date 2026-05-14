@@ -4,6 +4,7 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 import com.midterm.team12345.data.dto.ConversationResponse;
+import com.midterm.team12345.data.dto.MqttEventType;
 import com.midterm.team12345.data.dto.MqttMessageDTO;
 import com.midterm.team12345.data.repository.ChatRepository;
 import com.midterm.team12345.util.Resource;
@@ -16,6 +17,10 @@ public class ChatListViewModel extends ViewModel {
     private final MutableLiveData<Resource<List<ConversationResponse>>> _conversationState = new MutableLiveData<>();
     public final LiveData<Resource<List<ConversationResponse>>> conversationState = _conversationState;
 
+    public LiveData<Boolean> getConnectionStatus() {
+        return chatRepository.getConnectionStatus();
+    }
+
     public ChatListViewModel(ChatRepository chatRepository) {
         this.chatRepository = chatRepository;
         observeRealTimeMessages();
@@ -23,7 +28,7 @@ public class ChatListViewModel extends ViewModel {
 
     private void observeRealTimeMessages() {
         chatRepository.getRealTimeMessages().observeForever(mqttMessage -> {
-            if (mqttMessage != null && "NEW_MESSAGE".equals(mqttMessage.getType())) {
+            if (mqttMessage != null && MqttEventType.NEW_MESSAGE.name().equals(mqttMessage.getType())) {
                 updateConversationList(mqttMessage);
             }
         });
@@ -33,11 +38,17 @@ public class ChatListViewModel extends ViewModel {
         Resource<List<ConversationResponse>> currentResource = _conversationState.getValue();
         if (currentResource != null && currentResource.status == Resource.Status.SUCCESS && currentResource.data != null) {
             List<ConversationResponse> list = new ArrayList<>(currentResource.data);
-            Long senderId = Long.parseLong(mqttMessage.getSender());
+            Long senderId;
+            try {
+                senderId = Long.parseLong(mqttMessage.getSender());
+            } catch (NumberFormatException e) {
+                return;
+            }
             
             int foundIndex = -1;
             for (int i = 0; i < list.size(); i++) {
-                if (list.get(i).getConversationId().equals(senderId)) { // Simplified: senderId as conversationId for 1-1
+                // In this mock, we assume senderId is the conversationId for 1-1 chats
+                if (list.get(i).getConversationId().equals(senderId)) {
                     foundIndex = i;
                     break;
                 }
@@ -57,6 +68,11 @@ public class ChatListViewModel extends ViewModel {
                         old.getGroup()
                 );
                 list.add(0, updated);
+            } else {
+                // If conversation not in current list, we might want to fetch it or create a temporary entry
+                // For now, let's just re-fetch to keep it simple and accurate
+                fetchConversations();
+                return;
             }
             _conversationState.setValue(Resource.success(list));
         }
