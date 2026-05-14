@@ -2,17 +2,22 @@ package com.midterm.team12345.ui.chatlist;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
+
 import com.midterm.team12345.data.repository.ChatRepositoryImpl;
 import com.midterm.team12345.databinding.FragmentChatListBinding;
 import com.midterm.team12345.ui.chatdetail.ChatDetailActivity;
+import com.midterm.team12345.ui.creategroup.CreateGroupActivity;
 import com.midterm.team12345.util.Resource;
 
 public class ChatListFragment extends Fragment {
@@ -51,7 +56,7 @@ public class ChatListFragment extends Fragment {
     }
 
     private void setupViewModel() {
-        ChatListViewModelFactory factory = new ChatListViewModelFactory( ChatRepositoryImpl.getInstance());
+        ChatListViewModelFactory factory = new ChatListViewModelFactory(ChatRepositoryImpl.getInstance());
         viewModel = new ViewModelProvider(this, factory).get(ChatListViewModel.class);
     }
 
@@ -85,6 +90,24 @@ public class ChatListFragment extends Fragment {
 
     private void setupListeners() {
         binding.swipeRefresh.setOnRefreshListener(() -> viewModel.fetchConversations());
+
+        binding.btnNewMessage.setOnClickListener(v -> {
+            startActivity(new Intent(getContext(), CreateGroupActivity.class));
+        });
+
+        binding.etSearch.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                // Filter logic would be implemented in ViewModel
+                // viewModel.filter(s.toString());
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {}
+        });
     }
 
     @Override
