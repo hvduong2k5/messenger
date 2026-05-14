@@ -9,9 +9,9 @@ import lombok.Data;
 @Data
 public class RegisterRequestDTO {
 
-    @NotBlank(message = "Name is required")
-    @Size(min = 3, max = 100, message = "Name must be between 3 and 100 characters")
-    @Pattern(regexp = "^\\S+$", message = "Name must not contain spaces")
+    @NotBlank(message = "Username is required")
+    @Size(min = 3, max = 100, message = "Username must be between 3 and 100 characters")
+    @Pattern(regexp = "^\\S+$", message = "Username must not contain spaces")
     private String username;
 
     @NotBlank(message = "Email is required")
