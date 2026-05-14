@@ -2,7 +2,7 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item
         android:id="@+id/nav_chats"
-        android:icon="@drawable/ic_messenger_logo"
+        android:icon="@drawable/ic_chat_bubble"
         android:title="Chats" />
     <item
         android:id="@+id/nav_people"
@@ -10,6 +10,6 @@
         android:title="People" />
     <item
         android:id="@+id/nav_settings"
-        android:icon="@drawable/ic_lock"
+        android:icon="@drawable/ic_settings_gear"
         android:title="Settings" />
 </menu>
