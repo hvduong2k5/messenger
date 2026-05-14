@@ -51,7 +51,7 @@ public class ChatListFragment extends Fragment {
     }
 
     private void setupViewModel() {
-        ChatListViewModelFactory factory = new ChatListViewModelFactory(new ChatRepositoryImpl());
+        ChatListViewModelFactory factory = new ChatListViewModelFactory( ChatRepositoryImpl.getInstance());
         viewModel = new ViewModelProvider(this, factory).get(ChatListViewModel.class);
     }
 

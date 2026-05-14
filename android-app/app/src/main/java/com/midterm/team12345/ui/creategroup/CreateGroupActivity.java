@@ -29,8 +29,7 @@ public class CreateGroupActivity extends AppCompatActivity {
         binding = ActivityCreateGroupBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
-        // In a real app, use Dependency Injection or a global repository instance
-        CreateGroupViewModelFactory factory = new CreateGroupViewModelFactory(new ChatRepositoryImpl());
+        CreateGroupViewModelFactory factory = new CreateGroupViewModelFactory( ChatRepositoryImpl.getInstance());
         viewModel = new ViewModelProvider(this, factory).get(CreateGroupViewModel.class);
 
         setupRecyclerViews();
