@@ -1,5 +1,6 @@
 package com.team12345.messenger.config;
 
+import com.team12345.messenger.repository.BlacklistedTokenRepository;
 import com.team12345.messenger.repository.UserRepository;
 import com.team12345.messenger.security.CustomUserDetails;
 import com.team12345.messenger.security.JwtAuthenticationFilter;
@@ -34,6 +35,7 @@ public class SecurityConfig {
 
     private final UserRepository userRepository;
     private final JwtUtils jwtUtils;
+    private final BlacklistedTokenRepository blacklistedTokenRepository;
 
     @Bean
     public UserDetailsService userDetailsService() {
@@ -82,7 +84,7 @@ public class SecurityConfig {
 
     @Bean
     public JwtAuthenticationFilter jwtAuthenticationFilter() {
-        return new JwtAuthenticationFilter(jwtUtils, userDetailsService());
+        return new JwtAuthenticationFilter(jwtUtils, userDetailsService(), blacklistedTokenRepository);
     }
 
     @Bean
