@@ -56,7 +56,7 @@ public class ChatListFragment extends Fragment {
     }
 
     private void setupViewModel() {
-        ChatListViewModelFactory factory = new ChatListViewModelFactory(ChatRepositoryImpl.getInstance());
+        ChatListViewModelFactory factory = new ChatListViewModelFactory(ChatRepositoryImpl.getInstance(requireActivity().getApplication()));
         viewModel = new ViewModelProvider(this, factory).get(ChatListViewModel.class);
     }
 
@@ -67,21 +67,28 @@ public class ChatListFragment extends Fragment {
             switch (resource.status) {
                 case LOADING:
                     binding.progressBar.setVisibility(View.VISIBLE);
-                    binding.tvEmptyState.setVisibility(View.GONE);
+                    binding.emptyStateLayout.setVisibility(View.GONE);
                     break;
                 case SUCCESS:
                     binding.progressBar.setVisibility(View.GONE);
                     binding.swipeRefresh.setRefreshing(false);
                     if (resource.data != null && !resource.data.isEmpty()) {
                         adapter.submitList(resource.data);
-                        binding.tvEmptyState.setVisibility(View.GONE);
+                        binding.emptyStateLayout.setVisibility(View.GONE);
+                        binding.rvChatList.setVisibility(View.VISIBLE);
                     } else {
-                        binding.tvEmptyState.setVisibility(View.VISIBLE);
+                        binding.emptyStateLayout.setVisibility(View.VISIBLE);
+                        binding.rvChatList.setVisibility(View.GONE);
                     }
                     break;
                 case ERROR:
                     binding.progressBar.setVisibility(View.GONE);
                     binding.swipeRefresh.setRefreshing(false);
+                    // Show empty state on error as well, or keep previous list
+                    if (adapter.getItemCount() == 0) {
+                        binding.emptyStateLayout.setVisibility(View.VISIBLE);
+                        binding.rvChatList.setVisibility(View.GONE);
+                    }
                     Toast.makeText(getContext(), resource.message, Toast.LENGTH_SHORT).show();
                     break;
             }
