@@ -12,6 +12,7 @@ import com.midterm.team12345.data.dto.MessageRequestDTO;
 import com.midterm.team12345.data.dto.MessageResponse;
 import com.midterm.team12345.data.dto.MessageResponseDTO;
 import com.midterm.team12345.data.dto.MqttMessageDTO;
+import com.midterm.team12345.data.dto.PageResponse;
 import com.midterm.team12345.data.dto.UserDTO;
 import com.midterm.team12345.data.dto.UserProfileResponseDTO;
 import com.midterm.team12345.data.remote.ConversationApiService;
@@ -20,6 +21,7 @@ import com.midterm.team12345.data.remote.RetrofitClient;
 import com.midterm.team12345.data.remote.UserApiService;
 import com.midterm.team12345.util.Resource;
 
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
@@ -62,14 +64,14 @@ public class ChatRepositoryImpl implements ChatRepository {
         MutableLiveData<Resource<List<ConversationResponse>>> data = new MutableLiveData<>();
         data.setValue(Resource.loading(null));
 
-        conversationApiService.getConversations().enqueue(new Callback<List<ConversationResponseDTO>>() {
+        conversationApiService.getConversations().enqueue(new Callback<PageResponse<ConversationResponseDTO>>() {
             @Override
-            public void onResponse(@NonNull Call<List<ConversationResponseDTO>> call, @NonNull Response<List<ConversationResponseDTO>> response) {
-                if (response.isSuccessful()) {
-                    List<ConversationResponseDTO> body = response.body();
+            public void onResponse(@NonNull Call<PageResponse<ConversationResponseDTO>> call, @NonNull Response<PageResponse<ConversationResponseDTO>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    List<ConversationResponseDTO> bodyContent = response.body().getContent();
                     List<ConversationResponse> domainList = new ArrayList<>();
-                    if (body != null) {
-                        domainList = body.stream()
+                    if (bodyContent != null) {
+                        domainList = bodyContent.stream()
                                 .map(ChatRepositoryImpl.this::mapConversationToDomain)
                                 .collect(Collectors.toList());
                     }
@@ -80,24 +82,35 @@ public class ChatRepositoryImpl implements ChatRepository {
             }
 
             @Override
-            public void onFailure(@NonNull Call<List<ConversationResponseDTO>> call, @NonNull Throwable t) {
-                if (t.getMessage() != null && t.getMessage().contains("BEGIN_ARRAY but was BEGIN_OBJECT")) {
-                    data.setValue(Resource.success(new ArrayList<>()));
-                } else {
-                    data.setValue(Resource.error("Network error: " + t.getMessage(), null));
-                }
+            public void onFailure(@NonNull Call<PageResponse<ConversationResponseDTO>> call, @NonNull Throwable t) {
+                data.setValue(Resource.error("Network error: " + t.getMessage(), null));
             }
         });
 
         return data;
     }
 
+
     private ConversationResponse mapConversationToDomain(ConversationResponseDTO dto) {
         long timestamp = 0;
-        if (dto.getLastMessageCreatedAt() != null) {
-            timestamp = dto.getLastMessageCreatedAt().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
-        } else if (dto.getUpdatedAt() != null) {
-            timestamp = dto.getUpdatedAt().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
+
+        String timeStr = (dto.getLastMessageCreatedAt() != null) ? dto.getLastMessageCreatedAt() : dto.getUpdatedAt();
+
+        if (timeStr != null && !timeStr.isEmpty()) {
+            try {
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                    timestamp = LocalDateTime.parse(timeStr)
+                            .atZone(ZoneId.systemDefault())
+                            .toInstant()
+                            .toEpochMilli();
+                } else {
+                    // Fallback cho Android cũ
+                    java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", java.util.Locale.getDefault());
+                    timestamp = sdf.parse(timeStr).getTime();
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
 
         return new ConversationResponse(
@@ -166,13 +179,17 @@ public class ChatRepositoryImpl implements ChatRepository {
         MutableLiveData<Resource<List<MessageResponse>>> data = new MutableLiveData<>();
         data.setValue(Resource.loading(null));
 
-        messageApiService.getMessagesByConversation(conversationId).enqueue(new Callback<List<MessageResponseDTO>>() {
+        messageApiService.getMessagesByConversation(conversationId).enqueue(new Callback<PageResponse<MessageResponseDTO>>() {
             @Override
-            public void onResponse(@NonNull Call<List<MessageResponseDTO>> call, @NonNull Response<List<MessageResponseDTO>> response) {
+            public void onResponse(@NonNull Call<PageResponse<MessageResponseDTO>> call, @NonNull Response<PageResponse<MessageResponseDTO>> response) {
                 if (response.isSuccessful() && response.body() != null) {
-                    List<MessageResponse> domainList = response.body().stream()
-                            .map(ChatRepositoryImpl.this::mapMessageToDomain)
-                            .collect(Collectors.toList());
+                    List<MessageResponseDTO> bodyContent = response.body().getContent();
+                    List<MessageResponse> domainList = new ArrayList<>();
+                    if (bodyContent != null) {
+                        domainList = bodyContent.stream()
+                                .map(ChatRepositoryImpl.this::mapMessageToDomain)
+                                .collect(Collectors.toList());
+                    }
                     data.setValue(Resource.success(domainList));
                 } else {
                     data.setValue(Resource.error("Failed to fetch messages", null));
@@ -180,12 +197,8 @@ public class ChatRepositoryImpl implements ChatRepository {
             }
 
             @Override
-            public void onFailure(@NonNull Call<List<MessageResponseDTO>> call, @NonNull Throwable t) {
-                if (t.getMessage() != null && t.getMessage().contains("BEGIN_ARRAY but was BEGIN_OBJECT")) {
-                    data.setValue(Resource.success(new ArrayList<>()));
-                } else {
-                    data.setValue(Resource.error("Network error: " + t.getMessage(), null));
-                }
+            public void onFailure(@NonNull Call<PageResponse<MessageResponseDTO>> call, @NonNull Throwable t) {
+                data.setValue(Resource.error("Network error: " + t.getMessage(), null));
             }
         });
 
@@ -250,9 +263,26 @@ public class ChatRepositoryImpl implements ChatRepository {
         domain.setContent(dto.getContent());
         domain.setType(dto.getType());
         domain.setStatus(dto.getStatus());
-        if (dto.getCreatedAt() != null) {
-            domain.setCreatedAt(dto.getCreatedAt().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli());
+        
+        if (dto.getCreatedAt() != null && !dto.getCreatedAt().isEmpty()) {
+            try {
+                long timestamp = 0;
+                String timeStr = dto.getCreatedAt();
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                    timestamp = LocalDateTime.parse(timeStr)
+                            .atZone(ZoneId.systemDefault())
+                            .toInstant()
+                            .toEpochMilli();
+                } else {
+                    java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", java.util.Locale.getDefault());
+                    timestamp = sdf.parse(timeStr).getTime();
+                }
+                domain.setCreatedAt(timestamp);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
+
         domain.setDeleted(dto.getIsDeleted());
         domain.setEdited(dto.getIsEdited());
         domain.setAttachments(dto.getAttachments());
