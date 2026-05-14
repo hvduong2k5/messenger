@@ -73,6 +73,10 @@ dependencies {
     // SwipeRefresh
     implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.2.0")
 
+    // MQTT
+    implementation(libs.mqtt.paho)
+    implementation("androidx.localbroadcastmanager:localbroadcastmanager:1.1.0")
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
