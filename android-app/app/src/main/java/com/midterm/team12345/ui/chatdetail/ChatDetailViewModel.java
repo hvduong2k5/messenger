@@ -4,16 +4,39 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 import com.midterm.team12345.data.dto.MessageResponse;
+import com.midterm.team12345.data.dto.MqttMessageDTO;
+import com.midterm.team12345.data.repository.ChatRepository;
 import com.midterm.team12345.util.Resource;
 import java.util.ArrayList;
 import java.util.List;
 
 public class ChatDetailViewModel extends ViewModel {
 
+    private final ChatRepository repository;
     private final MutableLiveData<Resource<List<MessageResponse>>> _messageState = new MutableLiveData<>();
     public final LiveData<Resource<List<MessageResponse>>> messageState = _messageState;
 
     private final List<MessageResponse> messages = new ArrayList<>();
+
+    public ChatDetailViewModel(ChatRepository repository) {
+        this.repository = repository;
+        observeRealTimeMessages();
+    }
+
+    private void observeRealTimeMessages() {
+        repository.getRealTimeMessages().observeForever(mqttMessage -> {
+            if (mqttMessage != null && "NEW_MESSAGE".equals(mqttMessage.getType())) {
+                MessageResponse newMessage = new MessageResponse(
+                        System.currentTimeMillis(), // Mock ID
+                        Long.parseLong(mqttMessage.getSender()), // Assuming sender is ID
+                        mqttMessage.getPayload(),
+                        System.currentTimeMillis()
+                );
+                messages.add(newMessage);
+                _messageState.setValue(Resource.success(new ArrayList<>(messages)));
+            }
+        });
+    }
 
     public void loadMessages(Long conversationId) {
         _messageState.setValue(Resource.loading(null));
@@ -38,5 +61,7 @@ public class ChatDetailViewModel extends ViewModel {
         );
         messages.add(newMessage);
         _messageState.setValue(Resource.success(new ArrayList<>(messages)));
+        
+        // In a real app, you'd also publish via MqttManager or an API call
     }
 }
