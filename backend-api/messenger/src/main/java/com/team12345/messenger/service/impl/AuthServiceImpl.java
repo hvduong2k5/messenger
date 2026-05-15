@@ -113,18 +113,16 @@ public class AuthServiceImpl implements AuthService {
         // Find user by email
         Optional<User> userOptional = userRepository.findByEmail(forgotPasswordRequestDTO.getEmail());
         if (userOptional.isEmpty()) {
-            // For security reasons, don't reveal if email exists or not
-            return;
+            throw new InvalidCredentialsException("Email not found");
         }
 
         User user = userOptional.get();
 
         // Generate 6-digit OTP
-        String otp = String.format("%06d", new java.util.Random().nextInt(999999));
-
+        String otp = String.format("%06d", new java.util.Random().nextInt(1000000));
         LocalDateTime expiresAt = LocalDateTime.now().plusMinutes(5); // OTP expires in 5 minutes
 
-        // Save OTP to user
+        // Save OTP to user (ghi đè nếu đã có)
         user.setOtp(otp);
         user.setOtpExpiresAt(expiresAt);
         userRepository.save(user);
@@ -136,23 +134,35 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional
     public void resetPassword(ResetPasswordRequestDTO resetPasswordRequestDTO) {
-        // Find user by OTP
-        Optional<User> userOptional = userRepository.findByOtp(resetPasswordRequestDTO.getOtp());
+        // Find user by email
+        Optional<User> userOptional = userRepository.findByEmail(resetPasswordRequestDTO.getEmail());
         if (userOptional.isEmpty()) {
-            throw new InvalidCredentialsException("Invalid or expired OTP");
+            throw new InvalidCredentialsException("Email not found");
         }
 
         User user = userOptional.get();
 
-        // Check if OTP is expired
+        // Check if OTP exists and not expired
+        if (user.getOtp() == null || user.getOtpExpiresAt() == null) {
+            throw new InvalidCredentialsException("OTP has expired or does not exist");
+        }
+
         if (user.getOtpExpiresAt().isBefore(LocalDateTime.now())) {
-            throw new InvalidCredentialsException("OTP has expired");
+            throw new InvalidCredentialsException("OTP has expired or does not exist");
+        }
+
+        // Validate OTP
+        if (!user.getOtp().equals(resetPasswordRequestDTO.getOtp())) {
+            throw new InvalidCredentialsException("OTP is incorrect");
         }
 
         // Update password
         user.setPassword(passwordEncoder.encode(resetPasswordRequestDTO.getNewPassword()));
+
+        // Clear OTP
         user.setOtp(null);
         user.setOtpExpiresAt(null);
+
         userRepository.save(user);
     }
 
