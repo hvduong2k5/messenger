@@ -1,11 +1,11 @@
 package com.midterm.team12345.data.dto.request;
 
-public class RegisterRequest {
+public class RegisterRequestDTO {
     private String username;
     private String email;
     private String password;
 
-    public RegisterRequest(String username, String email, String password) {
+    public RegisterRequestDTO(String username, String email, String password) {
         this.username = username;
         this.email = email;
         this.password = password;

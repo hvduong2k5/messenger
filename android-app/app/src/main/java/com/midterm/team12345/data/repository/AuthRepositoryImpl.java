@@ -4,9 +4,9 @@ import android.app.Application;
 import androidx.annotation.NonNull;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
-import com.midterm.team12345.data.dto.response.AuthResponse;
-import com.midterm.team12345.data.dto.request.LoginRequest;
-import com.midterm.team12345.data.dto.request.RegisterRequest;
+import com.midterm.team12345.data.dto.response.AuthResponseDTO;
+import com.midterm.team12345.data.dto.request.LoginRequestDTO;
+import com.midterm.team12345.data.dto.request.RegisterRequestDTO;
 import com.midterm.team12345.data.local.TokenManager;
 import com.midterm.team12345.data.remote.AuthApiService;
 import com.midterm.team12345.data.remote.RetrofitClient;
@@ -35,17 +35,17 @@ public class AuthRepositoryImpl implements AuthRepository {
     }
 
     @Override
-    public LiveData<Resource<AuthResponse>> login(LoginRequest loginRequest) {
-        MutableLiveData<Resource<AuthResponse>> result = new MutableLiveData<>();
+    public LiveData<Resource<AuthResponseDTO>> login(LoginRequestDTO loginRequestDTO) {
+        MutableLiveData<Resource<AuthResponseDTO>> result = new MutableLiveData<>();
         result.setValue(Resource.loading(null));
 
-        authApiService.login(loginRequest).enqueue(new Callback<AuthResponse>() {
+        authApiService.login(loginRequestDTO).enqueue(new Callback<AuthResponseDTO>() {
             @Override
-            public void onResponse(@NonNull Call<AuthResponse> call, @NonNull Response<AuthResponse> response) {
+            public void onResponse(@NonNull Call<AuthResponseDTO> call, @NonNull Response<AuthResponseDTO> response) {
                 if (response.isSuccessful() && response.body() != null) {
-                    AuthResponse authResponse = response.body();
-                    tokenManager.saveToken(authResponse.getAccessToken());
-                    result.setValue(Resource.success(authResponse));
+                    AuthResponseDTO authResponseDTO = response.body();
+                    tokenManager.saveToken(authResponseDTO.getAccessToken());
+                    result.setValue(Resource.success(authResponseDTO));
                 } else {
                     String errorMsg = "Login failed";
                     if (response.code() == 401) {
@@ -58,7 +58,7 @@ public class AuthRepositoryImpl implements AuthRepository {
             }
 
             @Override
-            public void onFailure(@NonNull Call<AuthResponse> call, @NonNull Throwable t) {
+            public void onFailure(@NonNull Call<AuthResponseDTO> call, @NonNull Throwable t) {
                 result.setValue(Resource.error("Network error: " + t.getMessage(), null));
             }
         });
@@ -67,17 +67,17 @@ public class AuthRepositoryImpl implements AuthRepository {
     }
 
     @Override
-    public LiveData<Resource<AuthResponse>> register(RegisterRequest registerRequest) {
-        MutableLiveData<Resource<AuthResponse>> result = new MutableLiveData<>();
+    public LiveData<Resource<AuthResponseDTO>> register(RegisterRequestDTO registerRequestDTO) {
+        MutableLiveData<Resource<AuthResponseDTO>> result = new MutableLiveData<>();
         result.setValue(Resource.loading(null));
 
-        authApiService.register(registerRequest).enqueue(new Callback<AuthResponse>() {
+        authApiService.register(registerRequestDTO).enqueue(new Callback<AuthResponseDTO>() {
             @Override
-            public void onResponse(@NonNull Call<AuthResponse> call, @NonNull Response<AuthResponse> response) {
+            public void onResponse(@NonNull Call<AuthResponseDTO> call, @NonNull Response<AuthResponseDTO> response) {
                 if (response.isSuccessful() && response.body() != null) {
-                    AuthResponse authResponse = response.body();
-                    tokenManager.saveToken(authResponse.getAccessToken());
-                    result.setValue(Resource.success(authResponse));
+                    AuthResponseDTO authResponseDTO = response.body();
+                    tokenManager.saveToken(authResponseDTO.getAccessToken());
+                    result.setValue(Resource.success(authResponseDTO));
                 } else {
                     String errorMsg = "Registration failed";
                     if (response.code() == 409) {
@@ -90,7 +90,7 @@ public class AuthRepositoryImpl implements AuthRepository {
             }
 
             @Override
-            public void onFailure(@NonNull Call<AuthResponse> call, @NonNull Throwable t) {
+            public void onFailure(@NonNull Call<AuthResponseDTO> call, @NonNull Throwable t) {
                 result.setValue(Resource.error("Network connection error", null));
             }
         });
