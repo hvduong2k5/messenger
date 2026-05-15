@@ -1,11 +1,11 @@
 package com.midterm.team12345.data.dto.response;
 
-public class AuthResponse {
+public class AuthResponseDTO {
     private String accessToken;
     private String tokenType;
     private UserDTO user;
 
-    public AuthResponse() {}
+    public AuthResponseDTO() {}
 
     public String getAccessToken() { return accessToken; }
     public void setAccessToken(String accessToken) { this.accessToken = accessToken; }
