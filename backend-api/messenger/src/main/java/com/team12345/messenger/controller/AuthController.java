@@ -5,6 +5,7 @@ import com.team12345.messenger.dto.request.LoginRequestDTO;
 import com.team12345.messenger.dto.request.RegisterRequestDTO;
 import com.team12345.messenger.dto.request.ResetPasswordRequestDTO;
 import com.team12345.messenger.dto.response.AuthResponseDTO;
+import com.team12345.messenger.dto.response.ForgotPasswordResponseDTO;
 import com.team12345.messenger.security.CustomUserDetails;
 import com.team12345.messenger.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -38,18 +39,24 @@ public class AuthController {
         return ResponseEntity.ok(authResponseDTO);
     }
 
-    @Operation(summary = "Quên mật khẩu", description = "Gửi email chứa link đặt lại mật khẩu cho người dùng")
+    @Operation(summary = "Quên mật khẩu", description = "Gửi mã OTP để đặt lại mật khẩu")
     @PostMapping("/forgot-password")
-    public ResponseEntity<Void> forgotPassword(@Valid @RequestBody ForgotPasswordRequestDTO forgotPasswordRequestDTO) {
+    public ResponseEntity<ForgotPasswordResponseDTO> forgotPassword(@Valid @RequestBody ForgotPasswordRequestDTO forgotPasswordRequestDTO) {
         authService.forgotPassword(forgotPasswordRequestDTO);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(ForgotPasswordResponseDTO.builder()
+                .message("OTP has been sent to your email")
+                .success(true)
+                .build());
     }
 
-    @Operation(summary = "Đặt lại mật khẩu", description = "Đặt lại mật khẩu mới sử dụng token từ email quên mật khẩu")
+    @Operation(summary = "Đặt lại mật khẩu", description = "Xác nhận OTP và đặt lại mật khẩu mới")
     @PostMapping("/reset-password")
-    public ResponseEntity<Void> resetPassword(@Valid @RequestBody ResetPasswordRequestDTO resetPasswordRequestDTO) {
+    public ResponseEntity<ForgotPasswordResponseDTO> resetPassword(@Valid @RequestBody ResetPasswordRequestDTO resetPasswordRequestDTO) {
         authService.resetPassword(resetPasswordRequestDTO);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(ForgotPasswordResponseDTO.builder()
+                .message("Password has been reset successfully")
+                .success(true)
+                .build());
     }
 
     @Operation(summary = "Đăng xuất", description = "Đăng xuất người dùng hiện tại")
