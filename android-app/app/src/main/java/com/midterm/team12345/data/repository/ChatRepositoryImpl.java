@@ -1,6 +1,7 @@
 package com.midterm.team12345.data.repository;
 
 import android.app.Application;
+import android.os.Build;
 import androidx.annotation.NonNull;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
@@ -13,9 +14,10 @@ import com.midterm.team12345.data.remote.dto.response.MessageResponse;
 import com.midterm.team12345.data.remote.dto.response.MessageResponseDTO;
 import com.midterm.team12345.data.remote.dto.MqttMessageDTO;
 import com.midterm.team12345.data.remote.dto.response.PageResponse;
-import com.midterm.team12345.data.remote.dto.response.UserDTO;
+import com.midterm.team12345.data.remote.dto.response.UserResponseDTO;
 import com.midterm.team12345.data.remote.dto.response.UserProfileResponseDTO;
 import com.midterm.team12345.data.remote.api.ConversationApiService;
+import com.midterm.team12345.data.remote.api.FriendApiService;
 import com.midterm.team12345.data.remote.api.MessageApiService;
 import com.midterm.team12345.data.remote.RetrofitClient;
 import com.midterm.team12345.data.remote.api.UserApiService;
@@ -38,15 +40,18 @@ public class ChatRepositoryImpl implements ChatRepository {
     private final ConversationApiService conversationApiService;
     private final UserApiService userApiService;
     private final MessageApiService messageApiService;
+    private final FriendApiService friendApiService;
     private final MutableLiveData<MqttMessageDTO> realTimeMessages = new MutableLiveData<>();
     private final MutableLiveData<Boolean> connectionStatus = new MutableLiveData<>(false);
 
     private ChatRepositoryImpl(ConversationApiService conversationApiService, 
                                UserApiService userApiService,
-                               MessageApiService messageApiService) {
+                               MessageApiService messageApiService,
+                               FriendApiService friendApiService) {
         this.conversationApiService = conversationApiService;
         this.userApiService = userApiService;
         this.messageApiService = messageApiService;
+        this.friendApiService = friendApiService;
     }
 
     public static synchronized ChatRepositoryImpl getInstance(Application application) {
@@ -54,7 +59,8 @@ public class ChatRepositoryImpl implements ChatRepository {
             instance = new ChatRepositoryImpl(
                 RetrofitClient.getConversationApiService(application),
                 RetrofitClient.getUserApiService(application),
-                RetrofitClient.getMessageApiService(application)
+                RetrofitClient.getMessageApiService(application),
+                RetrofitClient.getFriendApiService(application)
             );
         }
         return instance;
@@ -99,7 +105,7 @@ public class ChatRepositoryImpl implements ChatRepository {
 
         if (timeStr != null && !timeStr.isEmpty()) {
             try {
-                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     timestamp = LocalDateTime.parse(timeStr)
                             .atZone(ZoneId.systemDefault())
                             .toInstant()
@@ -128,13 +134,13 @@ public class ChatRepositoryImpl implements ChatRepository {
     }
 
     @Override
-    public LiveData<Resource<List<UserDTO>>> getFriends() {
-        MutableLiveData<Resource<List<UserDTO>>> data = new MutableLiveData<>();
+    public LiveData<Resource<List<UserResponseDTO>>> getFriends() {
+        MutableLiveData<Resource<List<UserResponseDTO>>> data = new MutableLiveData<>();
         data.setValue(Resource.loading(null));
 
-        userApiService.getFriends().enqueue(new Callback<List<UserDTO>>() {
+        friendApiService.getFriendsList().enqueue(new Callback<List<UserResponseDTO>>() {
             @Override
-            public void onResponse(@NonNull Call<List<UserDTO>> call, @NonNull Response<List<UserDTO>> response) {
+            public void onResponse(@NonNull Call<List<UserResponseDTO>> call, @NonNull Response<List<UserResponseDTO>> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     data.setValue(Resource.success(response.body()));
                 } else {
@@ -143,7 +149,7 @@ public class ChatRepositoryImpl implements ChatRepository {
             }
 
             @Override
-            public void onFailure(@NonNull Call<List<UserDTO>> call, @NonNull Throwable t) {
+            public void onFailure(@NonNull Call<List<UserResponseDTO>> call, @NonNull Throwable t) {
                 data.setValue(Resource.error("Network error: " + t.getMessage(), null));
             }
         });
@@ -269,7 +275,7 @@ public class ChatRepositoryImpl implements ChatRepository {
             try {
                 long timestamp = 0;
                 String timeStr = dto.getCreatedAt();
-                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     timestamp = LocalDateTime.parse(timeStr)
                             .atZone(ZoneId.systemDefault())
                             .toInstant()
