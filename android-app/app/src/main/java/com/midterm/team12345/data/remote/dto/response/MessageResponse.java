@@ -30,7 +30,7 @@ public class MessageResponse {
     private String status;
 
     @SerializedName("createdAt")
-    private String createdAt;
+    private Long createdAt; // Chuyển về Long để xử lý ở UI
 
     @SerializedName("isDeleted")
     private Boolean isDeleted;
@@ -43,7 +43,7 @@ public class MessageResponse {
 
     public MessageResponse() {}
 
-    public MessageResponse(Long messageId, Long senderId, String content, String createdAt) {
+    public MessageResponse(Long messageId, Long senderId, String content, Long createdAt) {
         this.messageId = messageId;
         this.senderId = senderId;
         this.content = content;
@@ -76,8 +76,8 @@ public class MessageResponse {
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
 
-    public String getCreatedAt() { return createdAt; }
-    public void setCreatedAt(String createdAt) { this.createdAt = createdAt; }
+    public Long getCreatedAt() { return createdAt; }
+    public void setCreatedAt(Long createdAt) { this.createdAt = createdAt; }
 
     public Boolean getDeleted() { return isDeleted != null && isDeleted; }
     public void setDeleted(Boolean deleted) { isDeleted = deleted; }
