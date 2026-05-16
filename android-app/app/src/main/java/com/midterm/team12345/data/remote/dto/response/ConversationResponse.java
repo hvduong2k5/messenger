@@ -22,7 +22,7 @@ public class ConversationResponse implements Serializable {
     private String avatarUrl;
 
     @SerializedName("updatedAt")
-    private String updatedAt;
+    private Long updatedAt; // Chuyển về Long để xử lý ở UI (milliseconds)
 
     @SerializedName("unreadCount")
     private Integer unreadCount;
@@ -39,7 +39,7 @@ public class ConversationResponse implements Serializable {
     @SerializedName("attachments")
     private List<Object> attachments;
 
-    public ConversationResponse(Long conversationId, String conversationName, String lastMessage, String avatarUrl, String updatedAt, Integer unreadCount, Boolean isDeleted, Boolean isEdited, Boolean isGroup) {
+    public ConversationResponse(Long conversationId, String conversationName, String lastMessage, String avatarUrl, Long updatedAt, Integer unreadCount, Boolean isDeleted, Boolean isEdited, Boolean isGroup) {
         this.conversationId = conversationId;
         this.conversationName = conversationName;
         this.lastMessage = lastMessage;
@@ -67,7 +67,7 @@ public class ConversationResponse implements Serializable {
         return avatarUrl;
     }
 
-    public String getUpdatedAt() {
+    public Long getUpdatedAt() {
         return updatedAt;
     }
 
@@ -76,11 +76,11 @@ public class ConversationResponse implements Serializable {
     }
 
     public Boolean getDeleted() {
-        return isDeleted;
+        return isDeleted != null && isDeleted;
     }
 
     public Boolean getEdited() {
-        return isEdited;
+        return isEdited != null && isEdited;
     }
 
     public Boolean getGroup() {
@@ -90,23 +90,10 @@ public class ConversationResponse implements Serializable {
     public List<Object> getAttachments() { return attachments; }
 
     public String getFormattedTimestamp() {
-        if (updatedAt == null || updatedAt.isEmpty()) return "";
-        try {
-            long ts;
-            try {
-                ts = Long.parseLong(updatedAt);
-            } catch (NumberFormatException e) {
-                // If it's not a long, it might be ISO string. 
-                // For simplicity in this helper, we try to handle common case.
-                // In a real app, this should use the same logic as Repository.
-                return updatedAt; 
-            }
-            Date date = new Date(ts);
-            SimpleDateFormat fmt = new SimpleDateFormat("h:mm a", Locale.getDefault());
-            return fmt.format(date);
-        } catch (Exception e) {
-            return updatedAt;
-        }
+        if (updatedAt == null || updatedAt == 0L) return "";
+        Date date = new Date(updatedAt);
+        SimpleDateFormat fmt = new SimpleDateFormat("h:mm a", Locale.getDefault());
+        return fmt.format(date);
     }
 
     @Override
