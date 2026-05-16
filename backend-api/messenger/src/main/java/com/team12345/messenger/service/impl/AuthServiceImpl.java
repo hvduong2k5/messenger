@@ -76,8 +76,11 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public AuthResponseDTO login(LoginRequestDTO loginRequestDTO) {
-        // Find user by email only
-        Optional<User> userOptional = userRepository.findByEmail(loginRequestDTO.getEmail());
+        // Find user by username or email
+        Optional<User> userOptional = userRepository.findByUsernameOrEmail(
+                loginRequestDTO.getUsernameOrEmail(),
+                loginRequestDTO.getUsernameOrEmail()
+        );
 
         if (userOptional.isEmpty()) {
             throw new InvalidCredentialsException("Invalid email or password");
