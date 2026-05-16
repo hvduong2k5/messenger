@@ -1,9 +1,12 @@
 package com.midterm.team12345.data.repository;
 
+import android.content.Context;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
+import com.midterm.team12345.data.remote.RetrofitClient;
 import com.midterm.team12345.data.remote.api.ConversationApiService;
+import com.midterm.team12345.data.remote.dto.MqttMessageDTO;
 import com.midterm.team12345.data.remote.dto.request.ConversationRequestDTO;
 import com.midterm.team12345.data.remote.dto.request.ConversationUpdateDTO;
 import com.midterm.team12345.data.remote.dto.response.ConversationResponseDTO;
@@ -17,10 +20,20 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 public class ConversationRepositoryImpl implements ConversationRepository {
+    private static ConversationRepositoryImpl instance;
     private final ConversationApiService apiService;
+    private final MutableLiveData<MqttMessageDTO> realTimeMessages = new MutableLiveData<>();
+    private final MutableLiveData<Boolean> connectionStatus = new MutableLiveData<>(false);
 
-    public ConversationRepositoryImpl(ConversationApiService apiService) {
+    private ConversationRepositoryImpl(ConversationApiService apiService) {
         this.apiService = apiService;
+    }
+
+    public static synchronized ConversationRepositoryImpl getInstance(Context context) {
+        if (instance == null) {
+            instance = new ConversationRepositoryImpl(RetrofitClient.getConversationApiService(context));
+        }
+        return instance;
     }
 
     @Override
@@ -79,19 +92,16 @@ public class ConversationRepositoryImpl implements ConversationRepository {
 
     @Override
     public LiveData<Resource<Void>> addParticipant(Long conversationId, Long userId) {
-        // Implementation similar to above...
         return new MutableLiveData<>();
     }
 
     @Override
     public LiveData<Resource<Void>> removeParticipant(Long conversationId, Long userId) {
-        // Implementation...
         return new MutableLiveData<>();
     }
 
     @Override
     public LiveData<Resource<Void>> updateConversation(Long id, ConversationUpdateDTO request) {
-        // Implementation...
         return new MutableLiveData<>();
     }
 
@@ -111,5 +121,25 @@ public class ConversationRepositoryImpl implements ConversationRepository {
             }
         });
         return data;
+    }
+
+    @Override
+    public LiveData<MqttMessageDTO> getRealTimeMessages() {
+        return realTimeMessages;
+    }
+
+    @Override
+    public LiveData<Boolean> getConnectionStatus() {
+        return connectionStatus;
+    }
+
+    @Override
+    public void emitRealTimeMessage(MqttMessageDTO message) {
+        realTimeMessages.postValue(message);
+    }
+
+    @Override
+    public void updateConnectionStatus(boolean connected) {
+        connectionStatus.postValue(connected);
     }
 }

@@ -6,14 +6,21 @@ import com.midterm.team12345.data.remote.dto.request.ConversationUpdateDTO;
 import com.midterm.team12345.data.remote.dto.response.ConversationResponseDTO;
 import com.midterm.team12345.data.remote.dto.response.MessageResponseDTO;
 import com.midterm.team12345.data.remote.dto.response.PageResponse;
+import com.midterm.team12345.data.remote.dto.MqttMessageDTO;
 import com.midterm.team12345.utils.Resource;
 
 public interface ConversationRepository {
     LiveData<Resource<PageResponse<ConversationResponseDTO>>> getConversations(int page, int size);
     LiveData<Resource<ConversationResponseDTO>> getConversationDetails(Long id);
-    LiveData<Resource<Void>> createConversation(ConversationRequestDTO request); // Backend returns Conversation entity, but DTO is safer
+    LiveData<Resource<Void>> createConversation(ConversationRequestDTO request);
     LiveData<Resource<Void>> addParticipant(Long conversationId, Long userId);
     LiveData<Resource<Void>> removeParticipant(Long conversationId, Long userId);
     LiveData<Resource<Void>> updateConversation(Long id, ConversationUpdateDTO request);
     LiveData<Resource<PageResponse<MessageResponseDTO>>> getMessages(Long conversationId, int page, int size);
+
+    // Real-time (Mqtt)
+    LiveData<MqttMessageDTO> getRealTimeMessages();
+    LiveData<Boolean> getConnectionStatus();
+    void emitRealTimeMessage(MqttMessageDTO message);
+    void updateConnectionStatus(boolean connected);
 }
