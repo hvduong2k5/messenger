@@ -2,28 +2,23 @@ package com.midterm.team12345.ui.creategroup;
 
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
-import androidx.lifecycle.ViewModel;
 
 import com.midterm.team12345.data.remote.dto.request.ConversationRequestDTO;
 import com.midterm.team12345.data.remote.dto.response.ConversationResponse;
-import com.midterm.team12345.data.remote.dto.response.UserDTO;
+import com.midterm.team12345.data.remote.dto.response.UserResponseDTO;
 import com.midterm.team12345.domain.repository.ChatRepository;
+import com.midterm.team12345.ui.base.BaseViewModel;
 import com.midterm.team12345.utils.Resource;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class CreateGroupViewModel extends ViewModel {
+public class CreateGroupViewModel extends BaseViewModel {
 
     private final ChatRepository chatRepository;
 
-    private final MutableLiveData<List<UserDTO>> _friends = new MutableLiveData<>();
-    public LiveData<Resource<List<UserDTO>>> getFriends() {
-        return chatRepository.getFriends();
-    }
-
-    private final MutableLiveData<List<UserDTO>> _selectedUsers = new MutableLiveData<>(new ArrayList<>());
-    public LiveData<List<UserDTO>> getSelectedUsers() {
+    private final MutableLiveData<List<UserResponseDTO>> _selectedUsers = new MutableLiveData<>(new ArrayList<>());
+    public LiveData<List<UserResponseDTO>> getSelectedUsers() {
         return _selectedUsers;
     }
 
@@ -36,8 +31,18 @@ public class CreateGroupViewModel extends ViewModel {
         this.chatRepository = chatRepository;
     }
 
-    public void toggleUserSelection(UserDTO user) {
-        List<UserDTO> currentSelected = new ArrayList<>(_selectedUsers.getValue());
+    /**
+     * Lấy danh sách bạn bè để mời vào nhóm
+     */
+    public LiveData<Resource<List<UserResponseDTO>>> getFriends() {
+        return chatRepository.getFriends();
+    }
+
+    /**
+     * Chọn hoặc bỏ chọn một thành viên
+     */
+    public void toggleUserSelection(UserResponseDTO user) {
+        List<UserResponseDTO> currentSelected = new ArrayList<>(_selectedUsers.getValue() != null ? _selectedUsers.getValue() : new ArrayList<>());
         boolean exists = false;
         for (int i = 0; i < currentSelected.size(); i++) {
             if (currentSelected.get(i).getId().equals(user.getId())) {
@@ -52,26 +57,36 @@ public class CreateGroupViewModel extends ViewModel {
         _selectedUsers.setValue(currentSelected);
     }
 
+    /**
+     * Thực hiện tạo nhóm mới
+     */
     public void createGroup(String groupName) {
         if (groupName.trim().isEmpty()) {
-            _createState.setValue(Resource.error("Please enter group name", null));
+            setError("Please enter group name");
             return;
         }
 
-        List<UserDTO> selected = _selectedUsers.getValue();
+        List<UserResponseDTO> selected = _selectedUsers.getValue();
         if (selected == null || selected.size() < 2) {
-            _createState.setValue(Resource.error("Select at least 2 members", null));
+            setError("Select at least 2 members");
             return;
         }
 
+        showLoading();
         List<Long> ids = new ArrayList<>();
-        for (UserDTO u : selected) {
+        for (UserResponseDTO u : selected) {
             ids.add(u.getId());
         }
 
         ConversationRequestDTO request = new ConversationRequestDTO(groupName, true, ids);
         chatRepository.createConversation(request).observeForever(resource -> {
             _createState.setValue(resource);
+            if (resource.status != Resource.Status.LOADING) {
+                hideLoading();
+            }
+            if (resource.status == Resource.Status.ERROR) {
+                setError(resource.message);
+            }
         });
     }
 }
