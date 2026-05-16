@@ -1,8 +1,10 @@
 package com.midterm.team12345.data.repository;
 
+import android.content.Context;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
+import com.midterm.team12345.data.remote.RetrofitClient;
 import com.midterm.team12345.data.remote.api.FriendApiService;
 import com.midterm.team12345.data.remote.dto.response.FriendRequestResponseDTO;
 import com.midterm.team12345.data.remote.dto.response.UserResponseDTO;
@@ -16,10 +18,18 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 public class FriendRepositoryImpl implements FriendRepository {
+    private static FriendRepositoryImpl instance;
     private final FriendApiService friendApiService;
 
-    public FriendRepositoryImpl(FriendApiService friendApiService) {
+    private FriendRepositoryImpl(FriendApiService friendApiService) {
         this.friendApiService = friendApiService;
+    }
+
+    public static synchronized FriendRepositoryImpl getInstance(Context context) {
+        if (instance == null) {
+            instance = new FriendRepositoryImpl(RetrofitClient.getFriendApiService(context));
+        }
+        return instance;
     }
 
     @Override
