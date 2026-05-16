@@ -8,7 +8,7 @@ import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.midterm.team12345.R;
-import com.midterm.team12345.data.dto.response.MessageResponse;
+import com.midterm.team12345.data.remote.dto.response.MessageResponse;
 import com.midterm.team12345.databinding.ItemMessageReceivedBinding;
 import com.midterm.team12345.databinding.ItemMessageSentBinding;
 

@@ -19,7 +19,7 @@ import com.midterm.team12345.MainActivity;
 import com.midterm.team12345.R;
 import com.midterm.team12345.data.repository.AuthRepositoryImpl;
 import com.midterm.team12345.databinding.ActivityLoginBinding;
-import com.midterm.team12345.util.Resource;
+import com.midterm.team12345.utils.Resource;
 
 public class LoginActivity extends AppCompatActivity {
 

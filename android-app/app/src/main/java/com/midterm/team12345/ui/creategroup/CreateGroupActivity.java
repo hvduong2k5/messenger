@@ -12,9 +12,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.midterm.team12345.data.repository.ChatRepositoryImpl;
 import com.midterm.team12345.databinding.ActivityCreateGroupBinding;
-import com.midterm.team12345.util.Resource;
-
-import java.util.ArrayList;
+import com.midterm.team12345.utils.Resource;
 
 public class CreateGroupActivity extends AppCompatActivity {
 

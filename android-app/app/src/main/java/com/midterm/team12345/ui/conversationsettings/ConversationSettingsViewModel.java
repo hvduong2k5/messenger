@@ -4,7 +4,7 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
-import com.midterm.team12345.util.Resource;
+import com.midterm.team12345.utils.Resource;
 
 public class ConversationSettingsViewModel extends ViewModel {
 

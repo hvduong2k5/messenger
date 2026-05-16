@@ -18,7 +18,6 @@ import com.midterm.team12345.data.repository.ChatRepositoryImpl;
 import com.midterm.team12345.databinding.FragmentChatListBinding;
 import com.midterm.team12345.ui.chatdetail.ChatDetailActivity;
 import com.midterm.team12345.ui.creategroup.CreateGroupActivity;
-import com.midterm.team12345.util.Resource;
 
 public class ChatListFragment extends Fragment {
 

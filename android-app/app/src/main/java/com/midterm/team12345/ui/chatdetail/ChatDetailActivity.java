@@ -7,7 +7,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 import com.midterm.team12345.data.repository.ChatRepositoryImpl;
 import com.midterm.team12345.databinding.ActivityChatDetailBinding;
-import com.midterm.team12345.util.Resource;
+import com.midterm.team12345.utils.Resource;
 
 public class ChatDetailActivity extends AppCompatActivity {
 
