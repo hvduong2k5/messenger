@@ -21,7 +21,7 @@ import com.midterm.team12345.databinding.ItemSettingsRowMainBinding;
 import com.midterm.team12345.ui.auth.LoginActivity;
 import com.midterm.team12345.ui.chatlist.ChatListViewModel;
 import com.midterm.team12345.ui.chatlist.ChatListViewModelFactory;
-import com.midterm.team12345.util.Resource;
+import com.midterm.team12345.utils.Resource;
 
 public class SettingsFragment extends Fragment {
 

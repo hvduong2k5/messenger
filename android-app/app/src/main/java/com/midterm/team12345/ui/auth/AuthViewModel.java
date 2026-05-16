@@ -4,11 +4,11 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
-import com.midterm.team12345.data.dto.response.AuthResponseDTO;
-import com.midterm.team12345.data.dto.request.LoginRequestDTO;
-import com.midterm.team12345.data.dto.request.RegisterRequestDTO;
-import com.midterm.team12345.data.repository.AuthRepository;
-import com.midterm.team12345.util.Resource;
+import com.midterm.team12345.data.remote.dto.response.AuthResponseDTO;
+import com.midterm.team12345.data.remote.dto.request.LoginRequestDTO;
+import com.midterm.team12345.data.remote.dto.request.RegisterRequestDTO;
+import com.midterm.team12345.domain.repository.AuthRepository;
+import com.midterm.team12345.utils.Resource;
 
 public class AuthViewModel extends ViewModel {
     private final AuthRepository authRepository;

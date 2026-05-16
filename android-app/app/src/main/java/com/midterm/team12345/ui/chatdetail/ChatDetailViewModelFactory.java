@@ -3,7 +3,7 @@ package com.midterm.team12345.ui.chatdetail;
 import androidx.annotation.NonNull;
 import androidx.lifecycle.ViewModel;
 import androidx.lifecycle.ViewModelProvider;
-import com.midterm.team12345.data.repository.ChatRepository;
+import com.midterm.team12345.domain.repository.ChatRepository;
 
 public class ChatDetailViewModelFactory implements ViewModelProvider.Factory {
     private final ChatRepository repository;

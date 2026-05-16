@@ -4,11 +4,11 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
-import com.midterm.team12345.data.dto.request.ConversationRequestDTO;
-import com.midterm.team12345.data.dto.response.ConversationResponse;
-import com.midterm.team12345.data.dto.response.UserDTO;
-import com.midterm.team12345.data.repository.ChatRepository;
-import com.midterm.team12345.util.Resource;
+import com.midterm.team12345.data.remote.dto.request.ConversationRequestDTO;
+import com.midterm.team12345.data.remote.dto.response.ConversationResponse;
+import com.midterm.team12345.data.remote.dto.response.UserDTO;
+import com.midterm.team12345.domain.repository.ChatRepository;
+import com.midterm.team12345.utils.Resource;
 
 import java.util.ArrayList;
 import java.util.List;

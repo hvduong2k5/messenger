@@ -4,7 +4,7 @@ import androidx.annotation.NonNull;
 import androidx.lifecycle.ViewModel;
 import androidx.lifecycle.ViewModelProvider;
 
-import com.midterm.team12345.data.repository.AuthRepository;
+import com.midterm.team12345.domain.repository.AuthRepository;
 
 public class AuthViewModelFactory implements ViewModelProvider.Factory {
     private final AuthRepository authRepository;

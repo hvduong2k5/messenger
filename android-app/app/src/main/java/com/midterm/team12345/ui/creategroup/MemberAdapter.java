@@ -6,7 +6,7 @@ import android.view.ViewGroup;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.midterm.team12345.data.dto.response.UserDTO;
+import com.midterm.team12345.data.remote.dto.response.UserDTO;
 import com.midterm.team12345.databinding.ItemMemberSelectBinding;
 
 import java.util.ArrayList;
