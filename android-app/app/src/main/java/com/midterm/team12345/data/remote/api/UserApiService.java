@@ -1,21 +1,40 @@
 package com.midterm.team12345.data.remote.api;
 
+import com.midterm.team12345.data.remote.dto.request.UpdateProfileRequestDTO;
+import com.midterm.team12345.data.remote.dto.response.PageResponse;
 import com.midterm.team12345.data.remote.dto.response.UserProfileResponseDTO;
-import com.midterm.team12345.data.remote.dto.response.UserDTO;
+import com.midterm.team12345.data.remote.dto.response.UserSearchResponseDTO;
 
-import java.util.List;
-
+import okhttp3.MultipartBody;
 import retrofit2.Call;
+import retrofit2.http.Body;
 import retrofit2.http.GET;
+import retrofit2.http.Multipart;
+import retrofit2.http.PATCH;
+import retrofit2.http.PUT;
+import retrofit2.http.Part;
+import retrofit2.http.Path;
 import retrofit2.http.Query;
 
 public interface UserApiService {
+
     @GET("users/me")
     Call<UserProfileResponseDTO> getMyProfile();
 
-    @GET("users/search")
-    Call<List<UserDTO>> searchUsers(@Query("keyword") String keyword);
+    @GET("users/{id}")
+    Call<UserProfileResponseDTO> getUserProfile(@Path("id") Long id);
 
-    @GET("friends")
-    Call<List<UserDTO>> getFriends();
+    @PUT("users/profile")
+    Call<UserProfileResponseDTO> updateProfile(@Body UpdateProfileRequestDTO request);
+
+    @Multipart
+    @PATCH("users/avatar")
+    Call<UserProfileResponseDTO> updateAvatar(@Part MultipartBody.Part file);
+
+    @GET("users/search/paged")
+    Call<PageResponse<UserSearchResponseDTO>> searchUsers(
+            @Query("q") String query,
+            @Query("page") int page,
+            @Query("size") int size
+    );
 }
