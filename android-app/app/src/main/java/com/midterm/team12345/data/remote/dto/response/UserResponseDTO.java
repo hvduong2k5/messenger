@@ -1,7 +1,6 @@
 package com.midterm.team12345.data.remote.dto.response;
 
 import com.google.gson.annotations.SerializedName;
-import java.time.LocalDateTime;
 
 public class UserResponseDTO {
     @SerializedName("id")
@@ -23,7 +22,7 @@ public class UserResponseDTO {
     private Boolean isOnline;
 
     @SerializedName("lastSeen")
-    private LocalDateTime lastSeen;
+    private String lastSeen; // Chuyển sang String để tránh crash khi nhận giá trị NULL
 
     public UserResponseDTO() {}
 
@@ -45,6 +44,6 @@ public class UserResponseDTO {
     public Boolean getIsOnline() { return isOnline; }
     public void setIsOnline(Boolean online) { isOnline = online; }
 
-    public LocalDateTime getLastSeen() { return lastSeen; }
-    public void setLastSeen(LocalDateTime lastSeen) { this.lastSeen = lastSeen; }
+    public String getLastSeen() { return lastSeen; }
+    public void setLastSeen(String lastSeen) { this.lastSeen = lastSeen; }
 }
