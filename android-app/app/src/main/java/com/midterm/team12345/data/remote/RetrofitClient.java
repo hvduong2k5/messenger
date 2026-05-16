@@ -5,12 +5,16 @@ import android.content.Context;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.midterm.team12345.data.local.TokenManager;
-import com.midterm.team12345.util.LocalDateTimeAdapter;
+import com.midterm.team12345.data.remote.api.AuthApiService;
+import com.midterm.team12345.data.remote.api.ConversationApiService;
+import com.midterm.team12345.data.remote.api.MessageApiService;
+import com.midterm.team12345.data.remote.api.UserApiService;
+import com.midterm.team12345.data.remote.interceptor.AuthInterceptor;
+import com.midterm.team12345.utils.LocalDateTimeAdapter;
 
 import java.time.LocalDateTime;
 
 import okhttp3.OkHttpClient;
-import okhttp3.Request;
 import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
@@ -28,19 +32,7 @@ public class RetrofitClient {
 
             OkHttpClient client = new OkHttpClient.Builder()
                     .addInterceptor(logging)
-                    .addInterceptor(chain -> {
-                        Request original = chain.request();
-                        String token = tokenManager.getToken();
-                        
-                        if (token != null && !token.isEmpty()) {
-                            Request request = original.newBuilder()
-                                    .header("Authorization", "Bearer " + token)
-                                    .method(original.method(), original.body())
-                                    .build();
-                            return chain.proceed(request);
-                        }
-                        return chain.proceed(original);
-                    })
+                    .addInterceptor(new AuthInterceptor(tokenManager))
                     .build();
 
             Gson gson = new GsonBuilder()
