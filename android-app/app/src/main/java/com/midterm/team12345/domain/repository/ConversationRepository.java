@@ -12,10 +12,11 @@ import com.midterm.team12345.utils.Resource;
 public interface ConversationRepository {
     LiveData<Resource<PageResponse<ConversationResponseDTO>>> getConversations(int page, int size);
     LiveData<Resource<ConversationResponseDTO>> getConversationDetails(Long id);
-    LiveData<Resource<Void>> createConversation(ConversationRequestDTO request);
+    LiveData<Resource<ConversationResponseDTO>> createConversation(ConversationRequestDTO request);
     LiveData<Resource<Void>> addParticipant(Long conversationId, Long userId);
     LiveData<Resource<Void>> removeParticipant(Long conversationId, Long userId);
     LiveData<Resource<Void>> updateConversation(Long id, ConversationUpdateDTO request);
+    LiveData<Resource<Void>> leaveConversation(Long conversationId);
     LiveData<Resource<PageResponse<MessageResponseDTO>>> getMessages(Long conversationId, int page, int size);
 
     // Real-time (Mqtt)
