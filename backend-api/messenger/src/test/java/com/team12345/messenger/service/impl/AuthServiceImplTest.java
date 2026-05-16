@@ -111,7 +111,7 @@ class AuthServiceImplTest {
         // Act & Assert
         assertThatThrownBy(() -> authService.register(registerRequestDTO))
                 .isInstanceOf(UserAlreadyExistsException.class)
-                .hasMessage("Username is already taken: testuser");
+                .hasMessage("Username is already registered: testuser");
 
         verify(userRepository).existsByUsername("testuser");
         verify(userRepository, never()).existsByEmail(anyString());
@@ -210,10 +210,11 @@ class AuthServiceImplTest {
 
         when(userRepository.findByEmail("nonexistent@example.com")).thenReturn(Optional.empty());
 
-        // Act
-        authService.forgotPassword(request);
+        // Act & Assert
+        assertThatThrownBy(() -> authService.forgotPassword(request))
+                .isInstanceOf(InvalidCredentialsException.class)
+                .hasMessage("Email not found");
 
-        // Assert
         verify(userRepository).findByEmail("nonexistent@example.com");
         verify(userRepository, never()).save(any(User.class));
     }
@@ -222,6 +223,7 @@ class AuthServiceImplTest {
     void testResetPassword_Success() {
         // Arrange
         ResetPasswordRequestDTO request = new ResetPasswordRequestDTO();
+        request.setEmail("test@example.com");
         request.setOtp("reset-token-123");
         request.setNewPassword("newpassword123");
 
@@ -230,11 +232,11 @@ class AuthServiceImplTest {
                 .username("testuser")
                 .email("test@example.com")
                 .password("oldEncodedPassword")
-                .password("reset-token-123")
-                .passwordResetExpiresAt(LocalDateTime.now().plusHours(1))
+                .otp("reset-token-123")
+                .otpExpiresAt(LocalDateTime.now().plusHours(1))
                 .build();
 
-        when(userRepository.findByPasswordResetToken("reset-token-123")).thenReturn(Optional.of(userWithToken));
+        when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(userWithToken));
         when(passwordEncoder.encode("newpassword123")).thenReturn("newEncodedPassword");
         when(userRepository.save(any(User.class))).thenReturn(userWithToken);
 
@@ -242,7 +244,7 @@ class AuthServiceImplTest {
         authService.resetPassword(request);
 
         // Assert
-        verify(userRepository).findByPasswordResetToken("reset-token-123");
+        verify(userRepository).findByEmail("test@example.com");
         verify(passwordEncoder).encode("newpassword123");
         verify(userRepository).save(any(User.class));
     }
@@ -251,17 +253,25 @@ class AuthServiceImplTest {
     void testResetPassword_InvalidToken() {
         // Arrange
         ResetPasswordRequestDTO request = new ResetPasswordRequestDTO();
-        request.setToken("invalid-token");
+        request.setEmail("test@example.com");
+        request.setOtp("invalid-token");
         request.setNewPassword("newpassword123");
 
-        when(userRepository.findByPasswordResetToken("invalid-token")).thenReturn(Optional.empty());
 
-        // Act & Assert
+        User userWithOtherOtp = User.builder()
+                .email("test@example.com")
+                .otp("000000")
+                .otpExpiresAt(LocalDateTime.now().plusMinutes(5))
+                .build();
+
+        when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(userWithOtherOtp));
+
+        // user exists and OTP is present but does not match -> should throw OTP is incorrect
         assertThatThrownBy(() -> authService.resetPassword(request))
                 .isInstanceOf(InvalidCredentialsException.class)
-                .hasMessage("Invalid or expired reset token");
+                .hasMessage("OTP is incorrect");
 
-        verify(userRepository).findByPasswordResetToken("invalid-token");
+        verify(userRepository).findByEmail("test@example.com");
         verify(passwordEncoder, never()).encode(anyString());
         verify(userRepository, never()).save(any(User.class));
     }
@@ -270,7 +280,8 @@ class AuthServiceImplTest {
     void testResetPassword_ExpiredToken() {
         // Arrange
         ResetPasswordRequestDTO request = new ResetPasswordRequestDTO();
-        request.setToken("expired-token");
+        request.setEmail("test@example.com");
+        request.setOtp("expired-token");
         request.setNewPassword("newpassword123");
 
         User userWithExpiredToken = User.builder()
@@ -278,18 +289,18 @@ class AuthServiceImplTest {
                 .username("testuser")
                 .email("test@example.com")
                 .password("oldEncodedPassword")
-                .passwordResetToken("expired-token")
-                .passwordResetExpiresAt(LocalDateTime.now().minusHours(1))
+                .otp("expired-token")
+                .otpExpiresAt(LocalDateTime.now().minusHours(1))
                 .build();
 
-        when(userRepository.findByPasswordResetToken("expired-token")).thenReturn(Optional.of(userWithExpiredToken));
+        when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(userWithExpiredToken));
 
         // Act & Assert
         assertThatThrownBy(() -> authService.resetPassword(request))
                 .isInstanceOf(InvalidCredentialsException.class)
-                .hasMessage("Reset token has expired");
+                .hasMessage("OTP has expired or does not exist");
 
-        verify(userRepository).findByPasswordResetToken("expired-token");
+        verify(userRepository).findByEmail("test@example.com");
         verify(passwordEncoder, never()).encode(anyString());
         verify(userRepository, never()).save(any(User.class));
     }
