@@ -63,7 +63,7 @@ class AuthServiceImplTest {
         registerRequestDTO.setPassword("password123");
 
         loginRequestDTO = new LoginRequestDTO();
-        loginRequestDTO.setEmail("test@example.com");
+        loginRequestDTO.setUsernameOrEmail("test@example.com");
         loginRequestDTO.setPassword("password123");
 
         user = User.builder()
@@ -137,7 +137,7 @@ class AuthServiceImplTest {
     @Test
     void testLogin_Success() {
         // Arrange
-        when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(user));
+        when(userRepository.findByUsernameOrEmail("test@example.com", "test@example.com")).thenReturn(Optional.of(user));
         when(passwordEncoder.matches("password123", "encodedPassword")).thenReturn(true);
         when(jwtUtils.generateTokenFromUsername("testuser")).thenReturn("jwtToken");
 
@@ -149,7 +149,28 @@ class AuthServiceImplTest {
         assertThat(response.getAccessToken()).isEqualTo("jwtToken");
         assertThat(response.getUser().getUsername()).isEqualTo("testuser");
 
-        verify(userRepository).findByEmail("test@example.com");
+        verify(userRepository).findByUsernameOrEmail("test@example.com", "test@example.com");
+        verify(passwordEncoder).matches("password123", "encodedPassword");
+        verify(jwtUtils).generateTokenFromUsername("testuser");
+    }
+
+    @Test
+    void testLogin_SuccessWithUsername() {
+        // Arrange
+        loginRequestDTO.setUsernameOrEmail("testuser");
+        when(userRepository.findByUsernameOrEmail("testuser", "testuser")).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches("password123", "encodedPassword")).thenReturn(true);
+        when(jwtUtils.generateTokenFromUsername("testuser")).thenReturn("jwtToken");
+
+        // Act
+        AuthResponseDTO response = authService.login(loginRequestDTO);
+
+        // Assert
+        assertThat(response).isNotNull();
+        assertThat(response.getAccessToken()).isEqualTo("jwtToken");
+        assertThat(response.getUser().getUsername()).isEqualTo("testuser");
+
+        verify(userRepository).findByUsernameOrEmail("testuser", "testuser");
         verify(passwordEncoder).matches("password123", "encodedPassword");
         verify(jwtUtils).generateTokenFromUsername("testuser");
     }
@@ -157,21 +178,21 @@ class AuthServiceImplTest {
     @Test
     void testLogin_UserNotFound() {
         // Arrange
-        when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.empty());
+        when(userRepository.findByUsernameOrEmail("test@example.com", "test@example.com")).thenReturn(Optional.empty());
 
         // Act & Assert
         assertThatThrownBy(() -> authService.login(loginRequestDTO))
                 .isInstanceOf(InvalidCredentialsException.class)
                 .hasMessage("Invalid email or password");
 
-        verify(userRepository).findByEmail("test@example.com");
+        verify(userRepository).findByUsernameOrEmail("test@example.com", "test@example.com");
         verify(passwordEncoder, never()).matches(anyString(), anyString());
     }
 
     @Test
     void testLogin_InvalidPassword() {
         // Arrange
-        when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(user));
+        when(userRepository.findByUsernameOrEmail("test@example.com", "test@example.com")).thenReturn(Optional.of(user));
         when(passwordEncoder.matches("password123", "encodedPassword")).thenReturn(false);
 
         // Act & Assert
@@ -179,7 +200,7 @@ class AuthServiceImplTest {
                 .isInstanceOf(InvalidCredentialsException.class)
                 .hasMessage("Invalid email or password");
 
-        verify(userRepository).findByEmail("test@example.com");
+        verify(userRepository).findByUsernameOrEmail("test@example.com", "test@example.com");
         verify(passwordEncoder).matches("password123", "encodedPassword");
         verify(jwtUtils, never()).generateTokenFromUsername(anyString());
     }

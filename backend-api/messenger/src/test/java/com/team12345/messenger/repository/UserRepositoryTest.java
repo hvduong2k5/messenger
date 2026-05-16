@@ -61,6 +61,24 @@ public class UserRepositoryTest {
     }
 
     @Test
+    public void testFindByUsernameOrEmail() {
+        User user = User.builder()
+                .username("loginuser")
+                .email("loginuser@example.com")
+                .password("passwo5555555555555555555555555555555555555555555555555555555rd")
+                .build();
+        userRepository.save(user);
+
+        Optional<User> foundByUsername = userRepository.findByUsernameOrEmail("loginuser", "loginuser");
+        Optional<User> foundByEmail = userRepository.findByUsernameOrEmail("loginuser@example.com", "loginuser@example.com");
+
+        assertThat(foundByUsername).isPresent();
+        assertThat(foundByUsername.get().getEmail()).isEqualTo("loginuser@example.com");
+        assertThat(foundByEmail).isPresent();
+        assertThat(foundByEmail.get().getUsername()).isEqualTo("loginuser");
+    }
+
+    @Test
     public void testExistsByEmail() {
         User user = User.builder()
                 .username("alice")
