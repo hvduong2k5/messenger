@@ -1,5 +1,6 @@
 package com.midterm.team12345.data.dto.response;
 
+import com.google.gson.annotations.SerializedName;
 import java.io.Serializable;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -8,18 +9,37 @@ import java.util.Objects;
 import java.util.List;
 
 public class ConversationResponse implements Serializable {
+    @SerializedName("conversationId")
     private Long conversationId;
+
+    @SerializedName("conversationName")
     private String conversationName;
+
+    @SerializedName("lastMessage")
     private String lastMessage;
+
+    @SerializedName("avatarUrl")
     private String avatarUrl;
-    private Long updatedAt; // epoch millis
+
+    @SerializedName("updatedAt")
+    private String updatedAt;
+
+    @SerializedName("unreadCount")
     private Integer unreadCount;
+
+    @SerializedName("isDeleted")
     private Boolean isDeleted;
+
+    @SerializedName("isEdited")
     private Boolean isEdited;
+
+    @SerializedName("isGroup")
     private Boolean isGroup;
+
+    @SerializedName("attachments")
     private List<Object> attachments;
 
-    public ConversationResponse(Long conversationId, String conversationName, String lastMessage, String avatarUrl, Long updatedAt, Integer unreadCount, Boolean isDeleted, Boolean isEdited, Boolean isGroup) {
+    public ConversationResponse(Long conversationId, String conversationName, String lastMessage, String avatarUrl, String updatedAt, Integer unreadCount, Boolean isDeleted, Boolean isEdited, Boolean isGroup) {
         this.conversationId = conversationId;
         this.conversationName = conversationName;
         this.lastMessage = lastMessage;
@@ -47,7 +67,7 @@ public class ConversationResponse implements Serializable {
         return avatarUrl;
     }
 
-    public Long getUpdatedAt() {
+    public String getUpdatedAt() {
         return updatedAt;
     }
 
@@ -70,10 +90,23 @@ public class ConversationResponse implements Serializable {
     public List<Object> getAttachments() { return attachments; }
 
     public String getFormattedTimestamp() {
-        if (updatedAt == null || updatedAt == 0L) return "";
-        Date date = new Date(updatedAt);
-        SimpleDateFormat fmt = new SimpleDateFormat("h:mm a", Locale.getDefault());
-        return fmt.format(date);
+        if (updatedAt == null || updatedAt.isEmpty()) return "";
+        try {
+            long ts;
+            try {
+                ts = Long.parseLong(updatedAt);
+            } catch (NumberFormatException e) {
+                // If it's not a long, it might be ISO string. 
+                // For simplicity in this helper, we try to handle common case.
+                // In a real app, this should use the same logic as Repository.
+                return updatedAt; 
+            }
+            Date date = new Date(ts);
+            SimpleDateFormat fmt = new SimpleDateFormat("h:mm a", Locale.getDefault());
+            return fmt.format(date);
+        } catch (Exception e) {
+            return updatedAt;
+        }
     }
 
     @Override

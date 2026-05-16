@@ -1,12 +1,22 @@
 package com.midterm.team12345.data.dto.request;
 
+import com.google.gson.annotations.SerializedName;
 import java.util.List;
 
 public class MessageRequestDTO {
+    @SerializedName("senderId")
     private Long senderId;
+
+    @SerializedName("conversationId")
     private Long conversationId;
+
+    @SerializedName("content")
     private String content;
+
+    @SerializedName("clientMessageId")
     private String clientMessageId;
+
+    @SerializedName("files")
     private List<Object> files;
 
     public MessageRequestDTO(Long senderId, Long conversationId, String content, String clientMessageId) {

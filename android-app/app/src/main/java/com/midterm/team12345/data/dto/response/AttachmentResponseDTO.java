@@ -1,13 +1,25 @@
 package com.midterm.team12345.data.dto.response;
 
+import com.google.gson.annotations.SerializedName;
 import java.time.LocalDateTime;
 
 public class AttachmentResponseDTO {
+    @SerializedName("id")
     private Long id;
+
+    @SerializedName("url")
     private String url;
+
+    @SerializedName("type")
     private String type;
+
+    @SerializedName("fileSize")
     private Integer fileSize;
+
+    @SerializedName("publicId")
     private String publicId;
+
+    @SerializedName("uploadedAt")
     private LocalDateTime uploadedAt;
 
     public AttachmentResponseDTO() {}

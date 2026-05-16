@@ -1,25 +1,49 @@
 package com.midterm.team12345.data.dto.response;
 
+import com.google.gson.annotations.SerializedName;
 import java.util.List;
 import java.util.Objects;
 
 public class MessageResponse {
+    @SerializedName("messageId")
     private Long messageId;
+
+    @SerializedName("conversationId")
     private Long conversationId;
+
+    @SerializedName("senderId")
     private Long senderId;
+
+    @SerializedName("senderUsername")
     private String senderUsername;
+
+    @SerializedName("senderAvatarUrl")
     private String senderAvatarUrl;
+
+    @SerializedName("content")
     private String content;
+
+    @SerializedName("type")
     private String type;
+
+    @SerializedName("status")
     private String status;
-    private Long createdAt; // Changed to Long for easier handling in Android if needed, or keep LocalDateTime
+
+    @SerializedName("createdAt")
+    private String createdAt;
+
+    @SerializedName("isDeleted")
     private Boolean isDeleted;
+
+    @SerializedName("isEdited")
     private Boolean isEdited;
+
+    @SerializedName("attachments")
     private List<Object> attachments;
 
     public MessageResponse() {}
 
-    public MessageResponse(Long messageId, Long senderId, String content, Long createdAt) {
+    public MessageResponse(Long messageId, Long senderId, String content, String createdAt) {
         this.messageId = messageId;
         this.senderId = senderId;
         this.content = content;
@@ -52,13 +76,13 @@ public class MessageResponse {
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
 
-    public Long getCreatedAt() { return createdAt; }
-    public void setCreatedAt(Long createdAt) { this.createdAt = createdAt; }
+    public String getCreatedAt() { return createdAt; }
+    public void setCreatedAt(String createdAt) { this.createdAt = createdAt; }
 
-    public Boolean getDeleted() { return isDeleted; }
+    public Boolean getDeleted() { return isDeleted != null && isDeleted; }
     public void setDeleted(Boolean deleted) { isDeleted = deleted; }
 
-    public Boolean getEdited() { return isEdited; }
+    public Boolean getEdited() { return isEdited != null && isEdited; }
     public void setEdited(Boolean edited) { isEdited = edited; }
 
     public List<Object> getAttachments() { return attachments; }

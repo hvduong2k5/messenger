@@ -1,13 +1,30 @@
 package com.midterm.team12345.data.dto.response;
 
+import com.google.gson.annotations.SerializedName;
+
 public class ConversationResponseDTO {
+    @SerializedName("id")
     private Long id;
+
+    @SerializedName("name")
     private String name;
+
+    @SerializedName("isGroup")
     private Boolean isGroup;
-    private String updatedAt; // Đổi sang String để tránh lỗi parse LocalDateTime
+
+    @SerializedName("updatedAt")
+    private String updatedAt;
+
+    @SerializedName("lastMessageContent")
     private String lastMessageContent;
-    private String lastMessageCreatedAt; // Đổi sang String
+
+    @SerializedName("lastMessageCreatedAt")
+    private String lastMessageCreatedAt;
+
+    @SerializedName("unreadCount")
     private Long unreadCount;
+
+    @SerializedName("avatarUrl")
     private String avatarUrl;
 
     public Long getId() { return id; }

@@ -1,8 +1,15 @@
 package com.midterm.team12345.data.dto.request;
 
+import com.google.gson.annotations.SerializedName;
+
 public class RegisterRequestDTO {
+    @SerializedName("username")
     private String username;
+
+    @SerializedName("email")
     private String email;
+
+    @SerializedName("password")
     private String password;
 
     public RegisterRequestDTO(String username, String email, String password) {
@@ -11,7 +18,6 @@ public class RegisterRequestDTO {
         this.password = password;
     }
 
-    // Getters and Setters
     public String getUsername() { return username; }
     public void setUsername(String username) { this.username = username; }
 
