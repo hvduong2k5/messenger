@@ -6,7 +6,9 @@ import android.view.ViewGroup;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.midterm.team12345.data.remote.dto.response.UserDTO;
+import com.bumptech.glide.Glide;
+import com.midterm.team12345.R;
+import com.midterm.team12345.data.remote.dto.response.UserResponseDTO;
 import com.midterm.team12345.databinding.ItemSelectedMemberBinding;
 
 import java.util.ArrayList;
@@ -14,18 +16,18 @@ import java.util.List;
 
 public class SelectedMemberAdapter extends RecyclerView.Adapter<SelectedMemberAdapter.ViewHolder> {
 
-    private List<UserDTO> selectedUsers = new ArrayList<>();
+    private List<UserResponseDTO> selectedUsers = new ArrayList<>();
     private final OnRemoveClickListener listener;
 
     public interface OnRemoveClickListener {
-        void onRemoveClick(UserDTO user);
+        void onRemoveClick(UserResponseDTO user);
     }
 
     public SelectedMemberAdapter(OnRemoveClickListener listener) {
         this.listener = listener;
     }
 
-    public void setData(List<UserDTO> users) {
+    public void setData(List<UserResponseDTO> users) {
         this.selectedUsers = users;
         notifyDataSetChanged();
     }
@@ -40,11 +42,20 @@ public class SelectedMemberAdapter extends RecyclerView.Adapter<SelectedMemberAd
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        UserDTO user = selectedUsers.get(position);
-        String firstName = user.getFullName().split(" ")[0];
-        holder.binding.tvFirstName.setText(firstName);
-        // Glide would be used here for avatar:
-        // Glide.with(holder.itemView).load(user.getAvatarUrl()).into(holder.binding.ivAvatar);
+        UserResponseDTO user = selectedUsers.get(position);
+        
+        // Dùng username thay cho fullName. Lấy phần đầu của username làm tên hiển thị rút gọn
+        String displayName = user.getUsername();
+        if (displayName != null && displayName.contains(" ")) {
+            displayName = displayName.split(" ")[0];
+        }
+        holder.binding.tvFirstName.setText(displayName);
+        
+        Glide.with(holder.itemView.getContext())
+                .load(user.getAvatarUrl())
+                .placeholder(R.drawable.ic_avatar_placeholder)
+                .error(R.drawable.ic_avatar_placeholder)
+                .into(holder.binding.ivAvatar);
         
         holder.binding.ivRemove.setOnClickListener(v -> listener.onRemoveClick(user));
     }
