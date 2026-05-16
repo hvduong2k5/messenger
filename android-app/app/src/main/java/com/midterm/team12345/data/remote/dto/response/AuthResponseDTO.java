@@ -10,7 +10,7 @@ public class AuthResponseDTO {
     private String tokenType;
 
     @SerializedName("user")
-    private UserDTO user;
+    private UserResponseDTO user;
 
     public AuthResponseDTO() {}
 
@@ -20,6 +20,6 @@ public class AuthResponseDTO {
     public String getTokenType() { return tokenType; }
     public void setTokenType(String tokenType) { this.tokenType = tokenType; }
 
-    public UserDTO getUser() { return user; }
-    public void setUser(UserDTO user) { this.user = user; }
+    public UserResponseDTO getUser() { return user; }
+    public void setUser(UserResponseDTO user) { this.user = user; }
 }
