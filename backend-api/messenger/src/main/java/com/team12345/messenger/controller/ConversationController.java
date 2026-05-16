@@ -3,9 +3,11 @@ package com.team12345.messenger.controller;
 import com.team12345.messenger.dto.request.ConversationRequestDTO;
 import com.team12345.messenger.dto.request.ConversationUpdateDTO;
 import com.team12345.messenger.dto.response.ConversationResponseDTO;
+import com.team12345.messenger.dto.response.MessageResponseDTO;
 import com.team12345.messenger.entity.Conversation;
 import com.team12345.messenger.security.CustomUserDetails;
 import com.team12345.messenger.service.ConversationService;
+import com.team12345.messenger.service.MessageService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -13,6 +15,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
@@ -28,7 +32,18 @@ import java.util.Map;
 public class ConversationController {
 
     private final ConversationService conversationService;
+    private final MessageService messageService;
 
+    @Operation(summary = "Lấy lịch sử tin nhắn", description = "Lấy danh sách tin nhắn của một hội thoại")
+    @GetMapping("/{conversationId}/messages")
+    public ResponseEntity<Page<MessageResponseDTO>> getMessages(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable Long conversationId,
+            @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+
+        Page<MessageResponseDTO> messages = messageService.getMessagesByConversation(conversationId, userDetails.getId(), pageable);
+        return ResponseEntity.ok(messages);
+    }
     @Operation(summary = "Get list of conversations", description = "Get a paginated list of conversations for the current user")
     @GetMapping
     public ResponseEntity<Page<ConversationResponseDTO>> getConversations(
