@@ -18,25 +18,17 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
+@RequestMapping("/messages")
 @RequiredArgsConstructor
 @Tag(name = "Message API", description = "Endpoints for managing messages")
 public class MessageController {
 
     private final MessageService messageService;
 
-    @Operation(summary = "Lấy lịch sử tin nhắn", description = "Lấy danh sách tin nhắn của một hội thoại")
-    @GetMapping("/conversations/{conversationId}/messages")
-    public ResponseEntity<Page<MessageResponseDTO>> getMessages(
-            @AuthenticationPrincipal CustomUserDetails userDetails,
-            @PathVariable Long conversationId,
-            @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
-        
-        Page<MessageResponseDTO> messages = messageService.getMessagesByConversation(conversationId, userDetails.getId(), pageable);
-        return ResponseEntity.ok(messages);
-    }
+
 
     @Operation(summary = "Gửi tin nhắn", description = "Gửi tin nhắn văn bản hoặc tệp đính kèm vào cuộc hội thoại")
-    @PostMapping("/messages")
+    @PostMapping
     public ResponseEntity<MessageResponseDTO> sendMessage(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @Valid @ModelAttribute MessageRequestDTO requestDTO) {
@@ -48,7 +40,7 @@ public class MessageController {
     }
 
     @Operation(summary = "Thu hồi/Xóa tin nhắn", description = "Xóa mềm một tin nhắn (chỉ người gửi mới có quyền)")
-    @DeleteMapping("/messages/{messageId}")
+    @DeleteMapping("/{messageId}")
     public ResponseEntity<Void> revokeMessage(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Long messageId) {
@@ -58,7 +50,7 @@ public class MessageController {
     }
 
     @Operation(summary = "Chỉnh sửa tin nhắn", description = "Cập nhật nội dung tin nhắn (chỉ người gửi mới có quyền)")
-    @PutMapping("/messages/{messageId}")
+    @PutMapping("/{messageId}")
     public ResponseEntity<MessageResponseDTO> editMessage(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Long messageId,
@@ -69,7 +61,7 @@ public class MessageController {
     }
 
     @Operation(summary = "Tìm kiếm tin nhắn", description = "Tìm kiếm nội dung tin nhắn theo từ khóa (bắt buộc truyền conversationId để đảm bảo quyền bảo mật)")
-    @GetMapping("/messages/search")
+    @GetMapping("/search")
     public ResponseEntity<Page<MessageResponseDTO>> searchMessages(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestParam String keyword,
