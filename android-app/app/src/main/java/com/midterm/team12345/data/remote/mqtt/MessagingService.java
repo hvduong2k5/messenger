@@ -15,13 +15,12 @@ import androidx.core.app.NotificationCompat;
 
 import com.midterm.team12345.MainActivity;
 import com.midterm.team12345.R;
-import com.midterm.team12345.domain.model.MqttEventType;
 import com.midterm.team12345.data.remote.dto.MqttMessageDTO;
 import com.midterm.team12345.data.local.TokenManager;
-import com.midterm.team12345.data.repository.ChatRepositoryImpl;
+import com.midterm.team12345.data.repository.ConversationRepositoryImpl;
+import com.midterm.team12345.domain.model.MqttEventType;
 
 public class MessagingService extends Service {
-    private static final String TAG = "MessagingService";
     private static final String CHANNEL_ID = "MessagingServiceChannel";
     public static final String EXTRA_USERNAME = "extra_username";
 
@@ -54,16 +53,15 @@ public class MessagingService extends Service {
     }
 
     private void connectMqtt(String username, String token) {
-        String brokerUrl = "tcp://10.0.2.2:1883";
+        String brokerUrl = "tcp://192.168.1.166:1883"; 
         String clientId = "android_" + username + "_" + System.currentTimeMillis();
 
         mqttManager.init(this, brokerUrl, clientId, username, token, new MqttManager.MqttCallback() {
             @Override
             public void onMessageReceived(MqttMessageDTO message) {
-                // Dispatch message to Repository Singleton
-                ChatRepositoryImpl.getInstance(getApplication()).emitRealTimeMessage(message);
+                // Sử dụng ConversationRepositoryImpl đã được tách ra
+                ConversationRepositoryImpl.getInstance(getApplicationContext()).emitRealTimeMessage(message);
                 
-                // Show notification if it's a new message
                 if (MqttEventType.NEW_MESSAGE.name().equals(message.getType())) {
                     showPushNotification(message);
                 }
@@ -72,13 +70,13 @@ public class MessagingService extends Service {
             @Override
             public void onConnectionLost(Throwable cause) {
                 updateNotification("Connection lost. Retrying...");
-                ChatRepositoryImpl.getInstance(getApplication()).updateConnectionStatus(false);
+                ConversationRepositoryImpl.getInstance(getApplicationContext()).updateConnectionStatus(false);
             }
 
             @Override
             public void onConnectComplete(boolean reconnect, String serverURI) {
                 updateNotification("Connected to Messenger");
-                ChatRepositoryImpl.getInstance(getApplication()).updateConnectionStatus(true);
+                ConversationRepositoryImpl.getInstance(getApplicationContext()).updateConnectionStatus(true);
                 mqttManager.subscribe("users/" + username + "/receive");
                 mqttManager.subscribe("users/" + username + "/presence");
             }
@@ -87,13 +85,19 @@ public class MessagingService extends Service {
 
     private void showPushNotification(MqttMessageDTO message) {
         NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        
+        Intent intent = new Intent(this, MainActivity.class);
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE);
+
         Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setContentTitle(message.getSender())
                 .setContentText(message.getPayload())
                 .setSmallIcon(R.drawable.ic_messenger_logo)
                 .setAutoCancel(true)
+                .setContentIntent(pendingIntent)
                 .setPriority(NotificationCompat.PRIORITY_DEFAULT)
                 .build();
+
         notificationManager.notify((int) System.currentTimeMillis(), notification);
     }
 
@@ -133,7 +137,7 @@ public class MessagingService extends Service {
 
     @Override
     public void onDestroy() {
-        ChatRepositoryImpl.getInstance(getApplication()).updateConnectionStatus(false);
+        ConversationRepositoryImpl.getInstance(getApplicationContext()).updateConnectionStatus(false);
         mqttManager.disconnect();
         super.onDestroy();
     }
