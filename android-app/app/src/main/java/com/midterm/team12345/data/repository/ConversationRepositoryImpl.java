@@ -76,13 +76,13 @@ public class ConversationRepositoryImpl implements ConversationRepository {
     }
 
     @Override
-    public LiveData<Resource<Void>> createConversation(ConversationRequestDTO request) {
-        MutableLiveData<Resource<Void>> data = new MutableLiveData<>();
+    public LiveData<Resource<ConversationResponseDTO>> createConversation(ConversationRequestDTO request) {
+        MutableLiveData<Resource<ConversationResponseDTO>> data = new MutableLiveData<>();
         data.setValue(Resource.loading(null));
         apiService.createConversation(request).enqueue(new Callback<ConversationResponseDTO>() {
             @Override
             public void onResponse(Call<ConversationResponseDTO> call, Response<ConversationResponseDTO> response) {
-                if (response.isSuccessful()) data.setValue(Resource.success(null));
+                if (response.isSuccessful()) data.setValue(Resource.success(response.body()));
                 else data.setValue(Resource.error("Failed to create conversation", null));
             }
             @Override
