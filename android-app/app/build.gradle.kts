@@ -77,6 +77,9 @@ dependencies {
     implementation(libs.mqtt.paho)
     implementation("androidx.localbroadcastmanager:localbroadcastmanager:1.1.0")
 
+    // Bean Validation API (provides javax.validation annotations at compile time)
+    implementation("javax.validation:validation-api:2.0.1.Final")
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
