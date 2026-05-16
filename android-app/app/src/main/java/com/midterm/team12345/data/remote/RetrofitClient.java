@@ -5,9 +5,14 @@ import android.content.Context;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.midterm.team12345.data.local.TokenManager;
+import com.midterm.team12345.data.remote.api.AttachmentApiService;
 import com.midterm.team12345.data.remote.api.AuthApiService;
+import com.midterm.team12345.data.remote.api.CallApiService;
 import com.midterm.team12345.data.remote.api.ConversationApiService;
+import com.midterm.team12345.data.remote.api.FriendApiService;
 import com.midterm.team12345.data.remote.api.MessageApiService;
+import com.midterm.team12345.data.remote.api.MessageStatusApiService;
+import com.midterm.team12345.data.remote.api.NotificationApiService;
 import com.midterm.team12345.data.remote.api.UserApiService;
 import com.midterm.team12345.data.remote.interceptor.AuthInterceptor;
 import com.midterm.team12345.utils.LocalDateTimeAdapter;
@@ -28,7 +33,7 @@ public class RetrofitClient {
             HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
             logging.setLevel(HttpLoggingInterceptor.Level.BODY);
 
-            TokenManager tokenManager = new TokenManager(context);
+            TokenManager tokenManager = new TokenManager(context.getApplicationContext());
 
             OkHttpClient client = new OkHttpClient.Builder()
                     .addInterceptor(logging)
@@ -62,5 +67,25 @@ public class RetrofitClient {
 
     public static UserApiService getUserApiService(Context context) {
         return getClient(context).create(UserApiService.class);
+    }
+
+    public static CallApiService getCallApiService(Context context) {
+        return getClient(context).create(CallApiService.class);
+    }
+
+    public static FriendApiService getFriendApiService(Context context) {
+        return getClient(context).create(FriendApiService.class);
+    }
+
+    public static MessageStatusApiService getMessageStatusApiService(Context context) {
+        return getClient(context).create(MessageStatusApiService.class);
+    }
+
+    public static NotificationApiService getNotificationApiService(Context context) {
+        return getClient(context).create(NotificationApiService.class);
+    }
+
+    public static AttachmentApiService getAttachmentApiService(Context context) {
+        return getClient(context).create(AttachmentApiService.class);
     }
 }
