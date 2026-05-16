@@ -15,6 +15,9 @@ import com.midterm.team12345.data.remote.dto.response.PageResponse;
 import com.midterm.team12345.domain.repository.ConversationRepository;
 import com.midterm.team12345.utils.Resource;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -92,17 +95,67 @@ public class ConversationRepositoryImpl implements ConversationRepository {
 
     @Override
     public LiveData<Resource<Void>> addParticipant(Long conversationId, Long userId) {
-        return new MutableLiveData<>();
+        MutableLiveData<Resource<Void>> data = new MutableLiveData<>();
+        data.setValue(Resource.loading(null));
+        Map<String, Long> body = new HashMap<>();
+        body.put("userId", userId);
+        apiService.addParticipant(conversationId, body).enqueue(new Callback<Void>() {
+            @Override
+            public void onResponse(Call<Void> call, Response<Void> response) {
+                if (response.isSuccessful()) data.setValue(Resource.success(null));
+                else data.setValue(Resource.error("Failed to add participant", null));
+            }
+            @Override
+            public void onFailure(Call<Void> call, Throwable t) {
+                data.setValue(Resource.error(t.getMessage(), null));
+            }
+        });
+        return data;
     }
 
     @Override
     public LiveData<Resource<Void>> removeParticipant(Long conversationId, Long userId) {
-        return new MutableLiveData<>();
+        MutableLiveData<Resource<Void>> data = new MutableLiveData<>();
+        data.setValue(Resource.loading(null));
+        apiService.removeParticipant(conversationId, userId).enqueue(new Callback<Void>() {
+            @Override
+            public void onResponse(Call<Void> call, Response<Void> response) {
+                if (response.isSuccessful()) data.setValue(Resource.success(null));
+                else data.setValue(Resource.error("Failed to remove participant", null));
+            }
+            @Override
+            public void onFailure(Call<Void> call, Throwable t) {
+                data.setValue(Resource.error(t.getMessage(), null));
+            }
+        });
+        return data;
     }
 
     @Override
     public LiveData<Resource<Void>> updateConversation(Long id, ConversationUpdateDTO request) {
-        return new MutableLiveData<>();
+        MutableLiveData<Resource<Void>> data = new MutableLiveData<>();
+        data.setValue(Resource.loading(null));
+        apiService.updateConversation(id, request).enqueue(new Callback<ConversationResponseDTO>() {
+            @Override
+            public void onResponse(Call<ConversationResponseDTO> call, Response<ConversationResponseDTO> response) {
+                if (response.isSuccessful()) data.setValue(Resource.success(null));
+                else data.setValue(Resource.error("Failed to update conversation", null));
+            }
+            @Override
+            public void onFailure(Call<ConversationResponseDTO> call, Throwable t) {
+                data.setValue(Resource.error(t.getMessage(), null));
+            }
+        });
+        return data;
+    }
+
+    @Override
+    public LiveData<Resource<Void>> leaveConversation(Long conversationId) {
+        // Leave is often implemented as removing self from participants on backend, 
+        // or a specific endpoint. Assuming there's a dedicated endpoint or we just use removeParticipant for now if we have user ID.
+        // If we don't have user ID here easily, let's assume the API might have a specific leave endpoint in a real scenario.
+        // Since I don't see it in ConversationApiService, I'll add it there first.
+        return new MutableLiveData<>(Resource.error("Method not fully implemented - Check API", null));
     }
 
     @Override
