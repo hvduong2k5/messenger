@@ -62,9 +62,21 @@ public class ConversationServiceImpl implements ConversationService {
         Optional<Message> lastMessage = messageRepository.findFirstByConversationIdOrderByCreatedAtDesc(conversation.getId());
         long unreadCount = messageStatusRepository.countUnreadInConversation(userId, conversation.getId(), MessageStatusEnum.read);
         
+        String displayableName = conversation.getName();
+        
+        // Nếu là chat 1-1 và name đang trống
+        if (Boolean.FALSE.equals(conversation.getIsGroup()) && (displayableName == null || displayableName.trim().isEmpty())) {
+            List<Participant> participants = participantRepository.findById_ConversationId(conversation.getId());
+            displayableName = participants.stream()
+                    .filter(p -> !p.getUser().getId().equals(userId))
+                    .findFirst()
+                    .map(p -> p.getUser().getUsername()) // Hoặc getFullName() tuỳ logic hiển thị
+                    .orElse("Người dùng ẩn danh"); 
+        }
+
         return ConversationResponseDTO.builder()
                 .id(conversation.getId())
-                .name(conversation.getName())
+                .name(displayableName)
                 .isGroup(conversation.getIsGroup())
                 .updatedAt(conversation.getUpdatedAt())
                 .lastMessageContent(lastMessage.map(Message::getContent).orElse(null))
@@ -129,7 +141,9 @@ public class ConversationServiceImpl implements ConversationService {
                 return existing.get();
             }
         }
-        
+        if (!isGroup) {
+            name = "";
+        }
         Conversation conversation = Conversation.builder()
                 .name(name)
                 .isGroup(isGroup)
