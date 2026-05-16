@@ -1,22 +1,40 @@
 package com.midterm.team12345.data.dto.response;
 
+import com.google.gson.annotations.SerializedName;
 import com.midterm.team12345.data.dto.CallStatus;
 import com.midterm.team12345.data.dto.CallType;
 
-import java.time.LocalDateTime;
-
 public class CallResponseDTO {
 
+    @SerializedName("id")
     private Long id;
+
+    @SerializedName("callerId")
     private Long callerId;
+
+    @SerializedName("callerUsername")
     private String callerUsername;
+
+    @SerializedName("receiverId")
     private Long receiverId;
+
+    @SerializedName("receiverUsername")
     private String receiverUsername;
+
+    @SerializedName("callType")
     private CallType callType;
+
+    @SerializedName("status")
     private CallStatus status;
-    private LocalDateTime startedAt;
-    private LocalDateTime endedAt;
-    private LocalDateTime createdAt;
+
+    @SerializedName("startedAt")
+    private String startedAt;
+
+    @SerializedName("endedAt")
+    private String endedAt;
+
+    @SerializedName("createdAt")
+    private String createdAt;
 
     public CallResponseDTO() {}
 
@@ -76,27 +94,27 @@ public class CallResponseDTO {
         this.status = status;
     }
 
-    public LocalDateTime getStartedAt() {
+    public String getStartedAt() {
         return startedAt;
     }
 
-    public void setStartedAt(LocalDateTime startedAt) {
+    public void setStartedAt(String startedAt) {
         this.startedAt = startedAt;
     }
 
-    public LocalDateTime getEndedAt() {
+    public String getEndedAt() {
         return endedAt;
     }
 
-    public void setEndedAt(LocalDateTime endedAt) {
+    public void setEndedAt(String endedAt) {
         this.endedAt = endedAt;
     }
 
-    public LocalDateTime getCreatedAt() {
+    public String getCreatedAt() {
         return createdAt;
     }
 
-    public void setCreatedAt(LocalDateTime createdAt) {
+    public void setCreatedAt(String createdAt) {
         this.createdAt = createdAt;
     }
 }

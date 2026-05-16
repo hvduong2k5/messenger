@@ -1,7 +1,12 @@
 package com.midterm.team12345.data.dto.request;
 
+import com.google.gson.annotations.SerializedName;
+
 public class ConversationUpdateDTO {
+    @SerializedName("name")
     private String name;
+
+    @SerializedName("avatarUrl")
     private String avatarUrl;
 
     public ConversationUpdateDTO(String name, String avatarUrl) {

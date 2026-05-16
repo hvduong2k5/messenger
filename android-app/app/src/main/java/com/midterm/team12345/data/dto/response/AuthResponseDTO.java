@@ -1,8 +1,15 @@
 package com.midterm.team12345.data.dto.response;
 
+import com.google.gson.annotations.SerializedName;
+
 public class AuthResponseDTO {
+    @SerializedName("accessToken")
     private String accessToken;
+
+    @SerializedName("tokenType")
     private String tokenType;
+
+    @SerializedName("user")
     private UserDTO user;
 
     public AuthResponseDTO() {}
