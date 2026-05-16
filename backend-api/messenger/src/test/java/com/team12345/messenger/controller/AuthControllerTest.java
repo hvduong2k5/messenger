@@ -54,7 +54,8 @@ class AuthControllerTest {
     @Test
     void resetPassword_ShouldReturnOk() throws Exception {
         ResetPasswordRequestDTO request = new ResetPasswordRequestDTO();
-        request.setToken("reset-token-123");
+        request.setEmail("test@example.com");
+        request.setOtp("123456");
         request.setNewPassword("newpassword123");
 
         doNothing().when(authService).resetPassword(any(ResetPasswordRequestDTO.class));
