@@ -11,13 +11,13 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.midterm.team12345.R;
 import com.midterm.team12345.data.remote.dto.response.AttachmentResponseDTO;
-import com.midterm.team12345.data.remote.dto.response.MessageResponse;
+import com.midterm.team12345.data.remote.dto.response.MessageResponseDTO;
 import com.midterm.team12345.databinding.ItemMessageReceivedBinding;
 import com.midterm.team12345.databinding.ItemMessageSentBinding;
 
 import java.util.List;
 
-public class MessageAdapter extends ListAdapter<MessageResponse, RecyclerView.ViewHolder> {
+public class MessageAdapter extends ListAdapter<MessageResponseDTO, RecyclerView.ViewHolder> {
 
     private static final int TYPE_SENT = 1;
     private static final int TYPE_RECEIVED = 2;
@@ -25,14 +25,14 @@ public class MessageAdapter extends ListAdapter<MessageResponse, RecyclerView.Vi
     private String recipientAvatarUrl;
 
     public MessageAdapter(Long currentUserId) {
-        super(new DiffUtil.ItemCallback<MessageResponse>() {
+        super(new DiffUtil.ItemCallback<MessageResponseDTO>() {
             @Override
-            public boolean areItemsTheSame(@NonNull MessageResponse oldItem, @NonNull MessageResponse newItem) {
+            public boolean areItemsTheSame(@NonNull MessageResponseDTO oldItem, @NonNull MessageResponseDTO newItem) {
                 return oldItem.getMessageId().equals(newItem.getMessageId());
             }
 
             @Override
-            public boolean areContentsTheSame(@NonNull MessageResponse oldItem, @NonNull MessageResponse newItem) {
+            public boolean areContentsTheSame(@NonNull MessageResponseDTO oldItem, @NonNull MessageResponseDTO newItem) {
                 return oldItem.equals(newItem) && 
                        String.valueOf(oldItem.getStatus()).equals(String.valueOf(newItem.getStatus()));
             }
@@ -74,7 +74,7 @@ public class MessageAdapter extends ListAdapter<MessageResponse, RecyclerView.Vi
 
     @Override
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
-        MessageResponse message = getItem(position);
+        MessageResponseDTO message = getItem(position);
         if (holder instanceof SentViewHolder) {
             ((SentViewHolder) holder).bind(message, recipientAvatarUrl);
         } else {
@@ -85,7 +85,7 @@ public class MessageAdapter extends ListAdapter<MessageResponse, RecyclerView.Vi
     public static String getFullUrl(String url) {
         if (url == null || url.isEmpty()) return null;
         if (url.startsWith("http")) return url;
-        return  "/" + url;
+        return com.midterm.team12345.data.remote.RetrofitClient.getBaseUrl() + (url.startsWith("/") ? "" : "/") + url;
     }
 
     static class SentViewHolder extends RecyclerView.ViewHolder {
@@ -96,7 +96,7 @@ public class MessageAdapter extends ListAdapter<MessageResponse, RecyclerView.Vi
             this.binding = binding;
         }
 
-        public void bind(MessageResponse message, String recipientAvatar) {
+        public void bind(MessageResponseDTO message, String recipientAvatar) {
             // 1. Handle Text content
             if (message.getDeleted() != null && message.getDeleted()) {
                 binding.tvMessageContent.setText("Tin nhắn đã bị thu hồi");
@@ -156,7 +156,7 @@ public class MessageAdapter extends ListAdapter<MessageResponse, RecyclerView.Vi
             this.binding = binding;
         }
 
-        public void bind(MessageResponse message) {
+        public void bind(MessageResponseDTO message) {
             if (message.getDeleted() != null && message.getDeleted()) {
                 binding.tvMessageContent.setText("Tin nhắn đã bị thu hồi");
                 binding.tvMessageContent.setAlpha(0.6f);
