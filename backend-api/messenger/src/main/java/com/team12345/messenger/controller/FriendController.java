@@ -2,6 +2,8 @@ package com.team12345.messenger.controller;
 
 import com.team12345.messenger.dto.response.FriendRequestResponseDTO;
 import com.team12345.messenger.dto.response.UserResponseDTO;
+import com.team12345.messenger.dto.response.FriendshipStatus;
+import com.team12345.messenger.dto.response.FriendshipStatusResponseDTO;
 import com.team12345.messenger.security.CustomUserDetails;
 import com.team12345.messenger.service.FriendshipService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -12,6 +14,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/friends")
@@ -74,6 +77,14 @@ public class FriendController {
         Long currentUserId = getCurrentUserId();
         List<FriendRequestResponseDTO> pendingRequests = friendshipService.getPendingRequests(currentUserId);
         return ResponseEntity.ok(pendingRequests);
+    }
+
+    @Operation(summary = "Check friendship status with another user")
+    @GetMapping("/status/{userId}")
+    public ResponseEntity<FriendshipStatusResponseDTO> checkFriendshipStatus(@PathVariable Long userId) {
+        Long currentUserId = getCurrentUserId();
+        FriendshipStatus status = friendshipService.checkFriendshipStatus(currentUserId, userId);
+        return ResponseEntity.ok(new FriendshipStatusResponseDTO(status));
     }
 
     // Helper method to extract ID from SecurityContext
