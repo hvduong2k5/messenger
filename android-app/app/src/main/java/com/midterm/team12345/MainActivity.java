@@ -39,6 +39,21 @@ public class MainActivity extends AppCompatActivity {
         if (savedInstanceState == null) {
             loadFragment(new ChatListFragment());
         }
+
+        // Start MessagingService for MQTT real-time updates
+        com.midterm.team12345.data.local.TokenManager tokenManager = new com.midterm.team12345.data.local.TokenManager(this);
+        Long userId = tokenManager.getUserId();
+        String username = tokenManager.getUsername();
+        if (userId != null && username != null) {
+            android.content.Intent serviceIntent = new android.content.Intent(this, com.midterm.team12345.data.remote.mqtt.MessagingService.class);
+            serviceIntent.putExtra(com.midterm.team12345.data.remote.mqtt.MessagingService.EXTRA_USERNAME, username);
+            serviceIntent.putExtra(com.midterm.team12345.data.remote.mqtt.MessagingService.EXTRA_USER_ID, userId);
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                startForegroundService(serviceIntent);
+            } else {
+                startService(serviceIntent);
+            }
+        }
     }
 
     private void setupNavigation() {
