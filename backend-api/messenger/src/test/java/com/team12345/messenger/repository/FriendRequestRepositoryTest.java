@@ -104,4 +104,72 @@ class FriendRequestRepositoryTest {
         assertThat(updatedFr).isPresent();
         assertThat(updatedFr.get().getStatus()).isEqualTo(FriendRequestStatus.accepted);
     }
+
+    @Test
+    void testFindBySenderIdAndReceiverIdAndStatus() {
+        // Create users
+        String commonPassword = "password123456789012345678901234567890123456789012345678901234567890";
+        User sender = User.builder().username("sender_c").email("sc@example.com").password(commonPassword).build();
+        User receiver = User.builder().username("receiver_c").email("rc@example.com").password(commonPassword).build();
+        
+        entityManager.persistAndFlush(sender);
+        entityManager.persistAndFlush(receiver);
+
+        // Create a pending request
+        FriendRequestId id = new FriendRequestId(sender.getId(), receiver.getId());
+        FriendRequest fr = FriendRequest.builder()
+                .id(id)
+                .sender(sender)
+                .receiver(receiver)
+                .status(FriendRequestStatus.pending)
+                .build();
+        
+        entityManager.persistAndFlush(fr);
+
+        // Test finding the request
+        Optional<FriendRequest> foundPending = friendRequestRepository.findBySenderIdAndReceiverIdAndStatus(sender.getId(), receiver.getId(), FriendRequestStatus.pending);
+        assertThat(foundPending).isPresent();
+        assertThat(foundPending.get().getSender().getUsername()).isEqualTo("sender_c");
+
+        // Verify finding with other statuses returns empty
+        Optional<FriendRequest> foundAccepted = friendRequestRepository.findBySenderIdAndReceiverIdAndStatus(sender.getId(), receiver.getId(), FriendRequestStatus.accepted);
+        assertThat(foundAccepted).isEmpty();
+    }
+
+    @Test
+    void testSaveAndReUseRejectedFriendRequest() {
+        // Create users
+        String commonPassword = "password123456789012345678901234567890123456789012345678901234567890";
+        User sender = User.builder().username("sender_reuse").email("sreuse@example.com").password(commonPassword).build();
+        User receiver = User.builder().username("receiver_reuse").email("rreuse@example.com").password(commonPassword).build();
+        
+        entityManager.persistAndFlush(sender);
+        entityManager.persistAndFlush(receiver);
+
+        // 1. Create a rejected request
+        FriendRequestId id = new FriendRequestId(sender.getId(), receiver.getId());
+        FriendRequest fr = FriendRequest.builder()
+                .id(id)
+                .sender(sender)
+                .receiver(receiver)
+                .status(FriendRequestStatus.rejected)
+                .build();
+        
+        entityManager.persistAndFlush(fr);
+
+        // 2. Retrieve existing request
+        Optional<FriendRequest> existingOpt = friendRequestRepository.findById(id);
+        assertThat(existingOpt).isPresent();
+        FriendRequest existing = existingOpt.get();
+        assertThat(existing.getStatus()).isEqualTo(FriendRequestStatus.rejected);
+
+        // 3. Update existing request status to pending and save
+        existing.setStatus(FriendRequestStatus.pending);
+        friendRequestRepository.saveAndFlush(existing);
+
+        // 4. Verify in database
+        Optional<FriendRequest> updatedOpt = friendRequestRepository.findById(id);
+        assertThat(updatedOpt).isPresent();
+        assertThat(updatedOpt.get().getStatus()).isEqualTo(FriendRequestStatus.pending);
+    }
 }
