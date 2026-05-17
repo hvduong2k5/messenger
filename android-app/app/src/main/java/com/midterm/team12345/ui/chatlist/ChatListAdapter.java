@@ -71,8 +71,13 @@ public class ChatListAdapter extends ListAdapter<ConversationResponse, ChatListA
             // ivPresenceStatus is for Issue #142
             binding.ivPresenceStatus.setVisibility(View.GONE); 
 
+            String avatarUrl = conversation.getAvatarUrl();
+            if (avatarUrl != null && !avatarUrl.startsWith("http")) {
+                avatarUrl = com.midterm.team12345.data.remote.RetrofitClient.getBaseUrl() + (avatarUrl.startsWith("/") ? "" : "/") + avatarUrl;
+            }
+
             Glide.with(binding.ivConversationAvatar.getContext())
-                    .load(conversation.getAvatarUrl())
+                    .load(avatarUrl)
                     .placeholder(R.drawable.ic_avatar_placeholder)
                     .error(R.drawable.ic_avatar_placeholder)
                     .into(binding.ivConversationAvatar);
