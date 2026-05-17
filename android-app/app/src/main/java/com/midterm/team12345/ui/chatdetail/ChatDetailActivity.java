@@ -33,6 +33,7 @@ public class ChatDetailActivity extends AppCompatActivity {
     private ActivityChatDetailBinding binding;
     private ChatDetailViewModel viewModel;
     private MessageAdapter adapter;
+    private SelectedFilesAdapter selectedFilesAdapter;
     private Long currentUserId = -1L;
     private Long conversationId;
     private ConversationResponse conversation;
@@ -79,8 +80,12 @@ public class ChatDetailActivity extends AppCompatActivity {
     private void setupUI() {
         if (conversation != null) {
             binding.tvPartnerName.setText(conversation.getConversationName());
+            String avatarUrl = conversation.getAvatarUrl();
+            if (avatarUrl != null && !avatarUrl.startsWith("http")) {
+                avatarUrl = com.midterm.team12345.data.remote.RetrofitClient.getBaseUrl() + (avatarUrl.startsWith("/") ? "" : "/") + avatarUrl;
+            }
             Glide.with(this)
-                    .load(conversation.getAvatarUrl())
+                    .load(avatarUrl)
                     .placeholder(R.drawable.ic_avatar_placeholder)
                     .into(binding.ivPartnerAvatar);
         } else {
@@ -103,6 +108,9 @@ public class ChatDetailActivity extends AppCompatActivity {
 
         adapter = new MessageAdapter(currentUserId);
         binding.rvMessages.setAdapter(adapter);
+
+        selectedFilesAdapter = new SelectedFilesAdapter(file -> viewModel.removeSelectedFile(file));
+        binding.rvSelectedFiles.setAdapter(selectedFilesAdapter);
 
         binding.btnBack.setOnClickListener(v -> finish());
 
@@ -230,10 +238,14 @@ public class ChatDetailActivity extends AppCompatActivity {
 
         // Observe danh sách file đã chọn để cập nhật UI nếu cần
         viewModel.selectedFiles.observe(this, files -> {
-            if (!files.isEmpty()) {
+            if (files != null && !files.isEmpty()) {
                 binding.btnAttach.setColorFilter(getResources().getColor(R.color.messenger_blue));
+                selectedFilesAdapter.setFiles(files);
+                binding.rvSelectedFiles.setVisibility(View.VISIBLE);
             } else {
                 binding.btnAttach.clearColorFilter();
+                selectedFilesAdapter.setFiles(new ArrayList<>());
+                binding.rvSelectedFiles.setVisibility(View.GONE);
             }
         });
     }
