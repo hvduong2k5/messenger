@@ -2,6 +2,7 @@ package com.team12345.messenger.controller;
 
 import com.team12345.messenger.dto.response.FriendRequestResponseDTO;
 import com.team12345.messenger.dto.response.UserResponseDTO;
+import com.team12345.messenger.dto.response.FriendshipStatus;
 import com.team12345.messenger.entity.User;
 import com.team12345.messenger.repository.BlacklistedTokenRepository;
 import com.team12345.messenger.repository.UserRepository;
@@ -29,123 +30,150 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc(addFilters = false) // Disable security filters for pure controller testing
 class FriendControllerTest {
 
-    @Autowired
-    private MockMvc mockMvc;
+        @Autowired
+        private MockMvc mockMvc;
 
-    @MockBean
-    private FriendshipService friendshipService;
-    
-    @MockBean
-    private JwtUtils jwtUtils;
+        @MockBean
+        private FriendshipService friendshipService;
 
-    @MockBean
-    private UserRepository userRepository;
+        @MockBean
+        private JwtUtils jwtUtils;
 
-    @MockBean
-    private BlacklistedTokenRepository blacklistedTokenRepository;
+        @MockBean
+        private UserRepository userRepository;
 
-    private Long currentUserId = 1L;
+        @MockBean
+        private BlacklistedTokenRepository blacklistedTokenRepository;
 
-    @BeforeEach
-    void setUp() {
-        User user = User.builder().id(currentUserId).username("testuser").build();
-        CustomUserDetails userDetails = new CustomUserDetails(user);
-        UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-        SecurityContextHolder.getContext().setAuthentication(auth);
-    }
+        private Long currentUserId = 1L;
 
-    @Test
-    void sendFriendRequest_ShouldReturn201AndDto() throws Exception {
-        Long receiverId = 2L;
-        FriendRequestResponseDTO responseDTO = FriendRequestResponseDTO.builder()
-                .senderId(currentUserId)
-                .receiverId(receiverId)
-                .status("PENDING")
-                .build();
+        @BeforeEach
+        void setUp() {
+                User user = User.builder().id(currentUserId).username("testuser").build();
+                CustomUserDetails userDetails = new CustomUserDetails(user);
+                UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(userDetails, null,
+                                userDetails.getAuthorities());
+                SecurityContextHolder.getContext().setAuthentication(auth);
+        }
 
-        when(friendshipService.sendFriendRequest(currentUserId, receiverId)).thenReturn(responseDTO);
+        @Test
+        void sendFriendRequest_ShouldReturn201AndDto() throws Exception {
+                Long receiverId = 2L;
+                FriendRequestResponseDTO responseDTO = FriendRequestResponseDTO.builder()
+                                .senderId(currentUserId)
+                                .receiverId(receiverId)
+                                .status("PENDING")
+                                .build();
 
-        mockMvc.perform(post("/friends/request/{receiverId}", receiverId))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.senderId").value(currentUserId))
-                .andExpect(jsonPath("$.receiverId").value(receiverId))
-                .andExpect(jsonPath("$.status").value("PENDING"));
+                when(friendshipService.sendFriendRequest(currentUserId, receiverId)).thenReturn(responseDTO);
 
-        verify(friendshipService, times(1)).sendFriendRequest(currentUserId, receiverId);
-    }
+                mockMvc.perform(post("/friends/request/{receiverId}", receiverId))
+                                .andExpect(status().isCreated())
+                                .andExpect(jsonPath("$.senderId").value(currentUserId))
+                                .andExpect(jsonPath("$.receiverId").value(receiverId))
+                                .andExpect(jsonPath("$.status").value("PENDING"));
 
-    @Test
-    void acceptFriendRequest_ShouldReturn200() throws Exception {
-        Long senderId = 2L;
+                verify(friendshipService, times(1)).sendFriendRequest(currentUserId, receiverId);
+        }
 
-        mockMvc.perform(put("/friends/request/{senderId}/accept", senderId))
-                .andExpect(status().isOk())
-                .andExpect(content().string("Friend request accepted successfully"));
+        @Test
+        void acceptFriendRequest_ShouldReturn200() throws Exception {
+                Long senderId = 2L;
 
-        verify(friendshipService, times(1)).acceptFriendRequest(currentUserId, senderId);
-    }
+                mockMvc.perform(put("/friends/request/{senderId}/accept", senderId))
+                                .andExpect(status().isOk())
+                                .andExpect(content().string("Friend request accepted successfully"));
 
-    @Test
-    void declineFriendRequest_ShouldReturn204() throws Exception {
-        Long senderId = 2L;
+                verify(friendshipService, times(1)).acceptFriendRequest(currentUserId, senderId);
+        }
 
-        mockMvc.perform(put("/friends/request/{senderId}/decline", senderId))
-                .andExpect(status().isNoContent());
+        @Test
+        void declineFriendRequest_ShouldReturn204() throws Exception {
+                Long senderId = 2L;
 
-        verify(friendshipService, times(1)).declineFriendRequest(currentUserId, senderId);
-    }
+                mockMvc.perform(put("/friends/request/{senderId}/decline", senderId))
+                                .andExpect(status().isNoContent());
 
-    @Test
-    void unfriend_ShouldReturn200() throws Exception {
-        Long friendId = 2L;
+                verify(friendshipService, times(1)).declineFriendRequest(currentUserId, senderId);
+        }
 
-        mockMvc.perform(delete("/friends/{friendId}", friendId))
-                .andExpect(status().isOk())
-                .andExpect(content().string("Unfriended successfully"));
+        @Test
+        void unfriend_ShouldReturn200() throws Exception {
+                Long friendId = 2L;
 
-        verify(friendshipService, times(1)).unfriend(currentUserId, friendId);
-    }
+                mockMvc.perform(delete("/friends/{friendId}", friendId))
+                                .andExpect(status().isOk())
+                                .andExpect(content().string("Unfriended successfully"));
 
-    @Test
-    void getFriendsList_ShouldReturn200AndList() throws Exception {
-        List<UserResponseDTO> friends = Arrays.asList(
-                UserResponseDTO.builder().id(2L).username("friend1").build(),
-                UserResponseDTO.builder().id(3L).username("friend2").build()
-        );
+                verify(friendshipService, times(1)).unfriend(currentUserId, friendId);
+        }
 
-        when(friendshipService.getFriendsList(currentUserId)).thenReturn(friends);
+        @Test
+        void getFriendsList_ShouldReturn200AndList() throws Exception {
+                List<UserResponseDTO> friends = Arrays.asList(
+                                UserResponseDTO.builder().id(2L).username("friend1").build(),
+                                UserResponseDTO.builder().id(3L).username("friend2").build());
 
-        mockMvc.perform(get("/friends"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id").value(2L))
-                .andExpect(jsonPath("$[1].id").value(3L));
+                when(friendshipService.getFriendsList(currentUserId)).thenReturn(friends);
 
-        verify(friendshipService, times(1)).getFriendsList(currentUserId);
-    }
+                mockMvc.perform(get("/friends"))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$[0].id").value(2L))
+                                .andExpect(jsonPath("$[1].id").value(3L));
 
-    @Test
-    void getPendingRequests_ShouldReturn200AndList() throws Exception {
-        List<FriendRequestResponseDTO> requests = Arrays.asList(
-                FriendRequestResponseDTO.builder().senderId(2L).receiverId(currentUserId).build()
-        );
+                verify(friendshipService, times(1)).getFriendsList(currentUserId);
+        }
 
-        when(friendshipService.getPendingRequests(currentUserId)).thenReturn(requests);
+        @Test
+        void getPendingRequests_ShouldReturn200AndList() throws Exception {
+                List<FriendRequestResponseDTO> requests = Arrays.asList(
+                                FriendRequestResponseDTO.builder().senderId(2L).receiverId(currentUserId).build());
 
-        mockMvc.perform(get("/friends/requests/pending"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].senderId").value(2L));
+                when(friendshipService.getPendingRequests(currentUserId)).thenReturn(requests);
 
-        verify(friendshipService, times(1)).getPendingRequests(currentUserId);
-    }
+                mockMvc.perform(get("/friends/requests/pending"))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$[0].senderId").value(2L));
 
-    @Test
-    void cancelFriendRequest_ShouldReturn200() throws Exception {
-        Long receiverId = 2L;
+                verify(friendshipService, times(1)).getPendingRequests(currentUserId);
+        }
 
-        mockMvc.perform(delete("/friends/request/{receiverId}/cancel", receiverId))
-                .andExpect(status().isOk())
-                .andExpect(content().string("Friend request canceled successfully"));
+        @Test
+        void cancelFriendRequest_ShouldReturn200() throws Exception {
+                Long receiverId = 2L;
 
-        verify(friendshipService, times(1)).cancelFriendRequest(currentUserId, receiverId);
-    }
+                mockMvc.perform(delete("/friends/request/{receiverId}/cancel", receiverId))
+                                .andExpect(status().isOk())
+                                .andExpect(content().string("Friend request canceled successfully"));
+
+                verify(friendshipService, times(1)).cancelFriendRequest(currentUserId, receiverId);
+        }
+
+        @Test
+        void checkFriendshipStatus_ShouldReturn200AndStatus() throws Exception {
+                Long targetUserId = 2L;
+                FriendshipStatus expectedStatus = FriendshipStatus.SENDER_PENDING;
+
+                when(friendshipService.checkFriendshipStatus(currentUserId, targetUserId)).thenReturn(expectedStatus);
+
+                mockMvc.perform(get("/friends/status/{userId}", targetUserId))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.friendshipStatus").value(expectedStatus.name()));
+
+                verify(friendshipService, times(1)).checkFriendshipStatus(currentUserId, targetUserId);
+        }
+
+        @Test
+        void checkFriendshipStatus_ShouldReturn404_WhenUserNotFound() throws Exception {
+                Long targetUserId = 999L;
+
+                when(friendshipService.checkFriendshipStatus(currentUserId, targetUserId))
+                                .thenThrow(new com.team12345.messenger.exception.ResourceNotFoundException(
+                                                "User not found"));
+
+                mockMvc.perform(get("/friends/status/{userId}", targetUserId))
+                                .andExpect(status().isNotFound());
+
+                verify(friendshipService, times(1)).checkFriendshipStatus(currentUserId, targetUserId);
+        }
 }
