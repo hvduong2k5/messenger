@@ -91,7 +91,15 @@ public class ChatDetailViewModel extends ViewModel {
         List<File> current = _selectedFiles.getValue();
         if (current == null) current = new ArrayList<>();
         current.add(file);
-        _selectedFiles.setValue(current);
+        _selectedFiles.setValue(new ArrayList<>(current));
+    }
+
+    public void removeSelectedFile(File file) {
+        List<File> current = _selectedFiles.getValue();
+        if (current != null) {
+            current.remove(file);
+            _selectedFiles.setValue(new ArrayList<>(current));
+        }
     }
 
     public void clearSelectedFiles() {
