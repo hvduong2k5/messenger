@@ -22,4 +22,6 @@ public interface FriendRequestRepository extends JpaRepository<FriendRequest, Fr
     Page<FriendRequest> findByReceiver_IdAndStatus(Long receiverId, FriendRequestStatus status, Pageable pageable);
     
     Optional<FriendRequest> findById_SenderIdAndId_ReceiverId(Long senderId, Long receiverId);
+    
+    Optional<FriendRequest> findBySenderIdAndReceiverIdAndStatus(Long senderId, Long receiverId, FriendRequestStatus status);
 }
