@@ -5,14 +5,14 @@ import androidx.lifecycle.ViewModel;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.midterm.team12345.domain.repository.AuthRepository;
-import com.midterm.team12345.domain.repository.ChatRepository;
+import com.midterm.team12345.domain.repository.UserRepository;
 
 public class SettingsViewModelFactory implements ViewModelProvider.Factory {
-    private final ChatRepository chatRepository;
+    private final UserRepository userRepository;
     private final AuthRepository authRepository;
 
-    public SettingsViewModelFactory(ChatRepository chatRepository, AuthRepository authRepository) {
-        this.chatRepository = chatRepository;
+    public SettingsViewModelFactory(UserRepository userRepository, AuthRepository authRepository) {
+        this.userRepository = userRepository;
         this.authRepository = authRepository;
     }
 
@@ -21,7 +21,7 @@ public class SettingsViewModelFactory implements ViewModelProvider.Factory {
     @SuppressWarnings("unchecked")
     public <T extends ViewModel> T create(@NonNull Class<T> modelClass) {
         if (modelClass.isAssignableFrom(SettingsViewModel.class)) {
-            return (T) new SettingsViewModel(chatRepository, authRepository);
+            return (T) new SettingsViewModel(userRepository, authRepository);
         }
         throw new IllegalArgumentException("Unknown ViewModel class");
     }

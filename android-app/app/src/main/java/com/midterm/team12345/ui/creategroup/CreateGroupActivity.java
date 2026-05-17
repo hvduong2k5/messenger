@@ -1,5 +1,6 @@
 package com.midterm.team12345.ui.creategroup;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -10,8 +11,10 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
-import com.midterm.team12345.data.repository.ChatRepositoryImpl;
+import com.midterm.team12345.data.repository.ConversationRepositoryImpl;
+import com.midterm.team12345.data.repository.FriendRepositoryImpl;
 import com.midterm.team12345.databinding.ActivityCreateGroupBinding;
+import com.midterm.team12345.ui.chatdetail.ChatDetailActivity;
 import com.midterm.team12345.utils.Resource;
 
 public class CreateGroupActivity extends AppCompatActivity {
@@ -27,7 +30,11 @@ public class CreateGroupActivity extends AppCompatActivity {
         binding = ActivityCreateGroupBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
-        CreateGroupViewModelFactory factory = new CreateGroupViewModelFactory( ChatRepositoryImpl.getInstance(getApplication()));
+        // Thay thế ChatRepositoryImpl bằng ConversationRepositoryImpl và FriendRepositoryImpl chuyên biệt
+        CreateGroupViewModelFactory factory = new CreateGroupViewModelFactory(
+                FriendRepositoryImpl.getInstance(getApplication()),
+                ConversationRepositoryImpl.getInstance(getApplication())
+        );
         viewModel = new ViewModelProvider(this, factory).get(CreateGroupViewModel.class);
 
         setupRecyclerViews();
@@ -48,6 +55,8 @@ public class CreateGroupActivity extends AppCompatActivity {
         viewModel.getFriends().observe(this, resource -> {
             if (resource.status == Resource.Status.SUCCESS && resource.data != null) {
                 memberAdapter.setMembers(resource.data);
+            } else if (resource.status == Resource.Status.ERROR) {
+                Toast.makeText(this, resource.message, Toast.LENGTH_SHORT).show();
             }
         });
 
@@ -67,6 +76,8 @@ public class CreateGroupActivity extends AppCompatActivity {
         });
 
         viewModel.getCreateState().observe(this, resource -> {
+            if (resource == null) return;
+
             if (resource.status == Resource.Status.LOADING) {
                 binding.progressBar.setVisibility(View.VISIBLE);
                 binding.btnCreate.setEnabled(false);
@@ -75,7 +86,12 @@ public class CreateGroupActivity extends AppCompatActivity {
                 binding.btnCreate.setEnabled(true);
                 if (resource.status == Resource.Status.SUCCESS) {
                     Toast.makeText(this, "Group created successfully!", Toast.LENGTH_SHORT).show();
-                    finish(); // Or navigate to ChatDetailActivity
+                    if (resource.data != null) {
+                        Intent intent = new Intent(this, ChatDetailActivity.class);
+                        intent.putExtra("conversation", resource.data);
+                        startActivity(intent);
+                    }
+                    finish();
                 } else if (resource.status == Resource.Status.ERROR) {
                     Toast.makeText(this, resource.message, Toast.LENGTH_SHORT).show();
                 }
@@ -97,7 +113,7 @@ public class CreateGroupActivity extends AppCompatActivity {
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                // Filter logic would go here, updating the memberAdapter
+                // Filter logic would go here
             }
 
             @Override
