@@ -39,7 +39,7 @@ public class MessageResponse {
     private Boolean isEdited;
 
     @SerializedName("attachments")
-    private List<Object> attachments;
+    private List<AttachmentResponseDTO> attachments;
 
     public MessageResponse() {}
 
@@ -85,8 +85,8 @@ public class MessageResponse {
     public Boolean getEdited() { return isEdited != null && isEdited; }
     public void setEdited(Boolean edited) { isEdited = edited; }
 
-    public List<Object> getAttachments() { return attachments; }
-    public void setAttachments(List<Object> attachments) { this.attachments = attachments; }
+    public List<AttachmentResponseDTO> getAttachments() { return attachments; }
+    public void setAttachments(List<AttachmentResponseDTO> attachments) { this.attachments = attachments; }
 
     @Override
     public boolean equals(Object o) {
