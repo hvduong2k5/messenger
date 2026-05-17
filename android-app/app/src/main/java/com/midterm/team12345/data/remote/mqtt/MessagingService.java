@@ -59,12 +59,27 @@ public class MessagingService extends Service {
         mqttManager.init(this, brokerUrl, clientId, username, token, new MqttManager.MqttCallback() {
             @Override
             public void onMessageReceived(MqttMessageDTO message) {
-                // Sử dụng ConversationRepositoryImpl đã được tách ra
-                ConversationRepositoryImpl.getInstance(getApplicationContext()).emitRealTimeMessage(message);
-                
                 if (MqttEventType.NEW_MESSAGE.name().equals(message.getType())) {
+                    new java.lang.Thread(() -> {
+                        try {
+                            // 1. Map MQTT packet to MessageEntity using MessageMapper
+                            com.midterm.team12345.data.local.entity.MessageEntity entity = 
+                                    com.midterm.team12345.data.mapper.MessageMapper.toEntity(message);
+                            
+                            // 2. Insert directly into Room DB
+                            com.midterm.team12345.data.local.database.MessengerDatabase.getInstance(getApplicationContext())
+                                    .messageDao()
+                                    .insertMessage(entity);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }).start();
+
                     showPushNotification(message);
                 }
+
+                // Emit real-time message to let other components handle it if necessary
+                ConversationRepositoryImpl.getInstance(getApplicationContext()).emitRealTimeMessage(message);
             }
 
             @Override
