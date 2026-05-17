@@ -93,8 +93,12 @@ public class ChatListFragment extends BaseFragment<FragmentChatListBinding, Chat
 
         viewModel.profileState.observe(getViewLifecycleOwner(), resource -> {
             if (resource != null && resource.status == Resource.Status.SUCCESS && resource.data != null) {
+                String avatarUrl = resource.data.getAvatarUrl();
+                if (avatarUrl != null && !avatarUrl.startsWith("http")) {
+                    avatarUrl = com.midterm.team12345.data.remote.RetrofitClient.getBaseUrl() + (avatarUrl.startsWith("/") ? "" : "/") + avatarUrl;
+                }
                 Glide.with(this)
-                        .load(resource.data.getAvatarUrl())
+                        .load(avatarUrl)
                         .placeholder(R.drawable.ic_avatar_placeholder)
                         .error(R.drawable.ic_avatar_placeholder)
                         .into(binding.ivMyProfile);
