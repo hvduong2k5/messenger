@@ -38,7 +38,7 @@ public class MessageResponseDTO {
     private Boolean isEdited;
 
     @SerializedName("attachments")
-    private List<Object> attachments;
+    private List<AttachmentResponseDTO> attachments;
 
     public Long getMessageId() { return messageId; }
     public void setMessageId(Long messageId) { this.messageId = messageId; }
@@ -73,6 +73,6 @@ public class MessageResponseDTO {
     public Boolean getIsEdited() { return isEdited; }
     public void setIsEdited(Boolean isEdited) { this.isEdited = isEdited; }
 
-    public List<Object> getAttachments() { return attachments; }
-    public void setAttachments(List<Object> attachments) { this.attachments = attachments; }
+    public List<AttachmentResponseDTO> getAttachments() { return attachments; }
+    public void setAttachments(List<AttachmentResponseDTO> attachments) { this.attachments = attachments; }
 }
