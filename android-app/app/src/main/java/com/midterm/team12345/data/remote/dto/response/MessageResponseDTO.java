@@ -4,7 +4,7 @@ import com.google.gson.annotations.SerializedName;
 import java.util.List;
 import java.util.Objects;
 
-public class MessageResponse {
+public class MessageResponseDTO {
     @SerializedName("messageId")
     private Long messageId;
 
@@ -30,7 +30,7 @@ public class MessageResponse {
     private String status;
 
     @SerializedName("createdAt")
-    private Long createdAt; // Chuyển về Long để xử lý ở UI
+    private String createdAt;
 
     @SerializedName("isDeleted")
     private Boolean isDeleted;
@@ -41,14 +41,15 @@ public class MessageResponse {
     @SerializedName("attachments")
     private List<AttachmentResponseDTO> attachments;
 
-    public MessageResponse() {}
+    public MessageResponseDTO() {}
 
-    public MessageResponse(Long messageId, Long senderId, String content, Long createdAt) {
+    public MessageResponseDTO(Long messageId, Long senderId, String content, Long createdAt) {
         this.messageId = messageId;
         this.senderId = senderId;
         this.content = content;
-        this.createdAt = createdAt;
+        setCreatedAt(createdAt);
         this.isDeleted = false;
+        this.isEdited = false;
     }
 
     // Getters and Setters
@@ -76,8 +77,29 @@ public class MessageResponse {
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
 
-    public Long getCreatedAt() { return createdAt; }
-    public void setCreatedAt(Long createdAt) { this.createdAt = createdAt; }
+    // Specialized Getter & Setter for UI time processing
+    public Long getCreatedAt() {
+        if (createdAt == null || createdAt.isEmpty()) return null;
+        try {
+            return Long.parseLong(createdAt);
+        } catch (NumberFormatException e) {
+            return parseDateStringToLong(createdAt);
+        }
+    }
+
+    public void setCreatedAt(Long time) {
+        this.createdAt = time != null ? String.valueOf(time) : null;
+    }
+
+    public String getCreatedAtStr() { return createdAt; }
+    public void setCreatedAtStr(String createdAtStr) { this.createdAt = createdAtStr; }
+
+    // Dual support for both DTO and UI model methods
+    public Boolean getIsDeleted() { return isDeleted != null && isDeleted; }
+    public void setIsDeleted(Boolean isDeleted) { this.isDeleted = isDeleted; }
+
+    public Boolean getIsEdited() { return isEdited != null && isEdited; }
+    public void setIsEdited(Boolean isEdited) { this.isEdited = isEdited; }
 
     public Boolean getDeleted() { return isDeleted != null && isDeleted; }
     public void setDeleted(Boolean deleted) { isDeleted = deleted; }
@@ -92,7 +114,7 @@ public class MessageResponse {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        MessageResponse that = (MessageResponse) o;
+        MessageResponseDTO that = (MessageResponseDTO) o;
         return Objects.equals(messageId, that.messageId) &&
                 Objects.equals(content, that.content) &&
                 Objects.equals(status, that.status) &&
@@ -102,5 +124,25 @@ public class MessageResponse {
     @Override
     public int hashCode() {
         return Objects.hash(messageId, content, status, isDeleted);
+    }
+
+    private static Long parseDateStringToLong(String timeStr) {
+        if (timeStr == null || timeStr.isEmpty()) return null;
+        try {
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                return java.time.LocalDateTime.parse(timeStr)
+                        .atZone(java.time.ZoneId.systemDefault())
+                        .toInstant()
+                        .toEpochMilli();
+            } else {
+                java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", java.util.Locale.getDefault());
+                return sdf.parse(timeStr).getTime();
+            }
+        } catch (Exception e) {
+            try {
+                return Long.parseLong(timeStr);
+            } catch (NumberFormatException ignored) {}
+        }
+        return null;
     }
 }
