@@ -28,6 +28,10 @@ public class RetrofitClient {
     private static final String BASE_URL = "http://192.168.1.166:8080";
     private static Retrofit retrofit = null;
 
+    public static String getBaseUrl() {
+        return BASE_URL;
+    }
+
     public static synchronized Retrofit getClient(Context context) {
         if (retrofit == null) {
             HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
