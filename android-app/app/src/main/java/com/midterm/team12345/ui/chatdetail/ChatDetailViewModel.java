@@ -22,6 +22,7 @@ public class ChatDetailViewModel extends ViewModel {
     private final MessageRepository messageRepository;
     private final ConversationRepository conversationRepository;
     private final UserRepository userRepository;
+    private Long activeConversationId;
 
     private final MutableLiveData<Resource<List<MessageResponseDTO>>> _messageState = new MutableLiveData<>();
     public final LiveData<Resource<List<MessageResponseDTO>>> messageState = _messageState;
@@ -43,10 +44,63 @@ public class ChatDetailViewModel extends ViewModel {
 
     private void observeRealTimeMessages() {
         conversationRepository.getRealTimeMessages().observeForever(mqttMessage -> {
-            if (mqttMessage != null && "NEW_MESSAGE".equals(mqttMessage.getType())) {
-                addMessageLocally(mqttMessage.getSender(), mqttMessage.getPayload());
+            if (mqttMessage != null) {
+                String type = mqttMessage.getType();
+                if ("NEW_MESSAGE".equals(type) || "text".equalsIgnoreCase(type) || "media".equalsIgnoreCase(type)) {
+                    Long msgConvId = mqttMessage.getConversationId();
+                    if (activeConversationId != null && activeConversationId.equals(msgConvId)) {
+                        MessageResponseDTO responseDto = mqttMessage.toMessageResponseDTO();
+                        if (responseDto != null) {
+                            addMessageResponseLocally(responseDto);
+                        } else {
+                            addMessageLocally(mqttMessage.getSender(), mqttMessage.getPayload());
+                        }
+                    }
+                } else if ("REVOKE_MESSAGE".equals(type) || "EDIT_MESSAGE".equals(type)) {
+                    MessageResponseDTO responseDto = mqttMessage.toMessageResponseDTO();
+                    if (responseDto != null && activeConversationId != null && activeConversationId.equals(responseDto.getConversationId())) {
+                        updateMessageLocally(responseDto);
+                    }
+                }
             }
         });
+    }
+
+    private void addMessageResponseLocally(MessageResponseDTO newMessage) {
+        Resource<List<MessageResponseDTO>> currentState = _messageState.getValue();
+        List<MessageResponseDTO> currentMessages = new ArrayList<>();
+        if (currentState != null && currentState.data != null) {
+            currentMessages.addAll(currentState.data);
+        }
+
+        boolean exists = currentMessages.stream()
+                .anyMatch(m -> (newMessage.getMessageId() != null && newMessage.getMessageId().equals(m.getMessageId())) ||
+                             (newMessage.getContent().equals(m.getContent()) && 
+                              newMessage.getSenderId().equals(m.getSenderId()) &&
+                              m.getCreatedAt() != null && Math.abs(newMessage.getCreatedAt() - m.getCreatedAt()) < 2000));
+
+        if (!exists) {
+            currentMessages.add(0, newMessage);
+            _messageState.setValue(Resource.success(currentMessages));
+        }
+    }
+
+    private void updateMessageLocally(MessageResponseDTO updatedMessage) {
+        Resource<List<MessageResponseDTO>> currentState = _messageState.getValue();
+        if (currentState != null && currentState.data != null) {
+            List<MessageResponseDTO> list = new ArrayList<>(currentState.data);
+            boolean updated = false;
+            for (int i = 0; i < list.size(); i++) {
+                if (list.get(i).getMessageId().equals(updatedMessage.getMessageId())) {
+                    list.set(i, updatedMessage);
+                    updated = true;
+                    break;
+                }
+            }
+            if (updated) {
+                _messageState.setValue(Resource.success(list));
+            }
+        }
     }
 
     private void addMessageLocally(String sender, String payload) {
@@ -81,6 +135,7 @@ public class ChatDetailViewModel extends ViewModel {
     }
 
     public void loadMessages(Long conversationId) {
+        this.activeConversationId = conversationId;
         _messageState.setValue(Resource.loading(null));
         messageRepository.getMessages(conversationId, 0, 50).observeForever(resource -> {
             _messageState.setValue(resource);
