@@ -10,6 +10,7 @@ import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -64,13 +65,19 @@ public class LoginActivity extends AppCompatActivity {
         binding.etPassword.addTextChangedListener(loginWatcher);
 
         binding.btnLogin.setOnClickListener(v -> {
-            String email = binding.etUsernameEmail.getText().toString().trim();
-            String password = binding.etPassword.getText().toString().trim();
-            viewModel.login(email, password);
+            // Bypass login for testing UI
+            Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            startActivity(intent);
+            finish();
         });
 
         binding.btnCreateAccount.setOnClickListener(v -> {
-            startActivity(new Intent(LoginActivity.this, RegisterActivity.class));
+            try {
+                startActivity(new Intent(LoginActivity.this, RegisterActivity.class));
+            } catch (Exception e) {
+                Toast.makeText(this, "RegisterActivity chưa sẵn sàng", Toast.LENGTH_SHORT).show();
+            }
         });
     }
 
@@ -81,11 +88,11 @@ public class LoginActivity extends AppCompatActivity {
 
         binding.btnLogin.setEnabled(isValid);
         if (isValid) {
-            binding.btnLogin.setBackgroundTintList(ColorStateList.valueOf(getColor(R.color.messenger_blue)));
-            binding.btnLogin.setTextColor(getColor(android.R.color.white));
+            binding.btnLogin.setBackgroundTintList(ColorStateList.valueOf(ContextCompat.getColor(this, R.color.messenger_blue)));
+            binding.btnLogin.setTextColor(ContextCompat.getColor(this, android.R.color.white));
         } else {
-            binding.btnLogin.setBackgroundTintList(ColorStateList.valueOf(getColor(R.color.brand_1))); 
-            binding.btnLogin.setTextColor(getColor(R.color.gray_text));
+            binding.btnLogin.setBackgroundTintList(ColorStateList.valueOf(ContextCompat.getColor(this, R.color.btn_background_gray))); 
+            binding.btnLogin.setTextColor(ContextCompat.getColor(this, R.color.btn_text_gray));
         }
     }
 
@@ -95,16 +102,13 @@ public class LoginActivity extends AppCompatActivity {
                 setLoadingState(true);
             } else if (resource.status == Resource.Status.SUCCESS) {
                 setLoadingState(false);
-                Toast.makeText(this, "Login successful!", Toast.LENGTH_SHORT).show();
-                
                 Intent intent = new Intent(this, MainActivity.class);
                 intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                 startActivity(intent);
                 finish();
             } else if (resource.status == Resource.Status.ERROR) {
                 setLoadingState(false);
-                String message = resource.message != null ? resource.message : "Login failed";
-                Toast.makeText(this, message, Toast.LENGTH_LONG).show();
+                Toast.makeText(this, resource.message != null ? resource.message : "Login failed", Toast.LENGTH_LONG).show();
             }
         });
     }
@@ -112,7 +116,7 @@ public class LoginActivity extends AppCompatActivity {
     private void setLoadingState(boolean isLoading) {
         binding.progressBar.setVisibility(isLoading ? View.VISIBLE : View.GONE);
         binding.btnLogin.setEnabled(!isLoading);
-        binding.btnLogin.setText(isLoading ? "" : getString(R.string.btn_login));
+        binding.btnLogin.setText(isLoading ? "" : "LOG IN");
         binding.etUsernameEmail.setEnabled(!isLoading);
         binding.etPassword.setEnabled(!isLoading);
         binding.btnCreateAccount.setEnabled(!isLoading);
