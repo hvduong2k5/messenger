@@ -23,6 +23,7 @@ import com.midterm.team12345.domain.model.MqttEventType;
 public class MessagingService extends Service {
     private static final String CHANNEL_ID = "MessagingServiceChannel";
     public static final String EXTRA_USERNAME = "extra_username";
+    public static final String EXTRA_USER_ID = "extra_user_id";
 
     private MqttManager mqttManager;
     private TokenManager tokenManager;
@@ -40,11 +41,22 @@ public class MessagingService extends Service {
         String username = intent != null ? intent.getStringExtra(EXTRA_USERNAME) : null;
         if (username == null) username = tokenManager.getUsername();
         
+        Long userId = null;
+        if (intent != null && intent.hasExtra(EXTRA_USER_ID)) {
+            long id = intent.getLongExtra(EXTRA_USER_ID, -1L);
+            if (id != -1L) {
+                userId = id;
+            }
+        }
+        if (userId == null) {
+            userId = tokenManager.getUserId();
+        }
+        
         String token = tokenManager.getToken();
 
-        if (username != null && token != null) {
+        if (username != null && token != null && userId != null) {
             startForeground(1, getNotification("Connecting to chat..."));
-            connectMqtt(username, token);
+            connectMqtt(username, token, userId);
         } else {
             stopSelf();
         }
@@ -52,11 +64,11 @@ public class MessagingService extends Service {
         return START_STICKY;
     }
 
-    private void connectMqtt(String username, String token) {
+    private void connectMqtt(String username, String token, Long userId) {
         String brokerUrl = "tcp://192.168.1.166:1883"; 
         String clientId = "android_" + username + "_" + System.currentTimeMillis();
 
-        mqttManager.init(this, brokerUrl, clientId, username, token, new MqttManager.MqttCallback() {
+        mqttManager.init(this, brokerUrl, clientId, username, token, userId, new MqttManager.MqttCallback() {
             @Override
             public void onMessageReceived(MqttMessageDTO message) {
                 if (MqttEventType.NEW_MESSAGE.name().equals(message.getType())) {
@@ -92,8 +104,8 @@ public class MessagingService extends Service {
             public void onConnectComplete(boolean reconnect, String serverURI) {
                 updateNotification("Connected to Messenger");
                 ConversationRepositoryImpl.getInstance(getApplicationContext()).updateConnectionStatus(true);
-                mqttManager.subscribe("users/" + username + "/receive");
-                mqttManager.subscribe("users/" + username + "/presence");
+                mqttManager.subscribe("user/" + userId + "/messages");
+                mqttManager.subscribe("user/" + userId + "/presence");
             }
         });
     }
