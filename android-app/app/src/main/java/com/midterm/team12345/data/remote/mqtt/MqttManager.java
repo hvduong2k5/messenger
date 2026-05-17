@@ -36,7 +36,7 @@ public class MqttManager {
         return instance;
     }
 
-    public void init(Context context, String serverUri, String clientId, String username, String token, MqttCallback callback) {
+    public void init(Context context, String serverUri, String clientId, String username, String token, Long userId, MqttCallback callback) {
         this.callback = callback;
         try {
             mqttClient = new MqttClient(serverUri, clientId, new MemoryPersistence());
@@ -47,7 +47,7 @@ public class MqttManager {
             options.setCleanSession(false);
             
             // Last Will and Testament
-            String lwtTopic = "users/" + username + "/presence";
+            String lwtTopic = "user/" + userId + "/presence";
             String lwtPayload = "offline";
             options.setWill(lwtTopic, lwtPayload.getBytes(), 1, true);
 
