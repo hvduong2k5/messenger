@@ -68,10 +68,10 @@ public class RegisterActivity extends AppCompatActivity {
         binding.etConfirmPassword.addTextChangedListener(watcher);
 
         binding.btnRegister.setOnClickListener(v -> {
-            String name = binding.etUsername.getText().toString().trim();
+            String username = binding.etUsername.getText().toString().trim();
             String email = binding.etEmail.getText().toString().trim();
             String password = binding.etPasswordReg.getText().toString().trim();
-            viewModel.register(email, email, password, name);
+            viewModel.register(username, email, password, username);
         });
     }
 
