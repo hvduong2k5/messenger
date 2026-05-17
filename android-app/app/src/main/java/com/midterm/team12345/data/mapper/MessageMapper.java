@@ -52,6 +52,12 @@ public class MessageMapper {
 
     public static MessageEntity toEntity(MqttMessageDTO mqttDto) {
         if (mqttDto == null) return null;
+        
+        MessageResponseDTO responseDto = mqttDto.toMessageResponseDTO();
+        if (responseDto != null) {
+            return toEntity(responseDto);
+        }
+        
         MessageEntity entity = new MessageEntity();
         
         Long senderId = null;
@@ -67,7 +73,7 @@ public class MessageMapper {
         entity.setLocalCreatedAt(mqttDto.getTimestamp() != null ? mqttDto.getTimestamp() : System.currentTimeMillis());
         entity.setServerCreatedAt(mqttDto.getTimestamp());
         entity.setClientMessageId(java.util.UUID.randomUUID().toString());
-        entity.setConversationId(senderId); // Set senderId as conversationId for 1-1 chat
+        entity.setConversationId(mqttDto.getConversationId() != null ? mqttDto.getConversationId() : senderId);
         return entity;
     }
 
