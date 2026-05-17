@@ -48,6 +48,7 @@ dependencies {
     implementation(libs.material)
     implementation(libs.activity)
     implementation(libs.constraintlayout)
+    implementation(libs.annotation)
 
     // Retrofit & OkHttp
     implementation(libs.retrofit)
