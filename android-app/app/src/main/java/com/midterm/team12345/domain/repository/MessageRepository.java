@@ -5,6 +5,8 @@ import com.midterm.team12345.data.remote.dto.request.MessageRequestDTO;
 import com.midterm.team12345.data.remote.dto.response.MessageResponse;
 import com.midterm.team12345.data.remote.dto.response.MessageStatusResponseDTO;
 import com.midterm.team12345.utils.Resource;
+
+import java.io.File;
 import java.util.List;
 
 public interface MessageRepository {
@@ -14,6 +16,12 @@ public interface MessageRepository {
     LiveData<Resource<List<MessageResponse>>> getMessages(Long conversationId, int page, int size);
 
     LiveData<Resource<MessageResponse>> sendMessage(MessageRequestDTO request);
+
+    /**
+     * Gửi tin nhắn kèm tệp đính kèm (Multipart)
+     */
+    LiveData<Resource<MessageResponse>> sendMessageWithAttachments(Long conversationId, String content, String clientMessageId, List<File> files);
+
     LiveData<Resource<Void>> revokeMessage(Long messageId);
     LiveData<Resource<MessageResponse>> editMessage(Long messageId, MessageRequestDTO request);
     
