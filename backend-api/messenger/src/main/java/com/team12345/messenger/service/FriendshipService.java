@@ -2,6 +2,7 @@ package com.team12345.messenger.service;
 
 import com.team12345.messenger.dto.response.FriendRequestResponseDTO;
 import com.team12345.messenger.dto.response.UserResponseDTO;
+import com.team12345.messenger.dto.response.FriendshipStatus;
 
 import java.util.List;
 
@@ -21,5 +22,5 @@ public interface FriendshipService {
 
     void cancelFriendRequest(Long currentUserId, Long receiverId);
 
-    String checkFriendshipStatus(Long userId1, Long userId2);
+    FriendshipStatus checkFriendshipStatus(Long userId1, Long userId2);
 }
