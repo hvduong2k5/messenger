@@ -16,7 +16,9 @@ import com.midterm.team12345.domain.repository.ConversationRepository;
 import com.midterm.team12345.utils.Resource;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -25,16 +27,21 @@ import retrofit2.Response;
 public class ConversationRepositoryImpl implements ConversationRepository {
     private static ConversationRepositoryImpl instance;
     private final ConversationApiService apiService;
+    private final com.midterm.team12345.data.local.dao.ConversationDao conversationDao;
     private final MutableLiveData<MqttMessageDTO> realTimeMessages = new MutableLiveData<>();
     private final MutableLiveData<Boolean> connectionStatus = new MutableLiveData<>(false);
 
-    private ConversationRepositoryImpl(ConversationApiService apiService) {
+    private ConversationRepositoryImpl(ConversationApiService apiService, com.midterm.team12345.data.local.dao.ConversationDao conversationDao) {
         this.apiService = apiService;
+        this.conversationDao = conversationDao;
     }
 
     public static synchronized ConversationRepositoryImpl getInstance(Context context) {
         if (instance == null) {
-            instance = new ConversationRepositoryImpl(RetrofitClient.getConversationApiService(context));
+            instance = new ConversationRepositoryImpl(
+                    RetrofitClient.getConversationApiService(context),
+                    com.midterm.team12345.data.local.database.MessengerDatabase.getInstance(context).conversationDao()
+            );
         }
         return instance;
     }
@@ -43,17 +50,67 @@ public class ConversationRepositoryImpl implements ConversationRepository {
     public LiveData<Resource<PageResponse<ConversationResponseDTO>>> getConversations(int page, int size) {
         MutableLiveData<Resource<PageResponse<ConversationResponseDTO>>> data = new MutableLiveData<>();
         data.setValue(Resource.loading(null));
-        apiService.getConversations(page, size).enqueue(new Callback<PageResponse<ConversationResponseDTO>>() {
-            @Override
-            public void onResponse(Call<PageResponse<ConversationResponseDTO>> call, Response<PageResponse<ConversationResponseDTO>> response) {
-                if (response.isSuccessful()) data.setValue(Resource.success(response.body()));
-                else data.setValue(Resource.error("Failed to fetch conversations", null));
+
+        // 1. Load from Local Room DB immediately in a background thread
+        new java.lang.Thread(() -> {
+            try {
+                List<com.midterm.team12345.data.local.entity.ConversationEntity> localEntities = conversationDao.getConversationsSync();
+                if (localEntities != null && !localEntities.isEmpty()) {
+                    List<ConversationResponseDTO> dtoContent = localEntities.stream()
+                            .map(com.midterm.team12345.data.mapper.ConversationMapper::toDto)
+                            .collect(Collectors.collectingAndThen(Collectors.toList(), java.util.ArrayList::new));
+                    
+                    PageResponse<ConversationResponseDTO> pageResponse = new PageResponse<>();
+                    pageResponse.setContent(dtoContent);
+                    pageResponse.setTotalPages(1);
+                    pageResponse.setTotalElements(dtoContent.size());
+                    
+                    data.postValue(Resource.success(pageResponse));
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
             }
-            @Override
-            public void onFailure(Call<PageResponse<ConversationResponseDTO>> call, Throwable t) {
-                data.setValue(Resource.error(t.getMessage(), null));
-            }
-        });
+
+            // 2. Fetch from network in the background
+            apiService.getConversations(page, size).enqueue(new Callback<PageResponse<ConversationResponseDTO>>() {
+                @Override
+                public void onResponse(Call<PageResponse<ConversationResponseDTO>> call, Response<PageResponse<ConversationResponseDTO>> response) {
+                    if (response.isSuccessful() && response.body() != null) {
+                        new java.lang.Thread(() -> {
+                            try {
+                                List<ConversationResponseDTO> remoteDtos = response.body().getContent();
+                                if (remoteDtos != null) {
+                                    List<com.midterm.team12345.data.local.entity.ConversationEntity> entities = 
+                                            com.midterm.team12345.data.mapper.ConversationMapper.toEntityList(remoteDtos);
+                                    conversationDao.insertConversations(entities);
+                                }
+                                
+                                // Fetch updated list from DB to ensure single source of truth
+                                List<com.midterm.team12345.data.local.entity.ConversationEntity> updatedLocal = conversationDao.getConversationsSync();
+                                List<ConversationResponseDTO> updatedDtos = updatedLocal.stream()
+                                        .map(com.midterm.team12345.data.mapper.ConversationMapper::toDto)
+                                        .collect(Collectors.collectingAndThen(Collectors.toList(), java.util.ArrayList::new));
+                                
+                                PageResponse<ConversationResponseDTO> pageResponse = new PageResponse<>();
+                                pageResponse.setContent(updatedDtos);
+                                pageResponse.setTotalPages(response.body().getTotalPages());
+                                pageResponse.setTotalElements(response.body().getTotalElements());
+                                
+                                data.postValue(Resource.success(pageResponse));
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                        }).start();
+                    }
+                }
+
+                @Override
+                public void onFailure(Call<PageResponse<ConversationResponseDTO>> call, Throwable t) {
+                    // Do nothing on failure to keep showing local cache
+                }
+            });
+        }).start();
+
         return data;
     }
 
