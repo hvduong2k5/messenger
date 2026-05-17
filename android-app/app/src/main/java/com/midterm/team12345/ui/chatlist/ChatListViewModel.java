@@ -39,8 +39,13 @@ public class ChatListViewModel extends BaseViewModel {
 
     private void observeRealTimeMessages() {
         conversationRepository.getRealTimeMessages().observeForever(mqttMessage -> {
-            if (mqttMessage != null && MqttEventType.NEW_MESSAGE.name().equals(mqttMessage.getType())) {
-                updateConversationList(mqttMessage);
+            if (mqttMessage != null) {
+                String type = mqttMessage.getType();
+                if ("NEW_MESSAGE".equals(type) || "text".equalsIgnoreCase(type) || "media".equalsIgnoreCase(type)) {
+                    updateConversationList(mqttMessage);
+                } else if ("REVOKE_MESSAGE".equals(type) || "EDIT_MESSAGE".equals(type)) {
+                    updateConversationListOnEditOrRevoke(mqttMessage);
+                }
             }
         });
     }
@@ -49,16 +54,22 @@ public class ChatListViewModel extends BaseViewModel {
         Resource<List<ConversationResponse>> currentResource = _conversationState.getValue();
         if (currentResource != null && currentResource.status == Resource.Status.SUCCESS && currentResource.data != null) {
             List<ConversationResponse> list = new ArrayList<>(currentResource.data);
-            Long senderId;
+            
+            Long conversationId = mqttMessage.getConversationId();
+            Long senderId = null;
             try {
-                senderId = Long.parseLong(mqttMessage.getSender());
-            } catch (NumberFormatException e) {
-                return;
-            }
+                if (mqttMessage.getSender() != null) {
+                    senderId = Long.parseLong(mqttMessage.getSender());
+                }
+            } catch (NumberFormatException ignored) {}
 
             int foundIndex = -1;
             for (int i = 0; i < list.size(); i++) {
-                if (list.get(i).getConversationId().equals(senderId)) {
+                ConversationResponse item = list.get(i);
+                if (conversationId != null && item.getConversationId().equals(conversationId)) {
+                    foundIndex = i;
+                    break;
+                } else if (conversationId == null && senderId != null && item.getConversationId().equals(senderId)) {
                     foundIndex = i;
                     break;
                 }
@@ -71,7 +82,7 @@ public class ChatListViewModel extends BaseViewModel {
                         old.getConversationName(),
                         mqttMessage.getPayload(),
                         old.getAvatarUrl(),
-                        System.currentTimeMillis(),
+                        mqttMessage.getTimestamp() != null ? mqttMessage.getTimestamp() : System.currentTimeMillis(),
                         (old.getUnreadCount() != null ? old.getUnreadCount() : 0) + 1,
                         old.getDeleted(),
                         old.getEdited(),
@@ -83,6 +94,36 @@ public class ChatListViewModel extends BaseViewModel {
                 return;
             }
             _conversationState.setValue(Resource.success(list));
+        }
+    }
+
+    private void updateConversationListOnEditOrRevoke(MqttMessageDTO mqttMessage) {
+        Resource<List<ConversationResponse>> currentResource = _conversationState.getValue();
+        if (currentResource != null && currentResource.status == Resource.Status.SUCCESS && currentResource.data != null) {
+            List<ConversationResponse> list = new ArrayList<>(currentResource.data);
+            Long conversationId = mqttMessage.getConversationId();
+
+            if (conversationId != null) {
+                for (int i = 0; i < list.size(); i++) {
+                    ConversationResponse old = list.get(i);
+                    if (old.getConversationId().equals(conversationId)) {
+                        ConversationResponse updated = new ConversationResponse(
+                                old.getConversationId(),
+                                old.getConversationName(),
+                                mqttMessage.getPayload(),
+                                old.getAvatarUrl(),
+                                old.getUpdatedAt(),
+                                old.getUnreadCount(),
+                                old.getDeleted(),
+                                old.getEdited(),
+                                old.getGroup()
+                        );
+                        list.set(i, updated);
+                        break;
+                    }
+                }
+                _conversationState.setValue(Resource.success(list));
+            }
         }
     }
 
