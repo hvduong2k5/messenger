@@ -3,6 +3,7 @@ package com.team12345.messenger.service.impl;
 import com.team12345.messenger.dto.response.UserProfileResponseDTO;
 import com.team12345.messenger.dto.response.UserResponseDTO;
 import com.team12345.messenger.dto.response.UserSearchResponseDTO;
+import com.team12345.messenger.dto.response.FriendshipStatus;
 import com.team12345.messenger.entity.User;
 import com.team12345.messenger.entity.FriendRequest;
 import com.team12345.messenger.entity.FriendRequestStatus;
@@ -96,16 +97,16 @@ public class UserServiceImpl implements UserService {
                 .collect(Collectors.toList());
         Page<User> filtered = new org.springframework.data.domain.PageImpl<>(filteredList, pageable, users.getTotalElements() - 1);
         return filtered.map(user -> {
-            String status = "STRANGER";
+            FriendshipStatus status = FriendshipStatus.STRANGER;
             if (userFriendRepository.existsById_UserIdAndId_FriendId(currentUserId, user.getId()) ||
                 userFriendRepository.existsById_UserIdAndId_FriendId(user.getId(), currentUserId)) {
-                status = "FRIEND";
+                status = FriendshipStatus.FRIEND;
             } else if (friendRequestRepository.findById_SenderIdAndId_ReceiverId(currentUserId, user.getId())
                     .filter(fr -> fr.getStatus() == FriendRequestStatus.pending).isPresent()) {
-                status = "SENDER_PENDING";
+                status = FriendshipStatus.SENDER_PENDING;
             } else if (friendRequestRepository.findById_SenderIdAndId_ReceiverId(user.getId(), currentUserId)
                     .filter(fr -> fr.getStatus() == FriendRequestStatus.pending).isPresent()) {
-                status = "RECEIVER_PENDING";
+                status = FriendshipStatus.RECEIVER_PENDING;
             }
             return UserSearchResponseDTO.builder()
                     .id(user.getId())
