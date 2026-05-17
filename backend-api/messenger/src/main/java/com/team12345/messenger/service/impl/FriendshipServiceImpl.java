@@ -43,8 +43,15 @@ public class FriendshipServiceImpl implements FriendshipService {
         }
 
         Optional<FriendRequest> existingRequest = friendRequestRepository.findById_SenderIdAndId_ReceiverId(senderId, receiverId);
-        if (existingRequest.isPresent() && existingRequest.get().getStatus() == FriendRequestStatus.pending) {
-            throw new IllegalStateException("Friend request already pending");
+        if (existingRequest.isPresent()) {
+            FriendRequest request = existingRequest.get();
+            if (request.getStatus() == FriendRequestStatus.pending) {
+                throw new IllegalStateException("Friend request already pending");
+            } else if (request.getStatus() == FriendRequestStatus.rejected) {
+                request.setStatus(FriendRequestStatus.pending);
+                FriendRequest savedRequest = friendRequestRepository.save(request);
+                return mapToFriendRequestResponse(savedRequest);
+            }
         }
 
         // Also check if receiver already sent a request to sender
@@ -112,6 +119,15 @@ public class FriendshipServiceImpl implements FriendshipService {
 
         friendRequest.setStatus(FriendRequestStatus.rejected);
         friendRequestRepository.save(friendRequest);
+    }
+
+    @Override
+    @Transactional
+    public void cancelFriendRequest(Long currentUserId, Long receiverId) {
+        FriendRequest friendRequest = friendRequestRepository.findBySenderIdAndReceiverIdAndStatus(currentUserId, receiverId, FriendRequestStatus.pending)
+                .orElseThrow(() -> new ResourceNotFoundException("Friend request not found or has already been processed"));
+
+        friendRequestRepository.delete(friendRequest);
     }
 
     @Override
