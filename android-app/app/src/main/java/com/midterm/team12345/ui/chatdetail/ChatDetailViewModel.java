@@ -5,7 +5,7 @@ import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
 import com.midterm.team12345.data.remote.dto.request.MessageRequestDTO;
-import com.midterm.team12345.data.remote.dto.response.MessageResponse;
+import com.midterm.team12345.data.remote.dto.response.MessageResponseDTO;
 import com.midterm.team12345.data.remote.dto.response.UserProfileResponseDTO;
 import com.midterm.team12345.domain.repository.ConversationRepository;
 import com.midterm.team12345.domain.repository.MessageRepository;
@@ -23,8 +23,8 @@ public class ChatDetailViewModel extends ViewModel {
     private final ConversationRepository conversationRepository;
     private final UserRepository userRepository;
 
-    private final MutableLiveData<Resource<List<MessageResponse>>> _messageState = new MutableLiveData<>();
-    public final LiveData<Resource<List<MessageResponse>>> messageState = _messageState;
+    private final MutableLiveData<Resource<List<MessageResponseDTO>>> _messageState = new MutableLiveData<>();
+    public final LiveData<Resource<List<MessageResponseDTO>>> messageState = _messageState;
 
     private final MutableLiveData<Resource<UserProfileResponseDTO>> _profileState = new MutableLiveData<>();
     public final LiveData<Resource<UserProfileResponseDTO>> profileState = _profileState;
@@ -50,8 +50,8 @@ public class ChatDetailViewModel extends ViewModel {
     }
 
     private void addMessageLocally(String sender, String payload) {
-        Resource<List<MessageResponse>> currentState = _messageState.getValue();
-        List<MessageResponse> currentMessages = new ArrayList<>();
+        Resource<List<MessageResponseDTO>> currentState = _messageState.getValue();
+        List<MessageResponseDTO> currentMessages = new ArrayList<>();
         if (currentState != null && currentState.data != null) {
             currentMessages.addAll(currentState.data);
         }
@@ -61,7 +61,7 @@ public class ChatDetailViewModel extends ViewModel {
                              m.getCreatedAt() != null && Math.abs(System.currentTimeMillis() - m.getCreatedAt()) < 2000);
 
         if (!exists) {
-            MessageResponse newMessage = new MessageResponse();
+            MessageResponseDTO newMessage = new MessageResponseDTO();
             newMessage.setMessageId(System.currentTimeMillis());
             newMessage.setSenderId(Long.parseLong(sender));
             newMessage.setContent(payload);
@@ -103,7 +103,7 @@ public class ChatDetailViewModel extends ViewModel {
         String clientMsgId = UUID.randomUUID().toString();
 
         // 1. Tạo tin nhắn tạm thời
-        MessageResponse pendingMsg = new MessageResponse();
+        MessageResponseDTO pendingMsg = new MessageResponseDTO();
         pendingMsg.setSenderId(senderId);
         pendingMsg.setContent(text);
         pendingMsg.setCreatedAt(System.currentTimeMillis());
@@ -111,8 +111,8 @@ public class ChatDetailViewModel extends ViewModel {
         pendingMsg.setConversationId(conversationId);
         pendingMsg.setMessageId(-System.currentTimeMillis()); 
 
-        Resource<List<MessageResponse>> currentState = _messageState.getValue();
-        List<MessageResponse> currentMessages = new ArrayList<>();
+        Resource<List<MessageResponseDTO>> currentState = _messageState.getValue();
+        List<MessageResponseDTO> currentMessages = new ArrayList<>();
         if (currentState != null && currentState.data != null) {
             currentMessages.addAll(currentState.data);
         }
@@ -135,11 +135,11 @@ public class ChatDetailViewModel extends ViewModel {
         }
     }
 
-    private void handleSendResult(Resource<MessageResponse> resource, Long conversationId, Long pendingId) {
+    private void handleSendResult(Resource<MessageResponseDTO> resource, Long conversationId, Long pendingId) {
         if (resource.status == Resource.Status.SUCCESS && resource.data != null) {
-            Resource<List<MessageResponse>> currentState = _messageState.getValue();
+            Resource<List<MessageResponseDTO>> currentState = _messageState.getValue();
             if (currentState != null && currentState.data != null) {
-                List<MessageResponse> list = new ArrayList<>(currentState.data);
+                List<MessageResponseDTO> list = new ArrayList<>(currentState.data);
                 for (int i = 0; i < list.size(); i++) {
                     if (list.get(i).getMessageId().equals(pendingId)) {
                         list.set(i, resource.data); 
