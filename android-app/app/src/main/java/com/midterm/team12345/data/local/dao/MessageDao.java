@@ -24,10 +24,10 @@ public interface MessageDao {
     @Update
     void updateMessage(MessageEntity message);
 
-    @Query("SELECT * FROM messages WHERE conversation_id = :conversationId ORDER BY local_created_at ASC")
+    @Query("SELECT * FROM messages WHERE conversation_id = :conversationId ORDER BY local_created_at DESC")
     LiveData<List<MessageEntity>> getMessagesByConversationId(Long conversationId);
 
-    @Query("SELECT * FROM messages WHERE conversation_id = :conversationId ORDER BY local_created_at ASC")
+    @Query("SELECT * FROM messages WHERE conversation_id = :conversationId ORDER BY local_created_at DESC")
     List<MessageEntity> getMessagesByConversationIdSync(Long conversationId);
 
     @Query("SELECT * FROM messages WHERE client_message_id = :clientMessageId LIMIT 1")
