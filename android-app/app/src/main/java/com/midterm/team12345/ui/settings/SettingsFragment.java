@@ -16,7 +16,7 @@ import com.bumptech.glide.Glide;
 import com.midterm.team12345.R;
 import com.midterm.team12345.data.local.TokenManager;
 import com.midterm.team12345.data.repository.AuthRepositoryImpl;
-import com.midterm.team12345.data.repository.ChatRepositoryImpl;
+import com.midterm.team12345.data.repository.UserRepositoryImpl;
 import com.midterm.team12345.databinding.FragmentSettingsBinding;
 import com.midterm.team12345.databinding.ItemSettingsRowMainBinding;
 import com.midterm.team12345.ui.auth.LoginActivity;
@@ -40,8 +40,9 @@ public class SettingsFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
         tokenManager = new TokenManager(requireContext());
         
+        // Thay thế ChatRepositoryImpl bằng UserRepositoryImpl chuyên biệt
         SettingsViewModelFactory factory = new SettingsViewModelFactory(
-                ChatRepositoryImpl.getInstance(requireActivity().getApplication()),
+                UserRepositoryImpl.getInstance(requireActivity().getApplication()),
                 AuthRepositoryImpl.getInstance(requireActivity().getApplication())
         );
         viewModel = new ViewModelProvider(this, factory).get(SettingsViewModel.class);
@@ -75,10 +76,6 @@ public class SettingsFragment extends Fragment {
                 Toast.makeText(requireContext(), "Logout error: " + resource.message, Toast.LENGTH_SHORT).show();
                 navigateToLogin();
             }
-        });
-
-        viewModel.isLoading.observe(getViewLifecycleOwner(), isLoading -> {
-            // Có thể thêm ProgressBar ở đây nếu layout có
         });
     }
 

@@ -2,95 +2,59 @@ package com.midterm.team12345.ui.chatlist;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.text.Editable;
-import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
+import com.bumptech.glide.Glide;
+import com.midterm.team12345.R;
+import com.midterm.team12345.data.repository.ConversationRepositoryImpl;
+import com.midterm.team12345.data.repository.UserRepositoryImpl;
 import com.midterm.team12345.databinding.FragmentChatListBinding;
+import com.midterm.team12345.ui.base.BaseFragment;
 import com.midterm.team12345.ui.chatdetail.ChatDetailActivity;
 import com.midterm.team12345.ui.creategroup.CreateGroupActivity;
+import com.midterm.team12345.utils.Resource;
 
-public class ChatListFragment extends Fragment {
+public class ChatListFragment extends BaseFragment<FragmentChatListBinding, ChatListViewModel> {
 
-    private FragmentChatListBinding binding;
-    private ChatListViewModel viewModel;
     private ChatListAdapter adapter;
 
-    @Nullable
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        binding = FragmentChatListBinding.inflate(inflater, container, false);
-        return binding.getRoot();
+    protected FragmentChatListBinding inflateBinding(LayoutInflater inflater, ViewGroup container) {
+        return FragmentChatListBinding.inflate(inflater, container, false);
     }
 
     @Override
-    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        super.onViewCreated(view, savedInstanceState);
+    protected ChatListViewModel createViewModel() {
+        ChatListViewModelFactory factory = new ChatListViewModelFactory(
+                ConversationRepositoryImpl.getInstance(requireContext()),
+                UserRepositoryImpl.getInstance(requireContext())
+        );
+        return new ViewModelProvider(this, factory).get(ChatListViewModel.class);
+    }
 
+    @Override
+    protected void setupViews() {
         setupRecyclerView();
-        setupViewModel();
-        setupObservers();
         setupListeners();
-
+        
+        // Tải dữ liệu ban đầu
         viewModel.fetchConversations();
+        viewModel.fetchMyProfile();
     }
 
     private void setupRecyclerView() {
         adapter = new ChatListAdapter(conversation -> {
             Intent intent = new Intent(getContext(), ChatDetailActivity.class);
-            intent.putExtra("CONVERSATION_ID", conversation.getConversationId());
-            intent.putExtra("PARTNER_NAME", conversation.getConversationName());
+            intent.putExtra("conversation", conversation); // Pass the whole object
             startActivity(intent);
         });
         binding.rvChatList.setAdapter(adapter);
-    }
-
-    private void setupViewModel() {
-        ChatListViewModelFactory factory = new ChatListViewModelFactory(ChatRepositoryImpl.getInstance(requireActivity().getApplication()));
-        viewModel = new ViewModelProvider(this, factory).get(ChatListViewModel.class);
-    }
-
-    private void setupObservers() {
-        viewModel.conversationState.observe(getViewLifecycleOwner(), resource -> {
-            if (resource == null) return;
-
-            switch (resource.status) {
-                case LOADING:
-                    binding.progressBar.setVisibility(View.VISIBLE);
-                    binding.emptyStateLayout.setVisibility(View.GONE);
-                    break;
-                case SUCCESS:
-                    binding.progressBar.setVisibility(View.GONE);
-                    binding.swipeRefresh.setRefreshing(false);
-                    if (resource.data != null && !resource.data.isEmpty()) {
-                        adapter.submitList(resource.data);
-                        binding.emptyStateLayout.setVisibility(View.GONE);
-                        binding.rvChatList.setVisibility(View.VISIBLE);
-                    } else {
-                        binding.emptyStateLayout.setVisibility(View.VISIBLE);
-                        binding.rvChatList.setVisibility(View.GONE);
-                    }
-                    break;
-                case ERROR:
-                    binding.progressBar.setVisibility(View.GONE);
-                    binding.swipeRefresh.setRefreshing(false);
-                    // Show empty state on error as well, or keep previous list
-                    if (adapter.getItemCount() == 0) {
-                        binding.emptyStateLayout.setVisibility(View.VISIBLE);
-                        binding.rvChatList.setVisibility(View.GONE);
-                    }
-                    Toast.makeText(getContext(), resource.message, Toast.LENGTH_SHORT).show();
-                    break;
-            }
-        });
     }
 
     private void setupListeners() {
@@ -99,25 +63,56 @@ public class ChatListFragment extends Fragment {
         binding.btnNewMessage.setOnClickListener(v -> {
             startActivity(new Intent(getContext(), CreateGroupActivity.class));
         });
+    }
 
-        binding.etSearch.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+    @Override
+    protected void observeViewModel() {
+        super.observeViewModel(); // Tự động xử lý show/hide loading và error
 
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-                // Filter logic would be implemented in ViewModel
-                // viewModel.filter(s.toString());
+        viewModel.conversationState.observe(getViewLifecycleOwner(), resource -> {
+            if (resource == null) return;
+
+            if (resource.status == Resource.Status.SUCCESS) {
+                binding.swipeRefresh.setRefreshing(false);
+                if (resource.data != null && !resource.data.isEmpty()) {
+                    adapter.submitList(resource.data);
+                    binding.emptyStateLayout.setVisibility(View.GONE);
+                    binding.rvChatList.setVisibility(View.VISIBLE);
+                } else {
+                    binding.emptyStateLayout.setVisibility(View.VISIBLE);
+                    binding.rvChatList.setVisibility(View.GONE);
+                }
+            } else if (resource.status == Resource.Status.ERROR) {
+                binding.swipeRefresh.setRefreshing(false);
+                if (adapter.getItemCount() == 0) {
+                    binding.emptyStateLayout.setVisibility(View.VISIBLE);
+                    binding.rvChatList.setVisibility(View.GONE);
+                }
             }
+        });
 
-            @Override
-            public void afterTextChanged(Editable s) {}
+        viewModel.profileState.observe(getViewLifecycleOwner(), resource -> {
+            if (resource != null && resource.status == Resource.Status.SUCCESS && resource.data != null) {
+                Glide.with(this)
+                        .load(resource.data.getAvatarUrl())
+                        .placeholder(R.drawable.ic_avatar_placeholder)
+                        .error(R.drawable.ic_avatar_placeholder)
+                        .into(binding.ivMyProfile);
+            }
         });
     }
 
     @Override
-    public void onDestroyView() {
-        super.onDestroyView();
-        binding = null;
+    protected void showLoading() {
+        // Chỉ hiện progress bar nếu không phải đang dùng swipe refresh
+        if (!binding.swipeRefresh.isRefreshing()) {
+            binding.progressBar.setVisibility(View.VISIBLE);
+        }
+        binding.emptyStateLayout.setVisibility(View.GONE);
+    }
+
+    @Override
+    protected void hideLoading() {
+        binding.progressBar.setVisibility(View.GONE);
     }
 }

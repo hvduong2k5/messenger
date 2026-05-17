@@ -11,7 +11,8 @@ import com.bumptech.glide.Glide;
 import com.midterm.team12345.MainActivity;
 import com.midterm.team12345.R;
 import com.midterm.team12345.data.remote.dto.response.ConversationResponse;
-import com.midterm.team12345.data.repository.ChatRepositoryImpl;
+import com.midterm.team12345.data.repository.ConversationRepositoryImpl;
+import com.midterm.team12345.data.repository.FriendRepositoryImpl;
 import com.midterm.team12345.databinding.ActivityConversationSettingsBinding;
 import com.midterm.team12345.databinding.ItemSettingsRowBinding;
 import com.midterm.team12345.ui.base.BaseActivity;
@@ -28,9 +29,10 @@ public class ConversationSettingsActivity extends BaseActivity<ActivityConversat
 
     @Override
     protected ConversationSettingsViewModel createViewModel() {
-        // Dependency Injection thủ công (Sẽ dùng Hilt/Koin trong tương lai)
+        // Thay thế ChatRepositoryImpl bằng ConversationRepositoryImpl và FriendRepositoryImpl chuyên biệt
         ConversationSettingsViewModelFactory factory = new ConversationSettingsViewModelFactory(
-                ChatRepositoryImpl.getInstance(getApplication())
+                ConversationRepositoryImpl.getInstance(getApplication()),
+                FriendRepositoryImpl.getInstance(getApplication())
         );
         return new ViewModelProvider(this, factory).get(ConversationSettingsViewModel.class);
     }
@@ -47,6 +49,7 @@ public class ConversationSettingsActivity extends BaseActivity<ActivityConversat
         setupToolbar();
         setupHeader();
         setupSettingRows();
+        setupListeners();
     }
 
     private void setupToolbar() {
@@ -89,6 +92,28 @@ public class ConversationSettingsActivity extends BaseActivity<ActivityConversat
         binding.itemDeleteHistory.tvTitle.setTextColor(getResources().getColor(android.R.color.holo_red_dark));
     }
 
+    private void setupListeners() {
+        binding.itemLeave.getRoot().setOnClickListener(v -> {
+            if (conversation.getGroup()) {
+                showConfirmDialog("Are you sure you want to leave this group?", () -> {
+                    viewModel.leaveGroup(conversation.getConversationId());
+                });
+            } else {
+                // Xử lý xóa chat hoặc block
+                showConfirmDialog("Delete this conversation?", () -> {
+                    // Logic xóa chat
+                });
+            }
+        });
+
+        binding.itemBlock.getRoot().setOnClickListener(v -> {
+            showConfirmDialog("Block this user?", () -> {
+                // Logic block người dùng (thường qua FriendRepository)
+                // viewModel.unfriend(partnerId); 
+            });
+        });
+    }
+
     /**
      * Helper để bind dữ liệu vào layout include item_settings_row
      */
@@ -112,8 +137,6 @@ public class ConversationSettingsActivity extends BaseActivity<ActivityConversat
             }
         });
     }
-
-
 
     private void showConfirmDialog(String message, Runnable onConfirm) {
         new AlertDialog.Builder(this)

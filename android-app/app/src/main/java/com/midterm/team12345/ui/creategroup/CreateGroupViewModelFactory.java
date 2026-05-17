@@ -3,14 +3,16 @@ package com.midterm.team12345.ui.creategroup;
 import androidx.annotation.NonNull;
 import androidx.lifecycle.ViewModel;
 import androidx.lifecycle.ViewModelProvider;
-
-import com.midterm.team12345.domain.repository.ChatRepository;
+import com.midterm.team12345.domain.repository.ConversationRepository;
+import com.midterm.team12345.domain.repository.FriendRepository;
 
 public class CreateGroupViewModelFactory implements ViewModelProvider.Factory {
-    private final ChatRepository repository;
+    private final FriendRepository friendRepository;
+    private final ConversationRepository conversationRepository;
 
-    public CreateGroupViewModelFactory(ChatRepository repository) {
-        this.repository = repository;
+    public CreateGroupViewModelFactory(FriendRepository friendRepository, ConversationRepository conversationRepository) {
+        this.friendRepository = friendRepository;
+        this.conversationRepository = conversationRepository;
     }
 
     @NonNull
@@ -18,7 +20,7 @@ public class CreateGroupViewModelFactory implements ViewModelProvider.Factory {
     @SuppressWarnings("unchecked")
     public <T extends ViewModel> T create(@NonNull Class<T> modelClass) {
         if (modelClass.isAssignableFrom(CreateGroupViewModel.class)) {
-            return (T) new CreateGroupViewModel(repository);
+            return (T) new CreateGroupViewModel(friendRepository, conversationRepository);
         }
         throw new IllegalArgumentException("Unknown ViewModel class");
     }

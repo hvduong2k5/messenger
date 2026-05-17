@@ -1,22 +1,28 @@
 package com.midterm.team12345.ui.chatdetail;
 
 import android.view.LayoutInflater;
+import android.view.View;
 import android.view.ViewGroup;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.DiffUtil;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.midterm.team12345.R;
+import com.midterm.team12345.data.remote.dto.response.AttachmentResponseDTO;
 import com.midterm.team12345.data.remote.dto.response.MessageResponse;
 import com.midterm.team12345.databinding.ItemMessageReceivedBinding;
 import com.midterm.team12345.databinding.ItemMessageSentBinding;
+
+import java.util.List;
 
 public class MessageAdapter extends ListAdapter<MessageResponse, RecyclerView.ViewHolder> {
 
     private static final int TYPE_SENT = 1;
     private static final int TYPE_RECEIVED = 2;
     private Long currentUserId;
+    private String recipientAvatarUrl;
 
     public MessageAdapter(Long currentUserId) {
         super(new DiffUtil.ItemCallback<MessageResponse>() {
@@ -27,7 +33,8 @@ public class MessageAdapter extends ListAdapter<MessageResponse, RecyclerView.Vi
 
             @Override
             public boolean areContentsTheSame(@NonNull MessageResponse oldItem, @NonNull MessageResponse newItem) {
-                return oldItem.equals(newItem);
+                return oldItem.equals(newItem) && 
+                       String.valueOf(oldItem.getStatus()).equals(String.valueOf(newItem.getStatus()));
             }
         });
         this.currentUserId = currentUserId;
@@ -35,6 +42,11 @@ public class MessageAdapter extends ListAdapter<MessageResponse, RecyclerView.Vi
 
     public void setCurrentUserId(Long currentUserId) {
         this.currentUserId = currentUserId;
+        notifyDataSetChanged();
+    }
+
+    public void setRecipientAvatarUrl(String url) {
+        this.recipientAvatarUrl = url;
     }
 
     @Override
@@ -64,10 +76,16 @@ public class MessageAdapter extends ListAdapter<MessageResponse, RecyclerView.Vi
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
         MessageResponse message = getItem(position);
         if (holder instanceof SentViewHolder) {
-            ((SentViewHolder) holder).bind(message);
+            ((SentViewHolder) holder).bind(message, recipientAvatarUrl);
         } else {
             ((ReceivedViewHolder) holder).bind(message);
         }
+    }
+
+    public static String getFullUrl(String url) {
+        if (url == null || url.isEmpty()) return null;
+        if (url.startsWith("http")) return url;
+        return  "/" + url;
     }
 
     static class SentViewHolder extends RecyclerView.ViewHolder {
@@ -78,13 +96,54 @@ public class MessageAdapter extends ListAdapter<MessageResponse, RecyclerView.Vi
             this.binding = binding;
         }
 
-        public void bind(MessageResponse message) {
+        public void bind(MessageResponse message, String recipientAvatar) {
+            // 1. Handle Text content
             if (message.getDeleted() != null && message.getDeleted()) {
                 binding.tvMessageContent.setText("Tin nhắn đã bị thu hồi");
                 binding.tvMessageContent.setAlpha(0.6f);
+                binding.tvMessageContent.setVisibility(View.VISIBLE);
+                binding.rvAttachments.setVisibility(View.GONE);
             } else {
-                binding.tvMessageContent.setText(message.getContent());
                 binding.tvMessageContent.setAlpha(1.0f);
+                String content = message.getContent();
+                if (content == null || content.trim().isEmpty()) {
+                    binding.tvMessageContent.setVisibility(View.GONE);
+                } else {
+                    binding.tvMessageContent.setVisibility(View.VISIBLE);
+                    binding.tvMessageContent.setText(content);
+                }
+
+                // 2. Handle Attachments (Horizontal RecyclerView)
+                List<AttachmentResponseDTO> attachments = message.getAttachments();
+                if (attachments != null && !attachments.isEmpty()) {
+                    binding.rvAttachments.setVisibility(View.VISIBLE);
+                    AttachmentAdapter attachmentAdapter = new AttachmentAdapter();
+                    binding.rvAttachments.setLayoutManager(new LinearLayoutManager(itemView.getContext(), LinearLayoutManager.HORIZONTAL, false));
+                    binding.rvAttachments.setAdapter(attachmentAdapter);
+                    attachmentAdapter.setAttachments(attachments);
+                } else {
+                    binding.rvAttachments.setVisibility(View.GONE);
+                }
+            }
+
+            // 3. Handle Status Indicator (Sending, Sent, Read)
+            String status = message.getStatus();
+            binding.viewStatusSending.setVisibility(View.GONE);
+            binding.ivStatusSent.setVisibility(View.GONE);
+            binding.ivStatusRead.setVisibility(View.GONE);
+
+            if ("SENDING".equalsIgnoreCase(status)) {
+                binding.viewStatusSending.setVisibility(View.VISIBLE);
+            } else if ("READ".equalsIgnoreCase(status)) {
+                binding.ivStatusRead.setVisibility(View.VISIBLE);
+                Glide.with(binding.ivStatusRead.getContext())
+                        .load(getFullUrl(recipientAvatar))
+                        .placeholder(R.drawable.ic_avatar_placeholder)
+                        .error(R.drawable.ic_avatar_placeholder)
+                        .into(binding.ivStatusRead);
+            } else {
+                // Default to checkmark for SENT or DELIVERED
+                binding.ivStatusSent.setVisibility(View.VISIBLE);
             }
         }
     }
@@ -101,13 +160,32 @@ public class MessageAdapter extends ListAdapter<MessageResponse, RecyclerView.Vi
             if (message.getDeleted() != null && message.getDeleted()) {
                 binding.tvMessageContent.setText("Tin nhắn đã bị thu hồi");
                 binding.tvMessageContent.setAlpha(0.6f);
+                binding.rvAttachments.setVisibility(View.GONE);
             } else {
-                binding.tvMessageContent.setText(message.getContent());
                 binding.tvMessageContent.setAlpha(1.0f);
+                String content = message.getContent();
+                if (content == null || content.trim().isEmpty()) {
+                    binding.tvMessageContent.setVisibility(View.GONE);
+                } else {
+                    binding.tvMessageContent.setVisibility(View.VISIBLE);
+                    binding.tvMessageContent.setText(content);
+                }
+
+                // Handle Attachments
+                List<AttachmentResponseDTO> attachments = message.getAttachments();
+                if (attachments != null && !attachments.isEmpty()) {
+                    binding.rvAttachments.setVisibility(View.VISIBLE);
+                    AttachmentAdapter attachmentAdapter = new AttachmentAdapter();
+                    binding.rvAttachments.setLayoutManager(new LinearLayoutManager(itemView.getContext(), LinearLayoutManager.HORIZONTAL, false));
+                    binding.rvAttachments.setAdapter(attachmentAdapter);
+                    attachmentAdapter.setAttachments(attachments);
+                } else {
+                    binding.rvAttachments.setVisibility(View.GONE);
+                }
             }
 
             Glide.with(binding.ivAvatar.getContext())
-                    .load(message.getSenderAvatarUrl())
+                    .load(getFullUrl(message.getSenderAvatarUrl()))
                     .placeholder(R.drawable.ic_avatar_placeholder)
                     .error(R.drawable.ic_avatar_placeholder)
                     .into(binding.ivAvatar);
