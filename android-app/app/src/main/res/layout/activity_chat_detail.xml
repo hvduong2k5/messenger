@@ -86,7 +86,7 @@
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
         app:reverseLayout="true"
         app:stackFromEnd="true"
-        app:layout_constraintBottom_toTopOf="@id/input_area"
+        app:layout_constraintBottom_toTopOf="@id/bottom_container"
         app:layout_constraintTop_toBottomOf="@id/toolbar_chat" />
 
     <ProgressBar
@@ -99,49 +99,70 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <!-- Input Area -->
+    <!-- Parent of Input Area and Selected Files Preview -->
     <LinearLayout
-        android:id="@+id/input_area"
+        android:id="@+id/bottom_container"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:padding="8dp"
+        android:orientation="vertical"
+        android:background="@color/white"
         app:layout_constraintBottom_toBottomOf="parent">
 
-        <ImageButton
-            android:id="@+id/btn_attach"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:src="@drawable/ic_attach"
-            app:tint="@color/messenger_blue"
-            android:contentDescription="Attach" />
-
-        <EditText
-            android:id="@+id/et_message"
-            android:layout_width="0dp"
+        <!-- Selected Files Horizontal RecyclerView -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rv_selected_files"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginHorizontal="8dp"
-            android:layout_weight="1"
-            android:background="@drawable/bg_input_chat"
-            android:hint="Aa"
-            android:inputType="textMultiLine"
-            android:maxLines="4"
-            android:paddingHorizontal="16dp"
-            android:paddingVertical="8dp"
-            android:textColor="@color/black"
-            android:textColorHint="@color/gray_text"
-            android:textSize="16sp" />
+            android:orientation="horizontal"
+            android:paddingHorizontal="8dp"
+            android:paddingVertical="4dp"
+            android:visibility="gone"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
 
-        <ImageButton
-            android:id="@+id/btn_send"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:src="@drawable/ic_send"
-            app:tint="@color/messenger_blue"
-            android:contentDescription="Send" />
+        <!-- Input Area -->
+        <LinearLayout
+            android:id="@+id/input_area"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:padding="8dp">
+
+            <ImageButton
+                android:id="@+id/btn_attach"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:src="@drawable/ic_attach"
+                app:tint="@color/messenger_blue"
+                android:contentDescription="Attach" />
+
+            <EditText
+                android:id="@+id/et_message"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="8dp"
+                android:layout_weight="1"
+                android:background="@drawable/bg_input_chat"
+                android:hint="Aa"
+                android:inputType="textMultiLine"
+                android:maxLines="4"
+                android:paddingHorizontal="16dp"
+                android:paddingVertical="8dp"
+                android:textColor="@color/black"
+                android:textColorHint="@color/gray_text"
+                android:textSize="16sp" />
+
+            <ImageButton
+                android:id="@+id/btn_send"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:src="@drawable/ic_send"
+                app:tint="@color/messenger_blue"
+                android:contentDescription="Send" />
+
+        </LinearLayout>
 
     </LinearLayout>
 
