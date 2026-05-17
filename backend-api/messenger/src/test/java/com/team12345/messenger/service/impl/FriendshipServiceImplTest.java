@@ -1,6 +1,7 @@
 package com.team12345.messenger.service.impl;
 
 import com.team12345.messenger.dto.response.FriendRequestResponseDTO;
+import com.team12345.messenger.dto.response.FriendshipStatus;
 import com.team12345.messenger.entity.*;
 import com.team12345.messenger.exception.ResourceNotFoundException;
 import com.team12345.messenger.repository.FriendRequestRepository;
@@ -200,5 +201,34 @@ class FriendshipServiceImplTest {
         });
 
         verify(friendRequestRepository, never()).delete(any(FriendRequest.class));
+    }
+
+    @Test
+    void checkFriendshipStatus_ShouldReturnStatus_WhenTargetUserExists() {
+        // Arrange
+        when(userRepository.existsById(2L)).thenReturn(true);
+        when(userFriendRepository.existsById_UserIdAndId_FriendId(1L, 2L)).thenReturn(false);
+        when(friendRequestRepository.findById_SenderIdAndId_ReceiverId(1L, 2L)).thenReturn(Optional.empty());
+        when(friendRequestRepository.findById_SenderIdAndId_ReceiverId(2L, 1L)).thenReturn(Optional.empty());
+
+        // Act
+        FriendshipStatus status = friendshipService.checkFriendshipStatus(1L, 2L);
+
+        // Assert
+        assertThat(status).isEqualTo(FriendshipStatus.STRANGER);
+        verify(userRepository, times(1)).existsById(2L);
+    }
+
+    @Test
+    void checkFriendshipStatus_ShouldThrowException_WhenTargetUserDoesNotExist() {
+        // Arrange
+        when(userRepository.existsById(999L)).thenReturn(false);
+
+        // Act & Assert
+        assertThrows(ResourceNotFoundException.class, () -> {
+            friendshipService.checkFriendshipStatus(1L, 999L);
+        });
+
+        verify(userRepository, times(1)).existsById(999L);
     }
 }
