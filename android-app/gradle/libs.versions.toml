@@ -18,6 +18,7 @@ circleimageview = "3.1.0"
 swiperefresh = "1.2.0"
 mqtt-client = "1.2.5"
 room = "2.6.1"
+annotation = "1.9.1"
 
 
 [libraries]
@@ -39,6 +40,7 @@ glide = { group = "com.github.bumptech.glide", name = "glide", version.ref = "gl
 glide-compiler = { group = "com.github.bumptech.glide", name = "compiler", version.ref = "glide" }
 circleimageview = { group = "de.hdodenhof", name = "circleimageview", version.ref = "circleimageview" }
 swiperefreshlayout = { group = "androidx.swiperefreshlayout", name = "swiperefreshlayout", version.ref = "swiperefresh" }
+annotation = { group = "androidx.annotation", name = "annotation", version.ref = "annotation" }
 mqtt-paho = { group = "org.eclipse.paho", name = "org.eclipse.paho.client.mqttv3", version.ref = "mqtt-client" }
 room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "room" }
 room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" }
