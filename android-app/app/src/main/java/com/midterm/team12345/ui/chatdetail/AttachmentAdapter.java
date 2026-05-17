@@ -54,7 +54,7 @@ public class AttachmentAdapter extends RecyclerView.Adapter<AttachmentAdapter.Vi
         public void bind(AttachmentResponseDTO attachment) {
             String url = attachment.getUrl();
             if (url != null && !url.startsWith("http")) {
-                url =  url;
+                url = com.midterm.team12345.data.remote.RetrofitClient.getBaseUrl() + (url.startsWith("/") ? "" : "/") + url;
             }
 
             if (url == null) return;
