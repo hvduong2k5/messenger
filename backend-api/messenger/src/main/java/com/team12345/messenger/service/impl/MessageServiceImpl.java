@@ -73,6 +73,8 @@ public class MessageServiceImpl implements MessageService {
 
         createMessageStatusRecords(savedMessage, participants, sender.getId());
 
+        sendMqttNotification(savedMessage, "NEW_MESSAGE");
+
         return new SaveMessageResult(mapToResponseDTO(savedMessage), participants);
     }
 
