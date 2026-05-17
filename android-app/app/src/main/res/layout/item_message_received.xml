@@ -12,25 +12,45 @@
         android:layout_width="28dp"
         android:layout_height="28dp"
         android:src="@drawable/ic_avatar_placeholder"
-        app:layout_constraintBottom_toBottomOf="@id/tv_message_content"
+        app:layout_constraintBottom_toBottomOf="@+id/ll_message_group"
         app:layout_constraintStart_toStartOf="parent" />
 
-    <TextView
-        android:id="@+id/tv_message_content"
+    <LinearLayout
+        android:id="@+id/ll_message_group"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
-        android:layout_marginEnd="64dp"
-        android:background="@drawable/bg_message_received"
-        android:paddingHorizontal="12dp"
-        android:paddingVertical="8dp"
-        android:textColor="@color/black"
-        android:textSize="16sp"
-        app:layout_constrainedWidth="true"
+        android:orientation="vertical"
+        android:gravity="start"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0"
-        app:layout_constraintStart_toEndOf="@id/iv_avatar"
         app:layout_constraintTop_toTopOf="parent"
-        tools:text="Hello! I am fine, thanks." />
+        app:layout_constrainedWidth="true"
+        app:layout_constraintStart_toEndOf="@id/iv_avatar"
+        app:layout_constraintHorizontal_bias="0">
+
+        <!-- Text Content -->
+        <TextView
+            android:id="@+id/tv_message_content"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_message_received"
+            android:paddingHorizontal="12dp"
+            android:paddingVertical="8dp"
+            android:textColor="@color/black"
+            android:textSize="16sp"
+            tools:text="Hello! I am fine, thanks." />
+
+        <!-- Attachments List -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rv_attachments"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:orientation="horizontal"
+            android:visibility="gone"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+            tools:listitem="@layout/item_attachment"
+            tools:visibility="visible" />
+    </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
