@@ -41,7 +41,8 @@
         app:layout_constraintBottom_toBottomOf="@id/iv_my_profile"
         app:layout_constraintEnd_toStartOf="@id/btn_new_message"
         app:layout_constraintTop_toTopOf="@id/iv_my_profile"
-        app:tint="@color/black" />
+        app:tint="@color/black"
+        android:contentDescription="Camera" />
 
     <ImageView
         android:id="@+id/btn_new_message"
@@ -54,7 +55,8 @@
         app:layout_constraintBottom_toBottomOf="@id/iv_my_profile"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@id/iv_my_profile"
-        app:tint="@color/black" />
+        app:tint="@color/black"
+        android:contentDescription="New Message" />
 
     <!-- Search Bar -->
     <EditText
@@ -69,6 +71,8 @@
         android:hint="Search"
         android:inputType="text"
         android:paddingHorizontal="12dp"
+        android:textColor="@color/black"
+        android:textColorHint="@color/gray_text"
         android:textSize="16sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
