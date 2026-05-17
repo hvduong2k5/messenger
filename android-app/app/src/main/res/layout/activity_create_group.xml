@@ -83,6 +83,8 @@
                 android:background="@null"
                 android:hint="Name your group"
                 android:inputType="textCapSentences"
+                android:textColor="@color/black"
+                android:textColorHint="@color/gray_text"
                 android:textSize="16sp" />
         </LinearLayout>
 
@@ -97,6 +99,8 @@
             android:drawablePadding="8dp"
             android:hint="Search"
             android:paddingHorizontal="12dp"
+            android:textColor="@color/black"
+            android:textColorHint="@color/gray_text"
             android:textSize="14sp" />
 
         <!-- Selected Members -->
