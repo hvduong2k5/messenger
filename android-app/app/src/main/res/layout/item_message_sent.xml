@@ -7,29 +7,78 @@
     android:paddingHorizontal="12dp"
     android:paddingVertical="4dp">
 
-    <TextView
-        android:id="@+id/tv_message_content"
+    <LinearLayout
+        android:id="@+id/ll_message_group"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="64dp"
-        android:background="@drawable/bg_message_sent"
-        android:paddingHorizontal="12dp"
-        android:paddingVertical="8dp"
-        android:textColor="@color/white"
-        android:textSize="16sp"
+        android:orientation="vertical"
+        android:gravity="end"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        tools:text="Hello, how are you?" />
+        app:layout_constrainedWidth="true"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintHorizontal_bias="1">
 
-    <ImageView
-        android:id="@+id/iv_status"
+        <!-- Text Content -->
+        <TextView
+            android:id="@+id/tv_message_content"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_message_sent"
+            android:paddingHorizontal="12dp"
+            android:paddingVertical="8dp"
+            android:textColor="@color/white"
+            android:textSize="16sp"
+            tools:text="Hello, how are you?" />
+
+        <!-- Attachments List (RecyclerView for multiple items like in the image) -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rv_attachments"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:orientation="horizontal"
+            android:visibility="gone"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+            tools:listitem="@layout/item_attachment"
+            tools:visibility="visible" />
+    </LinearLayout>
+
+    <!-- Status indicator area -->
+    <FrameLayout
+        android:id="@+id/fl_status_container"
         android:layout_width="14dp"
         android:layout_height="14dp"
         android:layout_marginTop="2dp"
-        android:src="@drawable/ic_check_circle"
-        android:visibility="gone"
-        app:layout_constraintEnd_toEndOf="@id/tv_message_content"
-        app:layout_constraintTop_toBottomOf="@id/tv_message_content"
-        app:tint="@color/messenger_blue" />
+        app:layout_constraintEnd_toEndOf="@id/ll_message_group"
+        app:layout_constraintTop_toBottomOf="@id/ll_message_group">
+
+        <!-- Sending status (Optional: thin empty circle) -->
+        <View
+            android:id="@+id/view_status_sending"
+            android:layout_width="12dp"
+            android:layout_height="12dp"
+            android:layout_gravity="center"
+            android:background="@drawable/bg_unread_count"
+            android:alpha="0.2"
+            android:visibility="gone" />
+
+        <!-- Sent/Delivered status (Checkmark circle) -->
+        <ImageView
+            android:id="@+id/iv_status_sent"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:src="@drawable/ic_check_circle"
+            android:visibility="gone"
+            app:tint="@color/messenger_blue" />
+
+        <!-- Read status (Avatar) -->
+        <de.hdodenhof.circleimageview.CircleImageView
+            android:id="@+id/iv_status_read"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:src="@drawable/ic_avatar_placeholder"
+            android:visibility="gone" />
+    </FrameLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
