@@ -3,6 +3,8 @@ package com.team12345.messenger.controller;
 import com.team12345.messenger.dto.response.FriendRequestResponseDTO;
 import com.team12345.messenger.dto.response.UserResponseDTO;
 import com.team12345.messenger.entity.User;
+import com.team12345.messenger.repository.BlacklistedTokenRepository;
+import com.team12345.messenger.repository.UserRepository;
 import com.team12345.messenger.security.CustomUserDetails;
 import com.team12345.messenger.security.JwtUtils;
 import com.team12345.messenger.service.FriendshipService;
@@ -35,6 +37,12 @@ class FriendControllerTest {
     
     @MockBean
     private JwtUtils jwtUtils;
+
+    @MockBean
+    private UserRepository userRepository;
+
+    @MockBean
+    private BlacklistedTokenRepository blacklistedTokenRepository;
 
     private Long currentUserId = 1L;
 
@@ -128,5 +136,16 @@ class FriendControllerTest {
                 .andExpect(jsonPath("$[0].senderId").value(2L));
 
         verify(friendshipService, times(1)).getPendingRequests(currentUserId);
+    }
+
+    @Test
+    void cancelFriendRequest_ShouldReturn200() throws Exception {
+        Long receiverId = 2L;
+
+        mockMvc.perform(delete("/friends/request/{receiverId}/cancel", receiverId))
+                .andExpect(status().isOk())
+                .andExpect(content().string("Friend request canceled successfully"));
+
+        verify(friendshipService, times(1)).cancelFriendRequest(currentUserId, receiverId);
     }
 }
