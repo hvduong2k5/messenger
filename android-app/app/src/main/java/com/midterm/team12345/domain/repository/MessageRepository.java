@@ -2,7 +2,7 @@ package com.midterm.team12345.domain.repository;
 
 import androidx.lifecycle.LiveData;
 import com.midterm.team12345.data.remote.dto.request.MessageRequestDTO;
-import com.midterm.team12345.data.remote.dto.response.MessageResponse;
+import com.midterm.team12345.data.remote.dto.response.MessageResponseDTO;
 import com.midterm.team12345.data.remote.dto.response.MessageStatusResponseDTO;
 import com.midterm.team12345.utils.Resource;
 
@@ -13,17 +13,17 @@ public interface MessageRepository {
     /**
      * Lấy danh sách tin nhắn (có phân trang)
      */
-    LiveData<Resource<List<MessageResponse>>> getMessages(Long conversationId, int page, int size);
+    LiveData<Resource<List<MessageResponseDTO>>> getMessages(Long conversationId, int page, int size);
 
-    LiveData<Resource<MessageResponse>> sendMessage(MessageRequestDTO request);
+    LiveData<Resource<MessageResponseDTO>> sendMessage(MessageRequestDTO request);
 
     /**
      * Gửi tin nhắn kèm tệp đính kèm (Multipart)
      */
-    LiveData<Resource<MessageResponse>> sendMessageWithAttachments(Long conversationId, String content, String clientMessageId, List<File> files);
+    LiveData<Resource<MessageResponseDTO>> sendMessageWithAttachments(Long conversationId, String content, String clientMessageId, List<File> files);
 
     LiveData<Resource<Void>> revokeMessage(Long messageId);
-    LiveData<Resource<MessageResponse>> editMessage(Long messageId, MessageRequestDTO request);
+    LiveData<Resource<MessageResponseDTO>> editMessage(Long messageId, MessageRequestDTO request);
     
     // Logic trạng thái tin nhắn
     LiveData<Resource<Void>> markConversationAsRead(Long conversationId);
