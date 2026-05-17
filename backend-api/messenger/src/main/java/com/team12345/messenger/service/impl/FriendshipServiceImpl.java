@@ -2,6 +2,7 @@ package com.team12345.messenger.service.impl;
 
 import com.team12345.messenger.dto.response.FriendRequestResponseDTO;
 import com.team12345.messenger.dto.response.UserResponseDTO;
+import com.team12345.messenger.dto.response.FriendshipStatus;
 import com.team12345.messenger.entity.*;
 import com.team12345.messenger.exception.ResourceNotFoundException;
 import com.team12345.messenger.repository.FriendRequestRepository;
@@ -167,24 +168,28 @@ public class FriendshipServiceImpl implements FriendshipService {
 
     @Override
     @Transactional(readOnly = true)
-    public String checkFriendshipStatus(Long userId1, Long userId2) {
-        if (userId1.equals(userId2)) return "SELF";
+    public FriendshipStatus checkFriendshipStatus(Long userId1, Long userId2) {
+        if (!userRepository.existsById(userId2)) {
+            throw new ResourceNotFoundException("User not found");
+        }
+
+        if (userId1.equals(userId2)) return FriendshipStatus.SELF;
 
         if (userFriendRepository.existsById_UserIdAndId_FriendId(userId1, userId2)) {
-            return "FRIENDS";
+            return FriendshipStatus.FRIEND;
         }
 
         Optional<FriendRequest> request1 = friendRequestRepository.findById_SenderIdAndId_ReceiverId(userId1, userId2);
         if (request1.isPresent() && request1.get().getStatus() == FriendRequestStatus.pending) {
-            return "REQUEST_SENT";
+            return FriendshipStatus.SENDER_PENDING;
         }
 
         Optional<FriendRequest> request2 = friendRequestRepository.findById_SenderIdAndId_ReceiverId(userId2, userId1);
         if (request2.isPresent() && request2.get().getStatus() == FriendRequestStatus.pending) {
-            return "REQUEST_RECEIVED";
+            return FriendshipStatus.RECEIVER_PENDING;
         }
 
-        return "NONE";
+        return FriendshipStatus.STRANGER;
     }
 
     private FriendRequestResponseDTO mapToFriendRequestResponse(FriendRequest request) {
