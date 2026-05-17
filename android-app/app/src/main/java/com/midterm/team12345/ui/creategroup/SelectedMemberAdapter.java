@@ -51,8 +51,12 @@ public class SelectedMemberAdapter extends RecyclerView.Adapter<SelectedMemberAd
         }
         holder.binding.tvFirstName.setText(displayName);
         
+        String avatarUrl = user.getAvatarUrl();
+        if (avatarUrl != null && !avatarUrl.startsWith("http")) {
+            avatarUrl = com.midterm.team12345.data.remote.RetrofitClient.getBaseUrl() + (avatarUrl.startsWith("/") ? "" : "/") + avatarUrl;
+        }
         Glide.with(holder.itemView.getContext())
-                .load(user.getAvatarUrl())
+                .load(avatarUrl)
                 .placeholder(R.drawable.ic_avatar_placeholder)
                 .error(R.drawable.ic_avatar_placeholder)
                 .into(holder.binding.ivAvatar);
