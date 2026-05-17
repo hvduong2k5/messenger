@@ -44,6 +44,14 @@ public class FriendController {
         return ResponseEntity.noContent().build();
     }
 
+    @Operation(summary = "Cancel a sent friend request")
+    @DeleteMapping("/request/{receiverId}/cancel")
+    public ResponseEntity<String> cancelFriendRequest(@PathVariable Long receiverId) {
+        Long currentUserId = getCurrentUserId();
+        friendshipService.cancelFriendRequest(currentUserId, receiverId);
+        return ResponseEntity.ok("Friend request canceled successfully");
+    }
+
     @Operation(summary = "Unfriend a user")
     @DeleteMapping("/{friendId}")
     public ResponseEntity<String> unfriend(@PathVariable Long friendId) {
