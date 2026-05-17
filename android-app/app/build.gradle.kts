@@ -73,6 +73,7 @@ dependencies {
 
     // SwipeRefresh
     implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.2.0")
+    implementation("androidx.recyclerview:recyclerview:1.3.2")
 
     // MQTT
     implementation(libs.mqtt.paho)
