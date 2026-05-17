@@ -15,7 +15,7 @@ public class UserSearchResponseDTO {
     private Long id;
     private String username;
     private String avatarUrl;
-    private String friendshipStatus;
+    private FriendshipStatus friendshipStatus;
     private Boolean isOnline;
     private LocalDateTime lastSeen;
 }
