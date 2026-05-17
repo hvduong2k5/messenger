@@ -77,6 +77,11 @@ dependencies {
     implementation(libs.mqtt.paho)
     implementation("androidx.localbroadcastmanager:localbroadcastmanager:1.1.0")
 
+    // Room Database
+    implementation(libs.room.runtime)
+    annotationProcessor(libs.room.compiler)
+    implementation(libs.room.ktx)
+
     // Bean Validation API (provides javax.validation annotations at compile time)
     implementation("javax.validation:validation-api:2.0.1.Final")
 
@@ -84,3 +89,4 @@ dependencies {
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
 }
+
