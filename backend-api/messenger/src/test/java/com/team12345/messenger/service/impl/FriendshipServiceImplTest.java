@@ -91,6 +91,35 @@ class FriendshipServiceImplTest {
     }
 
     @Test
+    void sendFriendRequest_ShouldReuseExistingRequest_WhenRequestIsRejected() {
+        // Arrange
+        when(userRepository.findById(1L)).thenReturn(Optional.of(sender));
+        when(userRepository.findById(2L)).thenReturn(Optional.of(receiver));
+        when(userFriendRepository.existsById_UserIdAndId_FriendId(1L, 2L)).thenReturn(false);
+
+        FriendRequest rejectedRequest = FriendRequest.builder()
+                .id(new FriendRequestId(1L, 2L))
+                .sender(sender)
+                .receiver(receiver)
+                .status(FriendRequestStatus.rejected)
+                .build();
+        when(friendRequestRepository.findById_SenderIdAndId_ReceiverId(1L, 2L)).thenReturn(Optional.of(rejectedRequest));
+        when(friendRequestRepository.save(any(FriendRequest.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        // Act
+        FriendRequestResponseDTO response = friendshipService.sendFriendRequest(1L, 2L);
+
+        // Assert
+        assertThat(response).isNotNull();
+        assertThat(response.getSenderId()).isEqualTo(1L);
+        assertThat(response.getReceiverId()).isEqualTo(2L);
+        assertThat(response.getStatus()).isEqualTo("pending");
+
+        verify(friendRequestRepository, times(1)).save(rejectedRequest);
+        assertThat(rejectedRequest.getStatus()).isEqualTo(FriendRequestStatus.pending);
+    }
+
+    @Test
     void acceptFriendRequest_ShouldSaveUserFriends_WhenValid() {
         // Arrange
         FriendRequest pendingRequest = FriendRequest.builder()
@@ -123,5 +152,53 @@ class FriendshipServiceImplTest {
 
         // Assert
         verify(userFriendRepository, times(2)).deleteById(any(UserFriendId.class));
+    }
+
+    @Test
+    void cancelFriendRequest_ShouldDeleteRequest_WhenValidAndPending() {
+        // Arrange
+        FriendRequest pendingRequest = FriendRequest.builder()
+                .id(new FriendRequestId(1L, 2L))
+                .sender(sender)
+                .receiver(receiver)
+                .status(FriendRequestStatus.pending)
+                .build();
+
+        when(friendRequestRepository.findBySenderIdAndReceiverIdAndStatus(1L, 2L, FriendRequestStatus.pending))
+                .thenReturn(Optional.of(pendingRequest));
+
+        // Act
+        friendshipService.cancelFriendRequest(1L, 2L);
+
+        // Assert
+        verify(friendRequestRepository, times(1)).delete(pendingRequest);
+    }
+
+    @Test
+    void cancelFriendRequest_ShouldThrowException_WhenNotSenderOrNoRequestExists() {
+        // Arrange
+        when(friendRequestRepository.findBySenderIdAndReceiverIdAndStatus(2L, 1L, FriendRequestStatus.pending))
+                .thenReturn(Optional.empty());
+
+        // Act & Assert
+        assertThrows(ResourceNotFoundException.class, () -> {
+            friendshipService.cancelFriendRequest(2L, 1L);
+        });
+
+        verify(friendRequestRepository, never()).delete(any(FriendRequest.class));
+    }
+
+    @Test
+    void cancelFriendRequest_ShouldThrowException_WhenRequestNotPending() {
+        // Arrange
+        when(friendRequestRepository.findBySenderIdAndReceiverIdAndStatus(1L, 2L, FriendRequestStatus.pending))
+                .thenReturn(Optional.empty());
+
+        // Act & Assert
+        assertThrows(ResourceNotFoundException.class, () -> {
+            friendshipService.cancelFriendRequest(1L, 2L);
+        });
+
+        verify(friendRequestRepository, never()).delete(any(FriendRequest.class));
     }
 }
