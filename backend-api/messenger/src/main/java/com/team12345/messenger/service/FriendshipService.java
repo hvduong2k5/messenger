@@ -19,5 +19,7 @@ public interface FriendshipService {
 
     List<FriendRequestResponseDTO> getPendingRequests(Long userId);
 
+    void cancelFriendRequest(Long currentUserId, Long receiverId);
+
     String checkFriendshipStatus(Long userId1, Long userId2);
 }
