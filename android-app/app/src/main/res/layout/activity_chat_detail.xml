@@ -24,7 +24,8 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:tint="@color/messenger_blue" />
+            app:tint="@color/messenger_blue"
+            android:contentDescription="Back" />
 
         <de.hdodenhof.circleimageview.CircleImageView
             android:id="@+id/iv_partner_avatar"
@@ -61,7 +62,8 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:tint="@color/messenger_blue" />
+            app:tint="@color/messenger_blue"
+            android:contentDescription="Video Call" />
 
         <ImageButton
             android:id="@+id/btn_call"
@@ -72,7 +74,8 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@id/btn_video_call"
             app:layout_constraintTop_toTopOf="parent"
-            app:tint="@color/messenger_blue" />
+            app:tint="@color/messenger_blue"
+            android:contentDescription="Voice Call" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -81,9 +84,10 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+        app:reverseLayout="true"
+        app:stackFromEnd="true"
         app:layout_constraintBottom_toTopOf="@id/input_area"
-        app:layout_constraintTop_toBottomOf="@id/toolbar_chat"
-        app:stackFromEnd="true" />
+        app:layout_constraintTop_toBottomOf="@id/toolbar_chat" />
 
     <ProgressBar
         android:id="@+id/loading_progress_bar"
@@ -111,7 +115,8 @@
             android:layout_height="40dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:src="@drawable/ic_attach"
-            app:tint="@color/messenger_blue" />
+            app:tint="@color/messenger_blue"
+            android:contentDescription="Attach" />
 
         <EditText
             android:id="@+id/et_message"
@@ -121,9 +126,12 @@
             android:layout_weight="1"
             android:background="@drawable/bg_input_chat"
             android:hint="Aa"
+            android:inputType="textMultiLine"
             android:maxLines="4"
             android:paddingHorizontal="16dp"
             android:paddingVertical="8dp"
+            android:textColor="@color/black"
+            android:textColorHint="@color/gray_text"
             android:textSize="16sp" />
 
         <ImageButton
@@ -132,7 +140,8 @@
             android:layout_height="40dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:src="@drawable/ic_send"
-            app:tint="@color/messenger_blue" />
+            app:tint="@color/messenger_blue"
+            android:contentDescription="Send" />
 
     </LinearLayout>
 
