@@ -52,7 +52,7 @@ class MessageServiceImplTest {
     private MessageRequestDTO request;
 
     @BeforeEach
-    void setUp() {
+    void setUp() throws Exception {
         sender       = User.builder().id(1L).username("sender").avatarUrl("avatar.jpg").build();
         receiver     = User.builder().id(2L).username("receiver").build();
         conversation = Conversation.builder().id(100L).build();
@@ -62,6 +62,8 @@ class MessageServiceImplTest {
                 .content("Hello, World!")
                 .clientMessageId("client-123")
                 .build();
+        
+        lenient().when(objectMapper.writeValueAsString(any())).thenReturn("{}");
     }
 
     // ── helpers ──────────────────────────────────────────────────────────────
@@ -108,6 +110,7 @@ class MessageServiceImplTest {
         assertThat(result.message().getAttachments()).isEmpty();
         verify(messageRepository).save(any(Message.class));
         verify(messageStatusRepository).saveAll(anyList());
+        verify(mqttGateway, times(2)).sendToMqtt(anyString(), anyString());
         verify(mediaService, never()).uploadFile(any());
     }
 
@@ -128,6 +131,7 @@ class MessageServiceImplTest {
         assertThat(result.message().getAttachments()).hasSize(1);
         assertThat(result.message().getAttachments().get(0).getUrl()).isEqualTo("http://cdn.com/test.jpg");
         verify(mediaService).uploadFile(any());
+        verify(mqttGateway, times(2)).sendToMqtt(anyString(), anyString());
     }
 
     @Test
