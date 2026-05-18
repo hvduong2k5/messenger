@@ -24,6 +24,7 @@ public class UserSearchAdapter extends ListAdapter<UserSearchResponseDTO, UserSe
         void onMessageClick(UserSearchResponseDTO user);
         void onAcceptRequest(Long userId);
         void onRejectRequest(Long userId);
+        void onCancelRequest(Long userId);
     }
 
     public UserSearchAdapter(OnUserSearchActionListener listener) {
@@ -100,6 +101,9 @@ public class UserSearchAdapter extends ListAdapter<UserSearchResponseDTO, UserSe
                 case SENDER_PENDING:
                     binding.btnConfirm.setText("Đã gửi lời mời");
                     binding.btnConfirm.setEnabled(false);
+                    binding.btnDelete.setVisibility(View.VISIBLE);
+                    binding.btnDelete.setText("Hủy");
+                    binding.btnDelete.setOnClickListener(v -> listener.onCancelRequest(user.getId()));
                     break;
                 case RECEIVER_PENDING:
                     binding.btnConfirm.setText("Chấp nhận");
