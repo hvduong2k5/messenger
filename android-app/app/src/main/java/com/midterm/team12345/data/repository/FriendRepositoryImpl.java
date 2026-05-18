@@ -7,6 +7,7 @@ import androidx.lifecycle.MutableLiveData;
 import com.midterm.team12345.data.remote.RetrofitClient;
 import com.midterm.team12345.data.remote.api.FriendApiService;
 import com.midterm.team12345.data.remote.dto.response.FriendRequestResponseDTO;
+import com.midterm.team12345.data.remote.dto.response.FriendshipStatusResponseDTO;
 import com.midterm.team12345.data.remote.dto.response.PageResponse;
 import com.midterm.team12345.data.remote.dto.response.UserResponseDTO;
 import com.midterm.team12345.domain.repository.FriendRepository;
@@ -181,6 +182,56 @@ public class FriendRepositoryImpl implements FriendRepository {
 
             @Override
             public void onFailure(Call<List<FriendRequestResponseDTO>> call, Throwable t) {
+                data.setValue(Resource.error("Lỗi kết nối: " + t.getMessage(), null));
+            }
+        });
+        return data;
+    }
+
+    @Override
+    public LiveData<Resource<Void>> cancelFriendRequest(Long receiverId) {
+        MutableLiveData<Resource<Void>> data = new MutableLiveData<>();
+        data.setValue(Resource.loading(null));
+        friendApiService.cancelFriendRequest(receiverId).enqueue(new Callback<Void>() {
+            @Override
+            public void onResponse(Call<Void> call, Response<Void> response) {
+                if (response.isSuccessful()) {
+                    data.setValue(Resource.success(null));
+                } else {
+                    data.setValue(Resource.error("Hủy yêu cầu kết bạn thất bại", null));
+                }
+            }
+
+            @Override
+            public void onFailure(Call<Void> call, Throwable t) {
+                data.setValue(Resource.error(t.getMessage(), null));
+            }
+        });
+        return data;
+    }
+
+    @Override
+    public LiveData<Resource<FriendshipStatusResponseDTO>> checkFriendshipStatus(Long userId) {
+        MutableLiveData<Resource<FriendshipStatusResponseDTO>> data = new MutableLiveData<>();
+        data.setValue(Resource.loading(null));
+        friendApiService.checkFriendshipStatus(userId).enqueue(new Callback<FriendshipStatusResponseDTO>() {
+            @Override
+            public void onResponse(Call<FriendshipStatusResponseDTO> call, Response<FriendshipStatusResponseDTO> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    data.setValue(Resource.success(response.body()));
+                } else {
+                    String errorMsg = "Không thể kiểm tra trạng thái bạn bè (HTTP " + response.code() + ")";
+                    try {
+                        if (response.errorBody() != null) {
+                            errorMsg += ": " + response.errorBody().string();
+                        }
+                    } catch (Exception ignored) {}
+                    data.setValue(Resource.error(errorMsg, null));
+                }
+            }
+
+            @Override
+            public void onFailure(Call<FriendshipStatusResponseDTO> call, Throwable t) {
                 data.setValue(Resource.error("Lỗi kết nối: " + t.getMessage(), null));
             }
         });
