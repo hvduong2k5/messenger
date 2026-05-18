@@ -156,6 +156,46 @@ class ConversationServiceTest {
     }
 
     @Test
+    void testGetConversationDetails_OneToOne() {
+        Conversation oneToOneConv = Conversation.builder()
+                .id(2L)
+                .name("")
+                .isGroup(false)
+                .build();
+        setAuditFields(oneToOneConv);
+
+        User otherUser = User.builder()
+                .id(2L)
+                .username("otheruser")
+                .avatarUrl("http://example.com/other.jpg")
+                .build();
+
+        Participant selfParticipant = Participant.builder()
+                .id(new ParticipantId(2L, 1L))
+                .conversation(oneToOneConv)
+                .user(testUser)
+                .build();
+
+        Participant otherParticipant = Participant.builder()
+                .id(new ParticipantId(2L, 2L))
+                .conversation(oneToOneConv)
+                .user(otherUser)
+                .build();
+
+        when(participantRepository.existsById(new ParticipantId(2L, 1L))).thenReturn(true);
+        when(conversationRepository.findById(2L)).thenReturn(Optional.of(oneToOneConv));
+        when(messageRepository.findFirstByConversationIdOrderByCreatedAtDesc(2L)).thenReturn(Optional.empty());
+        when(messageStatusRepository.countUnreadInConversation(1L, 2L, MessageStatusEnum.read)).thenReturn(0L);
+        when(participantRepository.findById_ConversationId(2L)).thenReturn(Arrays.asList(selfParticipant, otherParticipant));
+
+        ConversationResponseDTO result = conversationService.getConversationDetails(2L, 1L);
+
+        assertThat(result.getId()).isEqualTo(2L);
+        assertThat(result.getName()).isEqualTo("otheruser");
+        assertThat(result.getAvatarUrl()).isEqualTo("http://example.com/other.jpg");
+    }
+
+    @Test
     void testGetConversationMessages() {
         when(participantRepository.existsById(new ParticipantId(1L, 1L))).thenReturn(true);
         Pageable pageable = PageRequest.of(0, 10);
