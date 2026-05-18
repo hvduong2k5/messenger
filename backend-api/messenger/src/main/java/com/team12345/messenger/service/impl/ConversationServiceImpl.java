@@ -163,8 +163,8 @@ public class ConversationServiceImpl implements ConversationService {
                     .role((isGroup && userId.equals(currentUserId)) ? com.team12345.messenger.entity.ParticipantRole.admin : com.team12345.messenger.entity.ParticipantRole.member)
                     .build();
             
-            participantRepository.save(participant);
-            conversation.getParticipants().add(participant);
+            Participant savedParticipant = participantRepository.save(participant);
+            conversation.getParticipants().add(savedParticipant);
         }
         
         return mapToConversationResponseDTO(conversation, currentUserId);
