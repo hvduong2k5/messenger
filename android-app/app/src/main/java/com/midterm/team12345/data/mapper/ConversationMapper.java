@@ -98,21 +98,45 @@ public class ConversationMapper {
 
     public static Long parseDateStringToLong(String timeStr) {
         if (timeStr == null || timeStr.isEmpty()) return null;
-        try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                return LocalDateTime.parse(timeStr)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            try {
+                return java.time.Instant.parse(timeStr).toEpochMilli();
+            } catch (Exception ignored) {}
+            try {
+                return java.time.OffsetDateTime.parse(timeStr).toInstant().toEpochMilli();
+            } catch (Exception ignored) {}
+            try {
+                return java.time.ZonedDateTime.parse(timeStr).toInstant().toEpochMilli();
+            } catch (Exception ignored) {}
+            try {
+                return java.time.LocalDateTime.parse(timeStr)
                         .atZone(ZoneId.systemDefault())
                         .toInstant()
                         .toEpochMilli();
-            } else {
-                java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", java.util.Locale.getDefault());
-                return sdf.parse(timeStr).getTime();
-            }
-        } catch (Exception e) {
-            try {
-                return Long.parseLong(timeStr);
-            } catch (NumberFormatException ignored) {}
+            } catch (Exception ignored) {}
         }
+        
+        String[] formats = {
+            "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",
+            "yyyy-MM-dd'T'HH:mm:ss'Z'",
+            "yyyy-MM-dd'T'HH:mm:ss.SSSZZZZZ",
+            "yyyy-MM-dd'T'HH:mm:ssZZZZZ",
+            "yyyy-MM-dd'T'HH:mm:ss"
+        };
+        for (String format : formats) {
+            try {
+                java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat(format, java.util.Locale.getDefault());
+                if (format.endsWith("'Z'")) {
+                    sdf.setTimeZone(java.util.TimeZone.getTimeZone("UTC"));
+                }
+                return sdf.parse(timeStr).getTime();
+            } catch (Exception ignored) {}
+        }
+        
+        try {
+            return Long.parseLong(timeStr);
+        } catch (NumberFormatException ignored) {}
+        
         return null;
     }
 }
