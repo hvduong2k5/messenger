@@ -122,6 +122,19 @@ public class FriendsFragment extends BaseFragment<FragmentFriendsBinding, Friend
                 intent.putExtra("PARTNER_ID", user.getId());
                 startActivity(intent);
             }
+
+            @Override
+            public void onProfileLongClick(UserResponseDTO user) {
+                new androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                        .setTitle("Hủy kết bạn")
+                        .setMessage("Bạn có chắc chắn muốn hủy kết bạn với " + user.getUsername() + " không?")
+                        .setPositiveButton("Hủy kết bạn", (dialog, which) -> {
+                            viewModel.onUnfriend(user.getId());
+                            Toast.makeText(requireContext(), "Đã hủy kết bạn với " + user.getUsername(), Toast.LENGTH_SHORT).show();
+                        })
+                        .setNegativeButton("Hủy", null)
+                        .show();
+            }
         });
 
         userSearchAdapter = new UserSearchAdapter(new UserSearchAdapter.OnUserSearchActionListener() {
@@ -165,6 +178,12 @@ public class FriendsFragment extends BaseFragment<FragmentFriendsBinding, Friend
             public void onCancelRequest(Long userId) {
                 viewModel.onCancelFriendRequest(userId);
                 Toast.makeText(requireContext(), "Đã hủy yêu cầu kết bạn!", Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onUnfriend(Long userId) {
+                viewModel.onUnfriend(userId);
+                Toast.makeText(requireContext(), "Đã hủy kết bạn!", Toast.LENGTH_SHORT).show();
             }
         });
 
@@ -243,6 +262,7 @@ public class FriendsFragment extends BaseFragment<FragmentFriendsBinding, Friend
         android.widget.LinearLayout layout = new android.widget.LinearLayout(requireContext());
         layout.setOrientation(android.widget.LinearLayout.VERTICAL);
         layout.setPadding(48, 64, 48, 48);
+        layout.setBackgroundColor(android.graphics.Color.TRANSPARENT);
 
         TextView title = new TextView(requireContext());
         title.setText("Lời mời kết bạn");
@@ -282,6 +302,14 @@ public class FriendsFragment extends BaseFragment<FragmentFriendsBinding, Friend
         layout.addView(emptyView);
 
         dialog.setContentView(layout);
+
+        dialog.setOnShowListener(dialogInterface -> {
+            com.google.android.material.bottomsheet.BottomSheetDialog d = (com.google.android.material.bottomsheet.BottomSheetDialog) dialogInterface;
+            android.view.View bottomSheet = d.findViewById(com.google.android.material.R.id.design_bottom_sheet);
+            if (bottomSheet != null) {
+                bottomSheet.setBackground(androidx.core.content.ContextCompat.getDrawable(requireContext(), R.drawable.bg_bottom_sheet));
+            }
+        });
 
         viewModel.pendingRequests.observe(getViewLifecycleOwner(), resource -> {
             if (resource != null) {
