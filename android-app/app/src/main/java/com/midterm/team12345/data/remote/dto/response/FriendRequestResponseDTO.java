@@ -3,6 +3,9 @@ package com.midterm.team12345.data.remote.dto.response;
 import com.google.gson.annotations.SerializedName;
 
 public class FriendRequestResponseDTO {
+    @SerializedName("id")
+    private Long id;
+
     @SerializedName("senderId")
     private Long senderId;
 
@@ -56,5 +59,13 @@ public class FriendRequestResponseDTO {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
     }
 }
