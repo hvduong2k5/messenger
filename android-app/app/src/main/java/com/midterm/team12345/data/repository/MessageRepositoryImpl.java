@@ -116,16 +116,23 @@ public class MessageRepositoryImpl implements MessageRepository {
                                 data.postValue(Resource.success(updatedResponses));
                             } catch (Exception e) {
                                 e.printStackTrace();
+                                data.postValue(Resource.error("Lỗi Room DB: " + e.getMessage(), null));
                             }
                         }).start();
                     } else {
-                        data.setValue(Resource.error("Lỗi lấy danh sách tin nhắn", null));
+                        String errorMsg = "Lỗi lấy danh sách tin nhắn (HTTP " + response.code() + ")";
+                        try {
+                            if (response.errorBody() != null) {
+                                errorMsg += ": " + response.errorBody().string();
+                            }
+                        } catch (Exception ignored) {}
+                        data.setValue(Resource.error(errorMsg, null));
                     }
                 }
 
                 @Override
                 public void onFailure(Call<PageResponse<MessageResponseDTO>> call, Throwable t) {
-                    data.setValue(Resource.error(t.getMessage(), null));
+                    data.setValue(Resource.error("Lỗi kết nối: " + t.getMessage(), null));
                 }
             });
         }).start();
