@@ -1,5 +1,6 @@
 package com.midterm.team12345.ui.friends;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -7,8 +8,8 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -18,10 +19,15 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.midterm.team12345.R;
+import com.midterm.team12345.data.remote.dto.response.FriendRequestResponseDTO;
+import com.midterm.team12345.data.remote.dto.response.UserResponseDTO;
+import com.midterm.team12345.data.remote.dto.response.UserSearchResponseDTO;
 import com.midterm.team12345.databinding.FragmentFriendsBinding;
-import com.midterm.team12345.network.UserResponse;
 import com.midterm.team12345.ui.base.BaseFragment;
+import com.midterm.team12345.ui.chatdetail.ChatDetailActivity;
+import com.midterm.team12345.utils.Resource;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class FriendsFragment extends BaseFragment<FragmentFriendsBinding, FriendsViewModel> {
@@ -31,6 +37,9 @@ public class FriendsFragment extends BaseFragment<FragmentFriendsBinding, Friend
     private RequestsEntryAdapter requestsEntryAdapter;
     private FilterAdapter filterAdapter;
     private FriendsListAdapter friendsListAdapter;
+    private UserSearchAdapter userSearchAdapter;
+
+    private ConcatAdapter concatAdapter;
     private LinearLayoutManager layoutManager;
 
     @Override
@@ -40,7 +49,11 @@ public class FriendsFragment extends BaseFragment<FragmentFriendsBinding, Friend
 
     @Override
     protected FriendsViewModel createViewModel() {
-        return new ViewModelProvider(this).get(FriendsViewModel.class);
+        FriendsViewModelFactory factory = new FriendsViewModelFactory(
+                com.midterm.team12345.data.repository.FriendRepositoryImpl.getInstance(requireContext()),
+                com.midterm.team12345.data.repository.UserRepositoryImpl.getInstance(requireContext())
+        );
+        return new ViewModelProvider(this, factory).get(FriendsViewModel.class);
     }
 
     @Override
@@ -48,36 +61,112 @@ public class FriendsFragment extends BaseFragment<FragmentFriendsBinding, Friend
         layoutManager = new LinearLayoutManager(requireContext());
         setupRecyclerView();
         setupAlphabetIndex();
-        
+
         binding.swipeRefresh.setOnRefreshListener(() -> {
             viewModel.loadData();
         });
+
+        // Load initial data
+        viewModel.loadData();
     }
 
     private void setupRecyclerView() {
         titleAdapter = new TitleAdapter();
-        searchAdapter = new SearchAdapter();
-        requestsEntryAdapter = new RequestsEntryAdapter();
+
+        // Implement Search input with TextWatcher
+        searchAdapter = new SearchAdapter(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                String query = s.toString();
+                if (query.trim().isEmpty()) {
+                    showDefaultMode();
+                    viewModel.onLocalSearch(query);
+                } else {
+                    showSearchMode();
+                    viewModel.searchUser(query);
+                }
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {}
+        }, v -> {
+            Toast.makeText(requireContext(), "Nhập tên người dùng vào ô Tìm kiếm để tìm bạn mới!", Toast.LENGTH_SHORT).show();
+        });
+
+        // Clicking "Lời mời kết bạn" opens the Bottom Sheet
+        requestsEntryAdapter = new RequestsEntryAdapter(v -> showPendingRequestsBottomSheet());
         filterAdapter = new FilterAdapter();
-        
+
         friendsListAdapter = new FriendsListAdapter(new FriendsListAdapter.OnFriendActionListener() {
             @Override
-            public void onCall(UserResponse user) {
+            public void onCall(UserResponseDTO user) {
                 Log.d("FriendsFragment", "Calling: " + user.getUsername());
+                Toast.makeText(requireContext(), "Đang gọi " + user.getUsername() + "...", Toast.LENGTH_SHORT).show();
             }
 
             @Override
-            public void onVideoCall(UserResponse user) {
+            public void onVideoCall(UserResponseDTO user) {
                 Log.d("FriendsFragment", "Video Calling: " + user.getUsername());
+                Toast.makeText(requireContext(), "Đang gọi video " + user.getUsername() + "...", Toast.LENGTH_SHORT).show();
             }
 
             @Override
-            public void onProfileClick(UserResponse user) {
+            public void onProfileClick(UserResponseDTO user) {
                 Log.d("FriendsFragment", "Opening Profile: " + user.getUsername());
+                // Open chat session with friend
+                Intent intent = new Intent(requireContext(), ChatDetailActivity.class);
+                intent.putExtra("PARTNER_NAME", user.getUsername());
+                startActivity(intent);
             }
         });
 
-        ConcatAdapter concatAdapter = new ConcatAdapter(
+        userSearchAdapter = new UserSearchAdapter(new UserSearchAdapter.OnUserSearchActionListener() {
+            @Override
+            public void onAddFriend(Long userId) {
+                viewModel.onAddFriend(userId);
+                Toast.makeText(requireContext(), "Đã gửi lời mời kết bạn!", Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onMessageClick(UserSearchResponseDTO user) {
+                Intent intent = new Intent(requireContext(), ChatDetailActivity.class);
+                intent.putExtra("PARTNER_NAME", user.getUsername());
+                startActivity(intent);
+            }
+
+            @Override
+            public void onAcceptRequest(Long userId) {
+                Long requestId = findRequestIdForSender(userId);
+                if (requestId != null) {
+                    viewModel.onAcceptRequest(requestId);
+                    Toast.makeText(requireContext(), "Đã chấp nhận kết bạn!", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(requireContext(), "Lỗi: Không tìm thấy ID lời mời!", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onRejectRequest(Long userId) {
+                Long requestId = findRequestIdForSender(userId);
+                if (requestId != null) {
+                    viewModel.onRejectRequest(requestId);
+                    Toast.makeText(requireContext(), "Đã từ chối lời mời!", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(requireContext(), "Lỗi: Không tìm thấy ID lời mời!", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onCancelRequest(Long userId) {
+                viewModel.onCancelFriendRequest(userId);
+                Toast.makeText(requireContext(), "Đã hủy yêu cầu kết bạn!", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        concatAdapter = new ConcatAdapter(
                 titleAdapter,
                 searchAdapter,
                 requestsEntryAdapter,
@@ -89,8 +178,128 @@ public class FriendsFragment extends BaseFragment<FragmentFriendsBinding, Friend
         binding.rvFriends.setAdapter(concatAdapter);
     }
 
+    private void showDefaultMode() {
+        binding.llAlphabetIndex.setVisibility(View.VISIBLE);
+        if (concatAdapter.getAdapters().contains(userSearchAdapter)) {
+            concatAdapter.removeAdapter(userSearchAdapter);
+        }
+        if (!concatAdapter.getAdapters().contains(requestsEntryAdapter)) {
+            concatAdapter.addAdapter(2, requestsEntryAdapter);
+        }
+        if (!concatAdapter.getAdapters().contains(filterAdapter)) {
+            concatAdapter.addAdapter(3, filterAdapter);
+        }
+        if (!concatAdapter.getAdapters().contains(friendsListAdapter)) {
+            concatAdapter.addAdapter(4, friendsListAdapter);
+        }
+        
+        // Update empty state based on default friends list
+        List<Object> currentList = friendsListAdapter.getCurrentList();
+        if (currentList == null || currentList.isEmpty()) {
+            binding.tvEmptyState.setText("Danh sách bạn bè trống");
+            binding.tvEmptyState.setVisibility(View.VISIBLE);
+        } else {
+            binding.tvEmptyState.setVisibility(View.GONE);
+        }
+    }
+
+    private void showSearchMode() {
+        binding.llAlphabetIndex.setVisibility(View.GONE);
+        if (concatAdapter.getAdapters().contains(requestsEntryAdapter)) {
+            concatAdapter.removeAdapter(requestsEntryAdapter);
+        }
+        if (concatAdapter.getAdapters().contains(filterAdapter)) {
+            concatAdapter.removeAdapter(filterAdapter);
+        }
+        if (concatAdapter.getAdapters().contains(friendsListAdapter)) {
+            concatAdapter.removeAdapter(friendsListAdapter);
+        }
+        if (!concatAdapter.getAdapters().contains(userSearchAdapter)) {
+            concatAdapter.addAdapter(userSearchAdapter);
+        }
+        
+        // Clear empty state temporarily until search results load
+        binding.tvEmptyState.setVisibility(View.GONE);
+    }
+
+    private Long findRequestIdForSender(Long senderId) {
+        if (viewModel.pendingRequests.getValue() != null && 
+            viewModel.pendingRequests.getValue().data != null) {
+            for (FriendRequestResponseDTO req : viewModel.pendingRequests.getValue().data) {
+                if (req.getSenderId() != null && req.getSenderId().equals(senderId)) {
+                    return req.getId();
+                }
+            }
+        }
+        return null;
+    }
+
+    private void showPendingRequestsBottomSheet() {
+        com.google.android.material.bottomsheet.BottomSheetDialog dialog = 
+                new com.google.android.material.bottomsheet.BottomSheetDialog(requireContext());
+
+        android.widget.LinearLayout layout = new android.widget.LinearLayout(requireContext());
+        layout.setOrientation(android.widget.LinearLayout.VERTICAL);
+        layout.setPadding(48, 64, 48, 48);
+
+        TextView title = new TextView(requireContext());
+        title.setText("Lời mời kết bạn");
+        title.setTextSize(20);
+        title.setTypeface(null, android.graphics.Typeface.BOLD);
+        title.setTextColor(getResources().getColor(R.color.black));
+        title.setPadding(16, 0, 16, 32);
+        layout.addView(title);
+
+        RecyclerView rv = new RecyclerView(requireContext());
+        rv.setLayoutManager(new LinearLayoutManager(requireContext()));
+
+        FriendRequestAdapter requestAdapter = new FriendRequestAdapter(new FriendRequestAdapter.OnRequestActionListener() {
+            @Override
+            public void onConfirm(Long requestId) {
+                viewModel.onAcceptRequest(requestId);
+                Toast.makeText(requireContext(), "Đã chấp nhận kết bạn!", Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onDelete(Long requestId) {
+                viewModel.onRejectRequest(requestId);
+                Toast.makeText(requireContext(), "Đã từ chối lời mời!", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        rv.setAdapter(requestAdapter);
+        layout.addView(rv);
+
+        TextView emptyView = new TextView(requireContext());
+        emptyView.setText("Không có lời mời kết bạn nào");
+        emptyView.setGravity(android.view.Gravity.CENTER);
+        emptyView.setPadding(0, 64, 0, 64);
+        emptyView.setTextSize(16);
+        emptyView.setTextColor(getResources().getColor(R.color.gray_text));
+        emptyView.setVisibility(View.GONE);
+        layout.addView(emptyView);
+
+        dialog.setContentView(layout);
+
+        viewModel.pendingRequests.observe(getViewLifecycleOwner(), resource -> {
+            if (resource != null) {
+                if (resource.status == Resource.Status.SUCCESS && resource.data != null) {
+                    if (resource.data.isEmpty()) {
+                        rv.setVisibility(View.GONE);
+                        emptyView.setVisibility(View.VISIBLE);
+                    } else {
+                        rv.setVisibility(View.VISIBLE);
+                        emptyView.setVisibility(View.GONE);
+                        requestAdapter.submitList(resource.data);
+                    }
+                }
+            }
+        });
+
+        dialog.show();
+    }
+
     private void setupAlphabetIndex() {
-        // Lắng nghe sự kiện click trên thanh chữ cái bên phải
         for (int i = 0; i < binding.llAlphabetIndex.getChildCount(); i++) {
             View view = binding.llAlphabetIndex.getChildAt(i);
             if (view instanceof TextView) {
@@ -108,9 +317,9 @@ public class FriendsFragment extends BaseFragment<FragmentFriendsBinding, Friend
         for (int i = 0; i < currentList.size(); i++) {
             Object item = currentList.get(i);
             if (item instanceof String && ((String) item).equalsIgnoreCase(letter)) {
-                // Tính toán vị trí trong ConcatAdapter (Cộng thêm các adapter phía trước)
                 int position = i + titleAdapter.getItemCount() + searchAdapter.getItemCount() 
-                               + requestsEntryAdapter.getItemCount() + filterAdapter.getItemCount();
+                               + (concatAdapter.getAdapters().contains(requestsEntryAdapter) ? requestsEntryAdapter.getItemCount() : 0)
+                               + (concatAdapter.getAdapters().contains(filterAdapter) ? filterAdapter.getItemCount() : 0);
                 layoutManager.scrollToPositionWithOffset(position, 0);
                 break;
             }
@@ -120,10 +329,41 @@ public class FriendsFragment extends BaseFragment<FragmentFriendsBinding, Friend
     @Override
     protected void observeViewModel() {
         super.observeViewModel();
-        
+
+        viewModel.currentUserProfile.observe(getViewLifecycleOwner(), resource -> {
+            if (resource != null && resource.status == Resource.Status.SUCCESS && resource.data != null) {
+                String avatarUrl = resource.data.getAvatarUrl();
+                titleAdapter.setAvatarUrl(avatarUrl);
+            }
+        });
+
         viewModel.friendsListGrouped.observe(getViewLifecycleOwner(), list -> {
             friendsListAdapter.submitList(list);
             binding.swipeRefresh.setRefreshing(false);
+            if (binding.llAlphabetIndex.getVisibility() == View.VISIBLE) {
+                if (list == null || list.isEmpty()) {
+                    binding.tvEmptyState.setText("Danh sách bạn bè trống");
+                    binding.tvEmptyState.setVisibility(View.VISIBLE);
+                } else {
+                    binding.tvEmptyState.setVisibility(View.GONE);
+                }
+            }
+        });
+
+        viewModel.searchResults.observe(getViewLifecycleOwner(), resource -> {
+            if (resource != null) {
+                if (resource.status == Resource.Status.SUCCESS && resource.data != null) {
+                    userSearchAdapter.submitList(resource.data);
+                    if (binding.llAlphabetIndex.getVisibility() == View.GONE) {
+                        if (resource.data.isEmpty()) {
+                            binding.tvEmptyState.setText("Không tìm thấy kết quả nào");
+                            binding.tvEmptyState.setVisibility(View.VISIBLE);
+                        } else {
+                            binding.tvEmptyState.setVisibility(View.GONE);
+                        }
+                    }
+                }
+            }
         });
     }
 
