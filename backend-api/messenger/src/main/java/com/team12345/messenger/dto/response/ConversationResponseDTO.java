@@ -19,4 +19,5 @@ public class ConversationResponseDTO {
     private String lastMessageContent;
     private LocalDateTime lastMessageCreatedAt;
     private Long unreadCount;
+    private String avatarUrl;
 }
