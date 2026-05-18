@@ -28,6 +28,18 @@
         app:layout_constraintStart_toEndOf="@id/iv_avatar"
         app:layout_constraintHorizontal_bias="0">
 
+        <!-- Sender Username -->
+        <TextView
+            android:id="@+id/tv_sender_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="2dp"
+            android:layout_marginStart="4dp"
+            android:textColor="@color/gray_text"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            tools:text="Chí" />
+
         <!-- Text Content -->
         <TextView
             android:id="@+id/tv_message_content"
