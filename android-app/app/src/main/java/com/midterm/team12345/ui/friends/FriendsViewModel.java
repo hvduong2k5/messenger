@@ -2,65 +2,210 @@ package com.midterm.team12345.ui.friends;
 
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
-import com.midterm.team12345.network.UserResponse;
+
+import com.midterm.team12345.data.remote.dto.response.FriendRequestResponseDTO;
+import com.midterm.team12345.data.remote.dto.response.UserResponseDTO;
+import com.midterm.team12345.data.remote.dto.response.UserSearchResponseDTO;
+import com.midterm.team12345.domain.repository.FriendRepository;
+import com.midterm.team12345.domain.repository.UserRepository;
 import com.midterm.team12345.ui.base.BaseViewModel;
+import com.midterm.team12345.utils.Resource;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class FriendsViewModel extends BaseViewModel {
 
-    private final MutableLiveData<List<UserResponse>> _friendRequests = new MutableLiveData<>(new ArrayList<>());
-    public final LiveData<List<UserResponse>> friendRequests = _friendRequests;
+    private final FriendRepository friendRepository;
+    private final UserRepository userRepository;
+
+    private final MutableLiveData<Resource<List<UserResponseDTO>>> _friendsList = new MutableLiveData<>();
+    public final LiveData<Resource<List<UserResponseDTO>>> friendsList = _friendsList;
+
+    private final MutableLiveData<Resource<List<FriendRequestResponseDTO>>> _pendingRequests = new MutableLiveData<>();
+    public final LiveData<Resource<List<FriendRequestResponseDTO>>> pendingRequests = _pendingRequests;
+
+    private final MutableLiveData<Resource<List<UserSearchResponseDTO>>> _searchResults = new MutableLiveData<>();
+    public final LiveData<Resource<List<UserSearchResponseDTO>>> searchResults = _searchResults;
+
+    private final MutableLiveData<Resource<com.midterm.team12345.data.remote.dto.response.UserProfileResponseDTO>> _currentUserProfile = new MutableLiveData<>();
+    public final LiveData<Resource<com.midterm.team12345.data.remote.dto.response.UserProfileResponseDTO>> currentUserProfile = _currentUserProfile;
 
     private final MutableLiveData<List<Object>> _friendsListGrouped = new MutableLiveData<>(new ArrayList<>());
     public final LiveData<List<Object>> friendsListGrouped = _friendsListGrouped;
 
-    private final MutableLiveData<List<UserResponse>> _suggestions = new MutableLiveData<>(new ArrayList<>());
-    public final LiveData<List<UserResponse>> suggestions = _suggestions;
+    private final MutableLiveData<Resource<com.midterm.team12345.data.remote.dto.response.FriendshipStatusResponseDTO>> _friendshipStatus = new MutableLiveData<>();
+    public final LiveData<Resource<com.midterm.team12345.data.remote.dto.response.FriendshipStatusResponseDTO>> friendshipStatus = _friendshipStatus;
 
-    private List<UserResponse> allFriendsRaw = new ArrayList<>();
+    private List<UserResponseDTO> allFriendsRaw = new ArrayList<>();
+    private String lastSearchQuery = "";
 
-    public FriendsViewModel() {
-        loadData();
+    public FriendsViewModel(FriendRepository friendRepository, UserRepository userRepository) {
+        this.friendRepository = friendRepository;
+        this.userRepository = userRepository;
     }
 
     public void loadData() {
-        showLoading();
-        
-        // 1. Mock Lời mời kết bạn
-        List<UserResponse> requests = new ArrayList<>();
-        requests.add(new UserResponse(101L, "Nguyễn Văn A", "pending"));
-        requests.add(new UserResponse(102L, "Trần Thị B", "pending"));
-        _friendRequests.setValue(requests);
-
-        // 2. Mock Danh sách bạn bè
-        allFriendsRaw = new ArrayList<>();
-        allFriendsRaw.add(new UserResponse(1L, "Ái Vân", "online"));
-        allFriendsRaw.add(new UserResponse(2L, "Ba Nam", "online"));
-        allFriendsRaw.add(new UserResponse(3L, "Bảo Ngọc", "offline"));
-        allFriendsRaw.add(new UserResponse(4L, "Bee", "online"));
-        allFriendsRaw.add(new UserResponse(5L, "Boss", "offline"));
-        allFriendsRaw.add(new UserResponse(6L, "Cường", "online"));
-        allFriendsRaw.add(new UserResponse(7L, "Duy", "online"));
-        
-        updateGroupedList(allFriendsRaw);
-
-        // 3. Mock Gợi ý kết bạn
-        List<UserResponse> suggested = new ArrayList<>();
-        suggested.add(new UserResponse(201L, "Người quen cũ", "offline"));
-        _suggestions.setValue(suggested);
-
-        hideLoading();
+        fetchFriends();
+        fetchPendingRequests();
+        fetchCurrentUserProfile();
     }
 
-    private void updateGroupedList(List<UserResponse> list) {
-        Collections.sort(list, (u1, u2) -> u1.getUsername().compareToIgnoreCase(u2.getUsername()));
+    public void fetchCurrentUserProfile() {
+        _currentUserProfile.setValue(Resource.loading(null));
+        userRepository.getMyProfile().observeForever(resource -> {
+            if (resource != null) {
+                _currentUserProfile.setValue(resource);
+            }
+        });
+    }
+
+    public void fetchFriends() {
+        _friendsList.setValue(Resource.loading(null));
+        friendRepository.getFriends().observeForever(resource -> {
+            if (resource != null) {
+                _friendsList.setValue(resource);
+                if (resource.status == Resource.Status.SUCCESS && resource.data != null) {
+                    allFriendsRaw = resource.data;
+                    updateGroupedList(resource.data);
+                } else if (resource.status == Resource.Status.ERROR) {
+                    setError(resource.message);
+                }
+            }
+        });
+    }
+
+    public void fetchPendingRequests() {
+        _pendingRequests.setValue(Resource.loading(null));
+        friendRepository.getPendingRequests().observeForever(resource -> {
+            if (resource != null) {
+                _pendingRequests.setValue(resource);
+                if (resource.status == Resource.Status.ERROR) {
+                    setError(resource.message);
+                }
+            }
+        });
+    }
+
+    public void searchUser(String keyword) {
+        lastSearchQuery = keyword;
+        if (keyword == null || keyword.trim().isEmpty()) {
+            _searchResults.setValue(Resource.success(new ArrayList<>()));
+            return;
+        }
+        _searchResults.setValue(Resource.loading(null));
+        userRepository.searchUsers(keyword, 0, 50).observeForever(resource -> {
+            if (resource != null) {
+                if (resource.status == Resource.Status.SUCCESS && resource.data != null) {
+                    _searchResults.setValue(Resource.success(resource.data.getContent()));
+                } else if (resource.status == Resource.Status.ERROR) {
+                    _searchResults.setValue(Resource.error(resource.message, null));
+                    setError(resource.message);
+                }
+            }
+        });
+    }
+
+    public void onAcceptRequest(Long requestId) {
+        friendRepository.acceptFriendRequest(requestId).observeForever(resource -> {
+            if (resource != null && resource.status == Resource.Status.SUCCESS) {
+                fetchFriends();
+                fetchPendingRequests();
+                // If there was an active search, refresh the search results as well to update FriendshipStatus to FRIEND
+                if (lastSearchQuery != null && !lastSearchQuery.trim().isEmpty()) {
+                    searchUser(lastSearchQuery);
+                }
+            } else if (resource != null && resource.status == Resource.Status.ERROR) {
+                setError(resource.message);
+            }
+        });
+    }
+
+    public void onRejectRequest(Long requestId) {
+        friendRepository.rejectFriendRequest(requestId).observeForever(resource -> {
+            if (resource != null && resource.status == Resource.Status.SUCCESS) {
+                fetchPendingRequests();
+                // Refresh active search results
+                if (lastSearchQuery != null && !lastSearchQuery.trim().isEmpty()) {
+                    searchUser(lastSearchQuery);
+                }
+            } else if (resource != null && resource.status == Resource.Status.ERROR) {
+                setError(resource.message);
+            }
+        });
+    }
+
+    public void onAddFriend(Long userId) {
+        friendRepository.sendFriendRequest(userId).observeForever(resource -> {
+            if (resource != null && resource.status == Resource.Status.SUCCESS) {
+                // Once invitation is sent, refresh the search results so that status changes to SENDER_PENDING
+                if (lastSearchQuery != null && !lastSearchQuery.trim().isEmpty()) {
+                    searchUser(lastSearchQuery);
+                }
+            } else if (resource != null && resource.status == Resource.Status.ERROR) {
+                setError(resource.message);
+            }
+        });
+    }
+
+    public void onCancelFriendRequest(Long userId) {
+        friendRepository.cancelFriendRequest(userId).observeForever(resource -> {
+            if (resource != null && resource.status == Resource.Status.SUCCESS) {
+                // Once cancelled, refresh the search results so status returns to STRANGER
+                if (lastSearchQuery != null && !lastSearchQuery.trim().isEmpty()) {
+                    searchUser(lastSearchQuery);
+                }
+            } else if (resource != null && resource.status == Resource.Status.ERROR) {
+                setError(resource.message);
+            }
+        });
+    }
+
+    public void checkFriendshipStatus(Long userId) {
+        _friendshipStatus.setValue(Resource.loading(null));
+        friendRepository.checkFriendshipStatus(userId).observeForever(resource -> {
+            if (resource != null) {
+                _friendshipStatus.setValue(resource);
+                if (resource.status == Resource.Status.ERROR) {
+                    setError(resource.message);
+                }
+            }
+        });
+    }
+
+    public void onLocalSearch(String query) {
+        if (query == null || query.isEmpty()) {
+            updateGroupedList(allFriendsRaw);
+        } else {
+            List<UserResponseDTO> filtered = new ArrayList<>();
+            for (UserResponseDTO u : allFriendsRaw) {
+                if (u.getUsername() != null && u.getUsername().toLowerCase().contains(query.toLowerCase())) {
+                    filtered.add(u);
+                }
+            }
+            updateGroupedList(filtered);
+        }
+    }
+
+    private void updateGroupedList(List<UserResponseDTO> list) {
+        if (list == null) {
+            _friendsListGrouped.setValue(new ArrayList<>());
+            return;
+        }
+        List<UserResponseDTO> sorted = new ArrayList<>(list);
+        Collections.sort(sorted, (u1, u2) -> {
+            String name1 = u1.getUsername() != null ? u1.getUsername() : "";
+            String name2 = u2.getUsername() != null ? u2.getUsername() : "";
+            return name1.compareToIgnoreCase(name2);
+        });
+
         List<Object> grouped = new ArrayList<>();
         char lastChar = ' ';
-        for (UserResponse user : list) {
-            char firstChar = user.getUsername().toUpperCase().charAt(0);
+        for (UserResponseDTO user : sorted) {
+            String username = user.getUsername();
+            if (username == null || username.isEmpty()) continue;
+            char firstChar = username.toUpperCase().charAt(0);
             if (firstChar != lastChar) {
                 grouped.add(String.valueOf(firstChar));
                 lastChar = firstChar;
@@ -69,18 +214,4 @@ public class FriendsViewModel extends BaseViewModel {
         }
         _friendsListGrouped.setValue(grouped);
     }
-
-    public void onSearch(String query) {
-        if (query.isEmpty()) {
-            updateGroupedList(allFriendsRaw);
-        } else {
-            List<UserResponse> filtered = allFriendsRaw.stream()
-                .filter(u -> u.getUsername().toLowerCase().contains(query.toLowerCase()))
-                .collect(Collectors.toList());
-            updateGroupedList(filtered);
-        }
-    }
-
-    public void acceptRequest(Long id) { /* API call */ }
-    public void deleteRequest(Long id) { /* API call */ }
 }
