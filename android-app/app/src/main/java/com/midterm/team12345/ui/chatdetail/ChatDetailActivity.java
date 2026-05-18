@@ -98,7 +98,15 @@ public class ChatDetailActivity extends AppCompatActivity {
         viewModel.fetchMyProfile();
         setupUI();
         
-        viewModel.loadMessages(conversationId);
+        if (conversationId != null && conversationId != -1L) {
+            viewModel.loadMessages(conversationId);
+        } else {
+            Long partnerId = getIntent().getLongExtra("PARTNER_ID", -1L);
+            String partnerName = getIntent().getStringExtra("PARTNER_NAME");
+            if (partnerId != -1L) {
+                viewModel.startConversationWithPartner(partnerId, partnerName);
+            }
+        }
     }
 
     private void setupUI() {
@@ -257,6 +265,43 @@ public class ChatDetailActivity extends AppCompatActivity {
                     binding.loadingProgressBar.setVisibility(View.GONE);
                     Toast.makeText(this, resource.message, Toast.LENGTH_SHORT).show();
                     break;
+            }
+        });
+
+        viewModel.createConversationState.observe(this, resource -> {
+            if (resource == null) return;
+            
+            if (resource.status == Resource.Status.LOADING) {
+                binding.loadingProgressBar.setVisibility(View.VISIBLE);
+            } else if (resource.status == Resource.Status.SUCCESS && resource.data != null) {
+                binding.loadingProgressBar.setVisibility(View.GONE);
+                ConversationResponseDTO dto = resource.data;
+                conversationId = dto.getId();
+                
+                conversation = new Conversation(
+                        dto.getId(),
+                        dto.getName(),
+                        dto.getIsGroup(),
+                        dto.getAvatarUrl(),
+                        System.currentTimeMillis(),
+                        dto.getLastMessageContent(),
+                        null,
+                        System.currentTimeMillis(),
+                        dto.getUnreadCount() != null ? dto.getUnreadCount().intValue() : 0
+                );
+                
+                binding.tvPartnerName.setText(conversation.getConversationName());
+                String avatarUrl = conversation.getAvatarUrl();
+                if (avatarUrl != null && !avatarUrl.startsWith("http")) {
+                    avatarUrl = com.midterm.team12345.data.remote.RetrofitClient.getBaseUrl() + (avatarUrl.startsWith("/") ? "" : "/") + avatarUrl;
+                }
+                Glide.with(this)
+                        .load(avatarUrl)
+                        .placeholder(R.drawable.ic_avatar_placeholder)
+                        .into(binding.ivPartnerAvatar);
+            } else if (resource.status == Resource.Status.ERROR) {
+                binding.loadingProgressBar.setVisibility(View.GONE);
+                Toast.makeText(this, "Không thể tạo cuộc hội thoại: " + resource.message, Toast.LENGTH_SHORT).show();
             }
         });
 
