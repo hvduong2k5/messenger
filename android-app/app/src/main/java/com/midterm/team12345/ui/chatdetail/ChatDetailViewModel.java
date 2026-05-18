@@ -4,7 +4,9 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
+import com.midterm.team12345.data.remote.dto.request.ConversationRequestDTO;
 import com.midterm.team12345.data.remote.dto.request.MessageRequestDTO;
+import com.midterm.team12345.data.remote.dto.response.ConversationResponseDTO;
 import com.midterm.team12345.data.remote.dto.response.MessageResponseDTO;
 import com.midterm.team12345.data.remote.dto.response.UserProfileResponseDTO;
 import com.midterm.team12345.domain.repository.ConversationRepository;
@@ -29,6 +31,9 @@ public class ChatDetailViewModel extends ViewModel {
 
     private final MutableLiveData<Resource<UserProfileResponseDTO>> _profileState = new MutableLiveData<>();
     public final LiveData<Resource<UserProfileResponseDTO>> profileState = _profileState;
+
+    private final MutableLiveData<Resource<ConversationResponseDTO>> _createConversationState = new MutableLiveData<>();
+    public final LiveData<Resource<ConversationResponseDTO>> createConversationState = _createConversationState;
 
     private final MutableLiveData<List<File>> _selectedFiles = new MutableLiveData<>(new ArrayList<>());
     public final LiveData<List<File>> selectedFiles = _selectedFiles;
@@ -131,6 +136,28 @@ public class ChatDetailViewModel extends ViewModel {
     public void fetchMyProfile() {
         userRepository.getMyProfile().observeForever(resource -> {
             _profileState.setValue(resource);
+        });
+    }
+
+    public void startConversationWithPartner(Long partnerId, String partnerName) {
+        _createConversationState.setValue(Resource.loading(null));
+        List<Long> participants = new ArrayList<>();
+        participants.add(partnerId);
+        
+        ConversationRequestDTO request = new ConversationRequestDTO(
+                partnerName != null ? partnerName : "Chat",
+                false,
+                participants
+        );
+        
+        conversationRepository.createConversation(request).observeForever(resource -> {
+            if (resource.status == Resource.Status.SUCCESS && resource.data != null) {
+                activeConversationId = resource.data.getId();
+                _createConversationState.setValue(resource);
+                loadMessages(activeConversationId);
+            } else if (resource.status == Resource.Status.ERROR) {
+                _createConversationState.setValue(Resource.error(resource.message, null));
+            }
         });
     }
 

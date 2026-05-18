@@ -119,6 +119,7 @@ public class FriendsFragment extends BaseFragment<FragmentFriendsBinding, Friend
                 // Open chat session with friend
                 Intent intent = new Intent(requireContext(), ChatDetailActivity.class);
                 intent.putExtra("PARTNER_NAME", user.getUsername());
+                intent.putExtra("PARTNER_ID", user.getId());
                 startActivity(intent);
             }
         });
@@ -134,6 +135,7 @@ public class FriendsFragment extends BaseFragment<FragmentFriendsBinding, Friend
             public void onMessageClick(UserSearchResponseDTO user) {
                 Intent intent = new Intent(requireContext(), ChatDetailActivity.class);
                 intent.putExtra("PARTNER_NAME", user.getUsername());
+                intent.putExtra("PARTNER_ID", user.getId());
                 startActivity(intent);
             }
 
