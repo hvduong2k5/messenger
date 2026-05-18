@@ -7,6 +7,7 @@ import androidx.lifecycle.MutableLiveData;
 import com.midterm.team12345.data.remote.RetrofitClient;
 import com.midterm.team12345.data.remote.api.FriendApiService;
 import com.midterm.team12345.data.remote.dto.response.FriendRequestResponseDTO;
+import com.midterm.team12345.data.remote.dto.response.PageResponse;
 import com.midterm.team12345.data.remote.dto.response.UserResponseDTO;
 import com.midterm.team12345.domain.repository.FriendRepository;
 import com.midterm.team12345.utils.Resource;
@@ -33,33 +34,19 @@ public class FriendRepositoryImpl implements FriendRepository {
     }
 
     @Override
-    public LiveData<Resource<FriendRequestResponseDTO>> sendFriendRequest(Long receiverId) {
-        MutableLiveData<Resource<FriendRequestResponseDTO>> data = new MutableLiveData<>();
-        data.setValue(Resource.loading(null));
-        friendApiService.sendFriendRequest(receiverId).enqueue(new Callback<FriendRequestResponseDTO>() {
-            @Override
-            public void onResponse(Call<FriendRequestResponseDTO> call, Response<FriendRequestResponseDTO> response) {
-                if (response.isSuccessful()) data.setValue(Resource.success(response.body()));
-                else data.setValue(Resource.error("Failed to send request", null));
-            }
-            @Override
-            public void onFailure(Call<FriendRequestResponseDTO> call, Throwable t) {
-                data.setValue(Resource.error(t.getMessage(), null));
-            }
-        });
-        return data;
-    }
-
-    @Override
-    public LiveData<Resource<Void>> acceptFriendRequest(Long senderId) {
+    public LiveData<Resource<Void>> sendFriendRequest(Long receiverId) {
         MutableLiveData<Resource<Void>> data = new MutableLiveData<>();
         data.setValue(Resource.loading(null));
-        friendApiService.acceptFriendRequest(senderId).enqueue(new Callback<Void>() {
+        friendApiService.sendFriendRequest(receiverId).enqueue(new Callback<Void>() {
             @Override
             public void onResponse(Call<Void> call, Response<Void> response) {
-                if (response.isSuccessful()) data.setValue(Resource.success(null));
-                else data.setValue(Resource.error("Failed to accept", null));
+                if (response.isSuccessful()) {
+                    data.setValue(Resource.success(null));
+                } else {
+                    data.setValue(Resource.error("Gửi lời mời kết bạn thất bại", null));
+                }
             }
+
             @Override
             public void onFailure(Call<Void> call, Throwable t) {
                 data.setValue(Resource.error(t.getMessage(), null));
@@ -69,15 +56,63 @@ public class FriendRepositoryImpl implements FriendRepository {
     }
 
     @Override
-    public LiveData<Resource<Void>> declineFriendRequest(Long senderId) {
+    public LiveData<Resource<Void>> acceptFriendRequest(Long requestId) {
         MutableLiveData<Resource<Void>> data = new MutableLiveData<>();
         data.setValue(Resource.loading(null));
-        friendApiService.declineFriendRequest(senderId).enqueue(new Callback<Void>() {
+        friendApiService.acceptFriendRequest(requestId).enqueue(new Callback<Void>() {
             @Override
             public void onResponse(Call<Void> call, Response<Void> response) {
-                if (response.isSuccessful()) data.setValue(Resource.success(null));
-                else data.setValue(Resource.error("Failed to decline", null));
+                if (response.isSuccessful()) {
+                    data.setValue(Resource.success(null));
+                } else {
+                    data.setValue(Resource.error("Chấp nhận kết bạn thất bại", null));
+                }
             }
+
+            @Override
+            public void onFailure(Call<Void> call, Throwable t) {
+                data.setValue(Resource.error(t.getMessage(), null));
+            }
+        });
+        return data;
+    }
+
+    @Override
+    public LiveData<Resource<Void>> rejectFriendRequest(Long requestId) {
+        MutableLiveData<Resource<Void>> data = new MutableLiveData<>();
+        data.setValue(Resource.loading(null));
+        friendApiService.rejectFriendRequest(requestId).enqueue(new Callback<Void>() {
+            @Override
+            public void onResponse(Call<Void> call, Response<Void> response) {
+                if (response.isSuccessful()) {
+                    data.setValue(Resource.success(null));
+                } else {
+                    data.setValue(Resource.error("Từ chối kết bạn thất bại", null));
+                }
+            }
+
+            @Override
+            public void onFailure(Call<Void> call, Throwable t) {
+                data.setValue(Resource.error(t.getMessage(), null));
+            }
+        });
+        return data;
+    }
+
+    @Override
+    public LiveData<Resource<Void>> removeFriend(Long friendId) {
+        MutableLiveData<Resource<Void>> data = new MutableLiveData<>();
+        data.setValue(Resource.loading(null));
+        friendApiService.removeFriend(friendId).enqueue(new Callback<Void>() {
+            @Override
+            public void onResponse(Call<Void> call, Response<Void> response) {
+                if (response.isSuccessful()) {
+                    data.setValue(Resource.success(null));
+                } else {
+                    data.setValue(Resource.error("Hủy kết bạn thất bại", null));
+                }
+            }
+
             @Override
             public void onFailure(Call<Void> call, Throwable t) {
                 data.setValue(Resource.error(t.getMessage(), null));
@@ -88,17 +123,32 @@ public class FriendRepositoryImpl implements FriendRepository {
 
     @Override
     public LiveData<Resource<Void>> unfriend(Long friendId) {
-        MutableLiveData<Resource<Void>> data = new MutableLiveData<>();
+        return removeFriend(friendId);
+    }
+
+    @Override
+    public LiveData<Resource<List<UserResponseDTO>>> getFriends() {
+        MutableLiveData<Resource<List<UserResponseDTO>>> data = new MutableLiveData<>();
         data.setValue(Resource.loading(null));
-        friendApiService.unfriend(friendId).enqueue(new Callback<Void>() {
+        friendApiService.getFriends().enqueue(new Callback<List<UserResponseDTO>>() {
             @Override
-            public void onResponse(Call<Void> call, Response<Void> response) {
-                if (response.isSuccessful()) data.setValue(Resource.success(null));
-                else data.setValue(Resource.error("Failed to unfriend", null));
+            public void onResponse(Call<List<UserResponseDTO>> call, Response<List<UserResponseDTO>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    data.setValue(Resource.success(response.body()));
+                } else {
+                    String errorMsg = "Không thể lấy danh sách bạn bè (HTTP " + response.code() + ")";
+                    try {
+                        if (response.errorBody() != null) {
+                            errorMsg += ": " + response.errorBody().string();
+                        }
+                    } catch (Exception ignored) {}
+                    data.setValue(Resource.error(errorMsg, null));
+                }
             }
+
             @Override
-            public void onFailure(Call<Void> call, Throwable t) {
-                data.setValue(Resource.error(t.getMessage(), null));
+            public void onFailure(Call<List<UserResponseDTO>> call, Throwable t) {
+                data.setValue(Resource.error("Lỗi kết nối: " + t.getMessage(), null));
             }
         });
         return data;
@@ -106,35 +156,32 @@ public class FriendRepositoryImpl implements FriendRepository {
 
     @Override
     public LiveData<Resource<List<UserResponseDTO>>> getFriendsList() {
-        MutableLiveData<Resource<List<UserResponseDTO>>> data = new MutableLiveData<>();
-        data.setValue(Resource.loading(null));
-        friendApiService.getFriendsList().enqueue(new Callback<List<UserResponseDTO>>() {
-            @Override
-            public void onResponse(Call<List<UserResponseDTO>> call, Response<List<UserResponseDTO>> response) {
-                if (response.isSuccessful()) data.setValue(Resource.success(response.body()));
-                else data.setValue(Resource.error("Failed to fetch friends", null));
-            }
-            @Override
-            public void onFailure(Call<List<UserResponseDTO>> call, Throwable t) {
-                data.setValue(Resource.error(t.getMessage(), null));
-            }
-        });
-        return data;
+        return getFriends();
     }
 
     @Override
-    public LiveData<Resource<List<FriendRequestResponseDTO>>> getPendingFriendRequests() {
+    public LiveData<Resource<List<FriendRequestResponseDTO>>> getPendingRequests() {
         MutableLiveData<Resource<List<FriendRequestResponseDTO>>> data = new MutableLiveData<>();
         data.setValue(Resource.loading(null));
         friendApiService.getPendingRequests().enqueue(new Callback<List<FriendRequestResponseDTO>>() {
             @Override
             public void onResponse(Call<List<FriendRequestResponseDTO>> call, Response<List<FriendRequestResponseDTO>> response) {
-                if (response.isSuccessful()) data.setValue(Resource.success(response.body()));
-                else data.setValue(Resource.error("Failed to fetch pending requests", null));
+                if (response.isSuccessful() && response.body() != null) {
+                    data.setValue(Resource.success(response.body()));
+                } else {
+                    String errorMsg = "Không thể lấy danh sách lời mời (HTTP " + response.code() + ")";
+                    try {
+                        if (response.errorBody() != null) {
+                            errorMsg += ": " + response.errorBody().string();
+                        }
+                    } catch (Exception ignored) {}
+                    data.setValue(Resource.error(errorMsg, null));
+                }
             }
+
             @Override
             public void onFailure(Call<List<FriendRequestResponseDTO>> call, Throwable t) {
-                data.setValue(Resource.error(t.getMessage(), null));
+                data.setValue(Resource.error("Lỗi kết nối: " + t.getMessage(), null));
             }
         });
         return data;
