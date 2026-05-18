@@ -73,10 +73,10 @@ public class ConversationController {
 
     @Operation(summary = "Create conversation", description = "Create a new 1-1 or group conversation")
     @PostMapping
-    public ResponseEntity<Conversation> createConversation(
+    public ResponseEntity<ConversationResponseDTO> createConversation(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @Valid @RequestBody ConversationRequestDTO request) {
-        Conversation conversation = conversationService.createConversation(
+        ConversationResponseDTO conversation = conversationService.createConversation(
                 userDetails.getId(),
                 request.getName(),
                 request.getIsGroup(),
