@@ -1,6 +1,11 @@
 package com.midterm.team12345.domain.model;
 
-public class Conversation {
+import java.io.Serializable;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
+
+public class Conversation implements Serializable {
     private Long id;
     private String name;
     private Boolean isGroup;
@@ -51,4 +56,20 @@ public class Conversation {
 
     public Integer getUnreadCount() { return unreadCount; }
     public void setUnreadCount(Integer unreadCount) { this.unreadCount = unreadCount; }
+
+    // Compatibility methods for ConversationResponse
+    public Long getConversationId() { return id; }
+    public String getConversationName() { return name; }
+    public String getLastMessage() { return lastMessageContent; }
+    public Boolean getGroup() { return isGroup != null && isGroup; }
+    public Boolean getDeleted() { return false; }
+    public Boolean getEdited() { return false; }
+
+    public String getFormattedTimestamp() {
+        Long time = lastMessageCreatedAt != null ? lastMessageCreatedAt : updatedAt;
+        if (time == null || time == 0L) return "";
+        Date date = new Date(time);
+        SimpleDateFormat fmt = new SimpleDateFormat("h:mm a", Locale.getDefault());
+        return fmt.format(date);
+    }
 }

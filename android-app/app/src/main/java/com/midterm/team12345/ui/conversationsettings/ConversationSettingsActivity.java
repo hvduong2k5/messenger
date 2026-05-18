@@ -10,7 +10,7 @@ import androidx.lifecycle.ViewModelProvider;
 import com.bumptech.glide.Glide;
 import com.midterm.team12345.MainActivity;
 import com.midterm.team12345.R;
-import com.midterm.team12345.data.remote.dto.response.ConversationResponse;
+import com.midterm.team12345.domain.model.Conversation;
 import com.midterm.team12345.data.repository.ConversationRepositoryImpl;
 import com.midterm.team12345.data.repository.FriendRepositoryImpl;
 import com.midterm.team12345.databinding.ActivityConversationSettingsBinding;
@@ -20,7 +20,7 @@ import com.midterm.team12345.utils.Resource;
 
 public class ConversationSettingsActivity extends BaseActivity<ActivityConversationSettingsBinding, ConversationSettingsViewModel> {
 
-    private ConversationResponse conversation;
+    private Conversation conversation;
 
     @Override
     protected ActivityConversationSettingsBinding inflateBinding(LayoutInflater inflater) {
@@ -40,7 +40,7 @@ public class ConversationSettingsActivity extends BaseActivity<ActivityConversat
     @Override
     protected void setupViews() {
         // Lấy dữ liệu hội thoại từ Intent
-        conversation = (ConversationResponse) getIntent().getSerializableExtra("conversation");
+        conversation = (Conversation) getIntent().getSerializableExtra("conversation");
         if (conversation == null) {
             finish();
             return;

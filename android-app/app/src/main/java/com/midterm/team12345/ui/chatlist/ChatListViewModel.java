@@ -3,8 +3,8 @@ package com.midterm.team12345.ui.chatlist;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import com.midterm.team12345.data.remote.dto.MqttMessageDTO;
-import com.midterm.team12345.data.remote.dto.response.ConversationResponse;
 import com.midterm.team12345.data.remote.dto.response.ConversationResponseDTO;
+import com.midterm.team12345.domain.model.Conversation;
 import com.midterm.team12345.data.remote.dto.response.UserProfileResponseDTO;
 import com.midterm.team12345.domain.model.MqttEventType;
 import com.midterm.team12345.domain.repository.ConversationRepository;
@@ -21,8 +21,8 @@ public class ChatListViewModel extends BaseViewModel {
     private final ConversationRepository conversationRepository;
     private final UserRepository userRepository;
 
-    private final MutableLiveData<Resource<List<ConversationResponse>>> _conversationState = new MutableLiveData<>();
-    public final LiveData<Resource<List<ConversationResponse>>> conversationState = _conversationState;
+    private final MutableLiveData<Resource<List<Conversation>>> _conversationState = new MutableLiveData<>();
+    public final LiveData<Resource<List<Conversation>>> conversationState = _conversationState;
 
     private final MutableLiveData<Resource<UserProfileResponseDTO>> _profileState = new MutableLiveData<>();
     public final LiveData<Resource<UserProfileResponseDTO>> profileState = _profileState;
@@ -51,9 +51,9 @@ public class ChatListViewModel extends BaseViewModel {
     }
 
     private void updateConversationList(MqttMessageDTO mqttMessage) {
-        Resource<List<ConversationResponse>> currentResource = _conversationState.getValue();
+        Resource<List<Conversation>> currentResource = _conversationState.getValue();
         if (currentResource != null && currentResource.status == Resource.Status.SUCCESS && currentResource.data != null) {
-            List<ConversationResponse> list = new ArrayList<>(currentResource.data);
+            List<Conversation> list = new ArrayList<>(currentResource.data);
             
             Long conversationId = mqttMessage.getConversationId();
             Long senderId = null;
@@ -65,7 +65,7 @@ public class ChatListViewModel extends BaseViewModel {
 
             int foundIndex = -1;
             for (int i = 0; i < list.size(); i++) {
-                ConversationResponse item = list.get(i);
+                Conversation item = list.get(i);
                 if (conversationId != null && item.getConversationId().equals(conversationId)) {
                     foundIndex = i;
                     break;
@@ -76,17 +76,17 @@ public class ChatListViewModel extends BaseViewModel {
             }
 
             if (foundIndex != -1) {
-                ConversationResponse old = list.remove(foundIndex);
-                ConversationResponse updated = new ConversationResponse(
+                Conversation old = list.remove(foundIndex);
+                Conversation updated = new Conversation(
                         old.getConversationId(),
                         old.getConversationName(),
-                        mqttMessage.getPayload(),
+                        old.getGroup(),
                         old.getAvatarUrl(),
                         mqttMessage.getTimestamp() != null ? mqttMessage.getTimestamp() : System.currentTimeMillis(),
-                        (old.getUnreadCount() != null ? old.getUnreadCount() : 0) + 1,
-                        old.getDeleted(),
-                        old.getEdited(),
-                        old.getGroup()
+                        mqttMessage.getPayload(),
+                        senderId,
+                        mqttMessage.getTimestamp() != null ? mqttMessage.getTimestamp() : System.currentTimeMillis(),
+                        (old.getUnreadCount() != null ? old.getUnreadCount() : 0) + 1
                 );
                 list.add(0, updated);
             } else {
@@ -98,25 +98,25 @@ public class ChatListViewModel extends BaseViewModel {
     }
 
     private void updateConversationListOnEditOrRevoke(MqttMessageDTO mqttMessage) {
-        Resource<List<ConversationResponse>> currentResource = _conversationState.getValue();
+        Resource<List<Conversation>> currentResource = _conversationState.getValue();
         if (currentResource != null && currentResource.status == Resource.Status.SUCCESS && currentResource.data != null) {
-            List<ConversationResponse> list = new ArrayList<>(currentResource.data);
+            List<Conversation> list = new ArrayList<>(currentResource.data);
             Long conversationId = mqttMessage.getConversationId();
 
             if (conversationId != null) {
                 for (int i = 0; i < list.size(); i++) {
-                    ConversationResponse old = list.get(i);
+                    Conversation old = list.get(i);
                     if (old.getConversationId().equals(conversationId)) {
-                        ConversationResponse updated = new ConversationResponse(
+                        Conversation updated = new Conversation(
                                 old.getConversationId(),
                                 old.getConversationName(),
-                                mqttMessage.getPayload(),
+                                old.getGroup(),
                                 old.getAvatarUrl(),
                                 old.getUpdatedAt(),
-                                old.getUnreadCount(),
-                                old.getDeleted(),
-                                old.getEdited(),
-                                old.getGroup()
+                                mqttMessage.getPayload(),
+                                old.getLastMessageSenderId(),
+                                old.getLastMessageCreatedAt(),
+                                old.getUnreadCount()
                         );
                         list.set(i, updated);
                         break;
@@ -132,7 +132,7 @@ public class ChatListViewModel extends BaseViewModel {
         conversationRepository.getConversations(0, 50).observeForever(resource -> {
             if (resource.status == Resource.Status.SUCCESS && resource.data != null) {
                 // Thực hiện mapping từ DTO sang Domain model
-                List<ConversationResponse> domainList = resource.data.getContent().stream()
+                List<Conversation> domainList = resource.data.getContent().stream()
                         .map(this::mapToDomain)
                         .collect(Collectors.toList());
 
@@ -146,7 +146,7 @@ public class ChatListViewModel extends BaseViewModel {
         });
     }
 
-    private ConversationResponse mapToDomain(ConversationResponseDTO dto) {
+    private Conversation mapToDomain(ConversationResponseDTO dto) {
         long timestamp = 0;
         String timeStr = (dto.getLastMessageCreatedAt() != null) ? dto.getLastMessageCreatedAt() : dto.getUpdatedAt();
 
@@ -155,9 +155,9 @@ public class ChatListViewModel extends BaseViewModel {
                 // Parse chuỗi ISO sang milliseconds
                 if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
                     timestamp = LocalDateTime.parse(timeStr)
-                            .atZone(ZoneId.systemDefault())
-                            .toInstant()
-                            .toEpochMilli();
+                             .atZone(ZoneId.systemDefault())
+                             .toInstant()
+                             .toEpochMilli();
                 }
             } catch (Exception e) {
                 try {
@@ -166,16 +166,16 @@ public class ChatListViewModel extends BaseViewModel {
             }
         }
 
-        return new ConversationResponse(
+        return new Conversation(
                 dto.getId(),
                 dto.getName(),
-                dto.getLastMessageContent(),
+                dto.getIsGroup(),
                 dto.getAvatarUrl(),
                 timestamp,
-                dto.getUnreadCount() != null ? dto.getUnreadCount().intValue() : 0,
-                false,
-                false,
-                dto.getIsGroup()
+                dto.getLastMessageContent(),
+                null,
+                timestamp,
+                dto.getUnreadCount() != null ? dto.getUnreadCount().intValue() : 0
         );
     }
 

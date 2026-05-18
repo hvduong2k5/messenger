@@ -9,27 +9,30 @@ import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.midterm.team12345.R;
-import com.midterm.team12345.data.remote.dto.response.ConversationResponse;
 import com.midterm.team12345.databinding.ItemConversationBinding;
+import com.midterm.team12345.domain.model.Conversation;
 
-public class ChatListAdapter extends ListAdapter<ConversationResponse, ChatListAdapter.ViewHolder> {
+public class ChatListAdapter extends ListAdapter<Conversation, ChatListAdapter.ViewHolder> {
 
     private final OnConversationClickListener listener;
 
     public interface OnConversationClickListener {
-        void onConversationClick(ConversationResponse conversation);
+        void onConversationClick(Conversation conversation);
     }
 
     public ChatListAdapter(OnConversationClickListener listener) {
-        super(new DiffUtil.ItemCallback<ConversationResponse>() {
+        super(new DiffUtil.ItemCallback<Conversation>() {
             @Override
-            public boolean areItemsTheSame(@NonNull ConversationResponse oldItem, @NonNull ConversationResponse newItem) {
+            public boolean areItemsTheSame(@NonNull Conversation oldItem, @NonNull Conversation newItem) {
                 return oldItem.getConversationId().equals(newItem.getConversationId());
             }
 
             @Override
-            public boolean areContentsTheSame(@NonNull ConversationResponse oldItem, @NonNull ConversationResponse newItem) {
-                return oldItem.equals(newItem);
+            public boolean areContentsTheSame(@NonNull Conversation oldItem, @NonNull Conversation newItem) {
+                return oldItem.getConversationId().equals(newItem.getConversationId()) &&
+                       java.util.Objects.equals(oldItem.getConversationName(), newItem.getConversationName()) &&
+                       java.util.Objects.equals(oldItem.getLastMessage(), newItem.getLastMessage()) &&
+                       java.util.Objects.equals(oldItem.getAvatarUrl(), newItem.getAvatarUrl());
             }
         });
         this.listener = listener;
@@ -56,7 +59,7 @@ public class ChatListAdapter extends ListAdapter<ConversationResponse, ChatListA
             this.binding = binding;
         }
 
-        public void bind(ConversationResponse conversation, OnConversationClickListener listener) {
+        public void bind(Conversation conversation, OnConversationClickListener listener) {
             binding.tvConversationName.setText(conversation.getConversationName());
             binding.tvLastMessage.setText(conversation.getLastMessage());
             binding.tvTimestamp.setText(conversation.getFormattedTimestamp());
