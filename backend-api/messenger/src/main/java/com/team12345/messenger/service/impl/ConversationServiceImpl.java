@@ -15,6 +15,7 @@ import com.team12345.messenger.repository.MessageStatusRepository;
 import com.team12345.messenger.repository.ParticipantRepository;
 import com.team12345.messenger.repository.UserRepository;
 import com.team12345.messenger.service.ConversationService;
+import com.team12345.messenger.exception.UserNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -131,14 +132,14 @@ public class ConversationServiceImpl implements ConversationService {
 
     @Override
     @Transactional
-    public Conversation createConversation(Long currentUserId, String name, boolean isGroup, List<Long> participantIds) {
+    public ConversationResponseDTO createConversation(Long currentUserId, String name, boolean isGroup, List<Long> participantIds) {
         if (!participantIds.contains(currentUserId)) {
             participantIds.add(currentUserId);
         }
         if (!isGroup && participantIds.size() == 2) {
             Optional<Conversation> existing = conversationRepository.findOneToOneConversation(participantIds.get(0), participantIds.get(1));
             if (existing.isPresent()) {
-                return existing.get();
+                return mapToConversationResponseDTO(existing.get(), currentUserId);
             }
         }
         if (!isGroup) {
@@ -153,7 +154,7 @@ public class ConversationServiceImpl implements ConversationService {
         
         for (Long userId : participantIds) {
             User user = userRepository.findById(userId)
-                    .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
+                    .orElseThrow(() -> new UserNotFoundException("User not found with id: " + userId));
             
             Participant participant = Participant.builder()
                     .id(new ParticipantId(conversation.getId(), userId))
@@ -163,9 +164,10 @@ public class ConversationServiceImpl implements ConversationService {
                     .build();
             
             participantRepository.save(participant);
+            conversation.getParticipants().add(participant);
         }
         
-        return conversation;
+        return mapToConversationResponseDTO(conversation, currentUserId);
     }
 
     @Override
@@ -238,3 +240,4 @@ public class ConversationServiceImpl implements ConversationService {
         participantRepository.deleteById(targetId);
     }
 }
+
