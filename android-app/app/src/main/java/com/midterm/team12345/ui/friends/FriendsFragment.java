@@ -154,24 +154,14 @@ public class FriendsFragment extends BaseFragment<FragmentFriendsBinding, Friend
 
             @Override
             public void onAcceptRequest(Long userId) {
-                Long requestId = findRequestIdForSender(userId);
-                if (requestId != null) {
-                    viewModel.onAcceptRequest(requestId);
-                    Toast.makeText(requireContext(), "Đã chấp nhận kết bạn!", Toast.LENGTH_SHORT).show();
-                } else {
-                    Toast.makeText(requireContext(), "Lỗi: Không tìm thấy ID lời mời!", Toast.LENGTH_SHORT).show();
-                }
+                viewModel.onAcceptRequest(userId);
+                Toast.makeText(requireContext(), "Đã chấp nhận kết bạn!", Toast.LENGTH_SHORT).show();
             }
 
             @Override
             public void onRejectRequest(Long userId) {
-                Long requestId = findRequestIdForSender(userId);
-                if (requestId != null) {
-                    viewModel.onRejectRequest(requestId);
-                    Toast.makeText(requireContext(), "Đã từ chối lời mời!", Toast.LENGTH_SHORT).show();
-                } else {
-                    Toast.makeText(requireContext(), "Lỗi: Không tìm thấy ID lời mời!", Toast.LENGTH_SHORT).show();
-                }
+                viewModel.onRejectRequest(userId);
+                Toast.makeText(requireContext(), "Đã từ chối lời mời!", Toast.LENGTH_SHORT).show();
             }
 
             @Override
@@ -277,14 +267,14 @@ public class FriendsFragment extends BaseFragment<FragmentFriendsBinding, Friend
 
         FriendRequestAdapter requestAdapter = new FriendRequestAdapter(new FriendRequestAdapter.OnRequestActionListener() {
             @Override
-            public void onConfirm(Long requestId) {
-                viewModel.onAcceptRequest(requestId);
+            public void onConfirm(Long senderId) {
+                viewModel.onAcceptRequest(senderId);
                 Toast.makeText(requireContext(), "Đã chấp nhận kết bạn!", Toast.LENGTH_SHORT).show();
             }
 
             @Override
-            public void onDelete(Long requestId) {
-                viewModel.onRejectRequest(requestId);
+            public void onDelete(Long senderId) {
+                viewModel.onRejectRequest(senderId);
                 Toast.makeText(requireContext(), "Đã từ chối lời mời!", Toast.LENGTH_SHORT).show();
             }
         });

@@ -74,8 +74,8 @@ public class FriendRequestAdapter extends ListAdapter<FriendRequestResponseDTO, 
                     .error(R.drawable.ic_avatar_placeholder)
                     .into(binding.ivAvatar);
             
-            binding.btnConfirm.setOnClickListener(v -> listener.onConfirm(request.getId()));
-            binding.btnDelete.setOnClickListener(v -> listener.onDelete(request.getId()));
+            binding.btnConfirm.setOnClickListener(v -> listener.onConfirm(request.getSenderId()));
+            binding.btnDelete.setOnClickListener(v -> listener.onDelete(request.getSenderId()));
         }
     }
 }
