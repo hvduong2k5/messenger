@@ -53,16 +53,18 @@ public class ChatListViewModel extends BaseViewModel {
 
     private void updateConversationList(MqttMessageDTO mqttMessage) {
         Resource<List<Conversation>> currentResource = _conversationState.getValue();
-        if (currentResource != null && currentResource.status == Resource.Status.SUCCESS && currentResource.data != null) {
+        if (currentResource != null && currentResource.status == Resource.Status.SUCCESS
+                && currentResource.data != null) {
             List<Conversation> list = new ArrayList<>(currentResource.data);
-            
+
             Long conversationId = mqttMessage.getConversationId();
             Long senderId = null;
             try {
                 if (mqttMessage.getSender() != null) {
                     senderId = Long.parseLong(mqttMessage.getSender());
                 }
-            } catch (NumberFormatException ignored) {}
+            } catch (NumberFormatException ignored) {
+            }
 
             int foundIndex = -1;
             for (int i = 0; i < list.size(); i++) {
@@ -87,8 +89,7 @@ public class ChatListViewModel extends BaseViewModel {
                         mqttMessage.getPayload(),
                         senderId,
                         mqttMessage.getTimestamp() != null ? mqttMessage.getTimestamp() : System.currentTimeMillis(),
-                        (old.getUnreadCount() != null ? old.getUnreadCount() : 0) + 1
-                );
+                        (old.getUnreadCount() != null ? old.getUnreadCount() : 0) + 1);
                 list.add(0, updated);
             } else {
                 fetchConversations();
@@ -100,7 +101,8 @@ public class ChatListViewModel extends BaseViewModel {
 
     private void updateConversationListOnEditOrRevoke(MqttMessageDTO mqttMessage) {
         Resource<List<Conversation>> currentResource = _conversationState.getValue();
-        if (currentResource != null && currentResource.status == Resource.Status.SUCCESS && currentResource.data != null) {
+        if (currentResource != null && currentResource.status == Resource.Status.SUCCESS
+                && currentResource.data != null) {
             List<Conversation> list = new ArrayList<>(currentResource.data);
             Long conversationId = mqttMessage.getConversationId();
 
@@ -117,8 +119,7 @@ public class ChatListViewModel extends BaseViewModel {
                                 mqttMessage.getPayload(),
                                 old.getLastMessageSenderId(),
                                 old.getLastMessageCreatedAt(),
-                                old.getUnreadCount()
-                        );
+                                old.getUnreadCount());
                         list.set(i, updated);
                         break;
                     }
@@ -132,18 +133,17 @@ public class ChatListViewModel extends BaseViewModel {
         showLoading();
         conversationRepository.getConversations(0, 50).observeForever(resource -> {
             if (resource.status == Resource.Status.SUCCESS && resource.data != null) {
-                // Thực hiện mapping từ DTO sang Domain model và sắp xếp theo cái mới nhất lên trên
+                // Thực hiện mapping từ DTO sang Domain model và sắp xếp theo cái mới nhất lên
+                // trên
                 List<Conversation> domainList = resource.data.getContent().stream()
                         .map(this::mapToDomain)
                         .sorted((c1, c2) -> {
                             long t1 = Math.max(
-                                c1.getLastMessageCreatedAt() != null ? c1.getLastMessageCreatedAt() : 0L,
-                                c1.getUpdatedAt() != null ? c1.getUpdatedAt() : 0L
-                            );
+                                    c1.getLastMessageCreatedAt() != null ? c1.getLastMessageCreatedAt() : 0L,
+                                    c1.getUpdatedAt() != null ? c1.getUpdatedAt() : 0L);
                             long t2 = Math.max(
-                                c2.getLastMessageCreatedAt() != null ? c2.getLastMessageCreatedAt() : 0L,
-                                c2.getUpdatedAt() != null ? c2.getUpdatedAt() : 0L
-                            );
+                                    c2.getLastMessageCreatedAt() != null ? c2.getLastMessageCreatedAt() : 0L,
+                                    c2.getUpdatedAt() != null ? c2.getUpdatedAt() : 0L);
                             return Long.compare(t2, t1);
                         })
                         .collect(Collectors.toList());
@@ -151,7 +151,8 @@ public class ChatListViewModel extends BaseViewModel {
                 _conversationState.setValue(Resource.success(domainList));
                 hideLoading();
             } else if (resource.status == Resource.Status.ERROR) {
-                _conversationState.setValue(Resource.error(resource.message != null ? resource.message : "Error", null));
+                _conversationState
+                        .setValue(Resource.error(resource.message != null ? resource.message : "Error", null));
                 setError(resource.message);
                 hideLoading();
             }
@@ -172,8 +173,7 @@ public class ChatListViewModel extends BaseViewModel {
                 dto.getLastMessageContent(),
                 null,
                 timestamp,
-                dto.getUnreadCount() != null ? dto.getUnreadCount().intValue() : 0
-        );
+                dto.getUnreadCount() != null ? dto.getUnreadCount().intValue() : 0);
     }
 
     public void fetchMyProfile() {
