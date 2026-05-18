@@ -26,17 +26,20 @@ public class AuthRepositoryImpl implements AuthRepository {
     private static AuthRepositoryImpl instance;
     private final AuthApiService authApiService;
     private final TokenManager tokenManager;
+    private final Application application;
 
-    private AuthRepositoryImpl(AuthApiService authApiService, TokenManager tokenManager) {
+    private AuthRepositoryImpl(AuthApiService authApiService, TokenManager tokenManager, Application application) {
         this.authApiService = authApiService;
         this.tokenManager = tokenManager;
+        this.application = application;
     }
 
     public static synchronized AuthRepositoryImpl getInstance(Application application) {
         if (instance == null) {
             instance = new AuthRepositoryImpl(
                     RetrofitClient.getAuthApiService(application),
-                    new TokenManager(application)
+                    new TokenManager(application),
+                    application
             );
         }
         return instance;
@@ -145,16 +148,27 @@ public class AuthRepositoryImpl implements AuthRepository {
         authApiService.logout().enqueue(new Callback<Void>() {
             @Override
             public void onResponse(@NonNull Call<Void> call, @NonNull Response<Void> response) {
-                tokenManager.clear();
+                clearLocalData();
                 result.setValue(Resource.success(null));
             }
             @Override
             public void onFailure(@NonNull Call<Void> call, @NonNull Throwable t) {
-                tokenManager.clear();
+                clearLocalData();
                 result.setValue(Resource.error("Logout error", null));
             }
         });
         return result;
+    }
+
+    private void clearLocalData() {
+        tokenManager.clear();
+        new Thread(() -> {
+            try {
+                com.midterm.team12345.data.local.database.MessengerDatabase.getInstance(application).clearAllTables();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }).start();
     }
 
     private void saveAuthData(AuthResponseDTO response) {
