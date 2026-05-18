@@ -64,15 +64,26 @@ public class ConversationServiceImpl implements ConversationService {
         long unreadCount = messageStatusRepository.countUnreadInConversation(userId, conversation.getId(), MessageStatusEnum.read);
         
         String displayableName = conversation.getName();
+        String avatarUrl = null;
         
-        // Nếu là chat 1-1 và name đang trống
-        if (Boolean.FALSE.equals(conversation.getIsGroup()) && (displayableName == null || displayableName.trim().isEmpty())) {
+        // Nếu là chat 1-1
+        if (Boolean.FALSE.equals(conversation.getIsGroup())) {
             List<Participant> participants = participantRepository.findById_ConversationId(conversation.getId());
-            displayableName = participants.stream()
+            Optional<Participant> otherParticipant = participants.stream()
                     .filter(p -> !p.getUser().getId().equals(userId))
-                    .findFirst()
-                    .map(p -> p.getUser().getUsername()) // Hoặc getFullName() tuỳ logic hiển thị
-                    .orElse("Người dùng ẩn danh"); 
+                    .findFirst();
+            
+            if (otherParticipant.isPresent()) {
+                User otherUser = otherParticipant.get().getUser();
+                if (displayableName == null || displayableName.trim().isEmpty()) {
+                    displayableName = otherUser.getUsername(); // Hoặc getFullName() tuỳ logic hiển thị
+                }
+                avatarUrl = otherUser.getAvatarUrl();
+            } else {
+                if (displayableName == null || displayableName.trim().isEmpty()) {
+                    displayableName = "Người dùng ẩn danh";
+                }
+            }
         }
 
         return ConversationResponseDTO.builder()
@@ -83,6 +94,7 @@ public class ConversationServiceImpl implements ConversationService {
                 .lastMessageContent(lastMessage.map(Message::getContent).orElse(null))
                 .lastMessageCreatedAt(lastMessage.map(Message::getCreatedAt).orElse(null))
                 .unreadCount(unreadCount)
+                .avatarUrl(avatarUrl)
                 .build();
     }
 
