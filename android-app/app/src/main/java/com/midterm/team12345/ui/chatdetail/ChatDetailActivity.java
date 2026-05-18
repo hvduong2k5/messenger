@@ -46,8 +46,7 @@ public class ChatDetailActivity extends AppCompatActivity {
                 if (result.getResultCode() == Activity.RESULT_OK && result.getData() != null) {
                     handlePickedFiles(result.getData());
                 }
-            }
-    );
+            });
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,11 +60,14 @@ public class ChatDetailActivity extends AppCompatActivity {
         } else if (conversationExtra instanceof ConversationResponseDTO) {
             ConversationResponseDTO conversationDto = (ConversationResponseDTO) conversationExtra;
             long timestamp = 0;
-            String timeStr = (conversationDto.getLastMessageCreatedAt() != null) ? conversationDto.getLastMessageCreatedAt() : conversationDto.getUpdatedAt();
+            String timeStr = (conversationDto.getLastMessageCreatedAt() != null)
+                    ? conversationDto.getLastMessageCreatedAt()
+                    : conversationDto.getUpdatedAt();
             if (timeStr != null && !timeStr.isEmpty()) {
                 try {
                     timestamp = Long.parseLong(timeStr);
-                } catch (NumberFormatException ignored) {}
+                } catch (NumberFormatException ignored) {
+                }
             }
             conversation = new Conversation(
                     conversationDto.getId(),
@@ -76,10 +78,9 @@ public class ChatDetailActivity extends AppCompatActivity {
                     conversationDto.getLastMessageContent(),
                     null,
                     timestamp,
-                    conversationDto.getUnreadCount() != null ? conversationDto.getUnreadCount().intValue() : 0
-            );
+                    conversationDto.getUnreadCount() != null ? conversationDto.getUnreadCount().intValue() : 0);
         }
-        
+
         if (conversation != null) {
             conversationId = conversation.getConversationId();
         } else {
@@ -94,10 +95,10 @@ public class ChatDetailActivity extends AppCompatActivity {
 
         setupViewModel();
         setupObservers();
-        
+
         viewModel.fetchMyProfile();
         setupUI();
-        
+
         if (conversationId != null && conversationId != -1L) {
             viewModel.loadMessages(conversationId);
         } else {
@@ -114,7 +115,8 @@ public class ChatDetailActivity extends AppCompatActivity {
             binding.tvPartnerName.setText(conversation.getConversationName());
             String avatarUrl = conversation.getAvatarUrl();
             if (avatarUrl != null && !avatarUrl.startsWith("http")) {
-                avatarUrl = com.midterm.team12345.data.remote.RetrofitClient.getBaseUrl() + (avatarUrl.startsWith("/") ? "" : "/") + avatarUrl;
+                avatarUrl = com.midterm.team12345.data.remote.RetrofitClient.getBaseUrl()
+                        + (avatarUrl.startsWith("/") ? "" : "/") + avatarUrl;
             }
             Glide.with(this)
                     .load(avatarUrl)
@@ -148,7 +150,7 @@ public class ChatDetailActivity extends AppCompatActivity {
 
         // Setup Attach Button
         binding.btnAttach.setOnClickListener(v -> openFilePicker());
-        
+
         binding.btnSend.setOnClickListener(v -> {
             String text = binding.etMessage.getText().toString();
             // Cho phép gửi nếu có text hoặc có file đính kèm
@@ -204,7 +206,8 @@ public class ChatDetailActivity extends AppCompatActivity {
 
     private File getFileFromUri(Uri uri) throws Exception {
         InputStream inputStream = getContentResolver().openInputStream(uri);
-        if (inputStream == null) return null;
+        if (inputStream == null)
+            return null;
 
         // Tạo file tạm trong cache của app
         String fileName = "temp_file_" + System.currentTimeMillis();
@@ -228,8 +231,7 @@ public class ChatDetailActivity extends AppCompatActivity {
         ChatDetailViewModelFactory factory = new ChatDetailViewModelFactory(
                 MessageRepositoryImpl.getInstance(this),
                 ConversationRepositoryImpl.getInstance(this),
-                UserRepositoryImpl.getInstance(this)
-        );
+                UserRepositoryImpl.getInstance(this));
         viewModel = new ViewModelProvider(this, factory).get(ChatDetailViewModel.class);
     }
 
@@ -245,8 +247,9 @@ public class ChatDetailActivity extends AppCompatActivity {
         });
 
         viewModel.messageState.observe(this, resource -> {
-            if (resource == null) return;
-            
+            if (resource == null)
+                return;
+
             switch (resource.status) {
                 case LOADING:
                     binding.loadingProgressBar.setVisibility(View.VISIBLE);
@@ -269,15 +272,16 @@ public class ChatDetailActivity extends AppCompatActivity {
         });
 
         viewModel.createConversationState.observe(this, resource -> {
-            if (resource == null) return;
-            
+            if (resource == null)
+                return;
+
             if (resource.status == Resource.Status.LOADING) {
                 binding.loadingProgressBar.setVisibility(View.VISIBLE);
             } else if (resource.status == Resource.Status.SUCCESS && resource.data != null) {
                 binding.loadingProgressBar.setVisibility(View.GONE);
                 ConversationResponseDTO dto = resource.data;
                 conversationId = dto.getId();
-                
+
                 conversation = new Conversation(
                         dto.getId(),
                         dto.getName(),
@@ -287,13 +291,13 @@ public class ChatDetailActivity extends AppCompatActivity {
                         dto.getLastMessageContent(),
                         null,
                         System.currentTimeMillis(),
-                        dto.getUnreadCount() != null ? dto.getUnreadCount().intValue() : 0
-                );
-                
+                        dto.getUnreadCount() != null ? dto.getUnreadCount().intValue() : 0);
+
                 binding.tvPartnerName.setText(conversation.getConversationName());
                 String avatarUrl = conversation.getAvatarUrl();
                 if (avatarUrl != null && !avatarUrl.startsWith("http")) {
-                    avatarUrl = com.midterm.team12345.data.remote.RetrofitClient.getBaseUrl() + (avatarUrl.startsWith("/") ? "" : "/") + avatarUrl;
+                    avatarUrl = com.midterm.team12345.data.remote.RetrofitClient.getBaseUrl()
+                            + (avatarUrl.startsWith("/") ? "" : "/") + avatarUrl;
                 }
                 Glide.with(this)
                         .load(avatarUrl)
