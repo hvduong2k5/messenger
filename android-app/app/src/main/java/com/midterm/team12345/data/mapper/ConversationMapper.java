@@ -14,7 +14,8 @@ import java.util.stream.Collectors;
 public class ConversationMapper {
 
     public static ConversationEntity toEntity(ConversationResponseDTO dto) {
-        if (dto == null) return null;
+        if (dto == null)
+            return null;
         ConversationEntity entity = new ConversationEntity();
         entity.setId(dto.getId());
         entity.setName(dto.getName());
@@ -28,7 +29,8 @@ public class ConversationMapper {
     }
 
     public static Conversation toDomain(ConversationEntity entity) {
-        if (entity == null) return null;
+        if (entity == null)
+            return null;
         return new Conversation(
                 entity.getId(),
                 entity.getName(),
@@ -38,12 +40,12 @@ public class ConversationMapper {
                 entity.getLastMessageContent(),
                 entity.getLastMessageSenderId(),
                 entity.getLastMessageCreatedAt(),
-                entity.getUnreadCount()
-        );
+                entity.getUnreadCount());
     }
 
     public static ConversationEntity toEntity(Conversation domain) {
-        if (domain == null) return null;
+        if (domain == null)
+            return null;
         ConversationEntity entity = new ConversationEntity();
         entity.setId(domain.getId());
         entity.setName(domain.getName());
@@ -57,26 +59,25 @@ public class ConversationMapper {
         return entity;
     }
 
-
-
     public static List<Conversation> toDomainList(List<ConversationEntity> entities) {
-        if (entities == null) return Collections.emptyList();
+        if (entities == null)
+            return Collections.emptyList();
         return entities.stream()
                 .map(ConversationMapper::toDomain)
                 .collect(Collectors.toList());
     }
 
     public static List<ConversationEntity> toEntityList(List<ConversationResponseDTO> dtos) {
-        if (dtos == null) return Collections.emptyList();
+        if (dtos == null)
+            return Collections.emptyList();
         return dtos.stream()
                 .map(ConversationMapper::toEntity)
                 .collect(Collectors.toList());
     }
 
-
-
     public static ConversationResponseDTO toDto(ConversationEntity entity) {
-        if (entity == null) return null;
+        if (entity == null)
+            return null;
         ConversationResponseDTO dto = new ConversationResponseDTO();
         dto.setId(entity.getId());
         dto.setName(entity.getName());
@@ -84,44 +85,51 @@ public class ConversationMapper {
         dto.setAvatarUrl(entity.getAvatarUrl());
         dto.setUpdatedAt(entity.getUpdatedAt() != null ? String.valueOf(entity.getUpdatedAt()) : null);
         dto.setLastMessageContent(entity.getLastMessageContent());
-        dto.setLastMessageCreatedAt(entity.getLastMessageCreatedAt() != null ? String.valueOf(entity.getLastMessageCreatedAt()) : null);
+        dto.setLastMessageCreatedAt(
+                entity.getLastMessageCreatedAt() != null ? String.valueOf(entity.getLastMessageCreatedAt()) : null);
         dto.setUnreadCount(entity.getUnreadCount() != null ? entity.getUnreadCount().longValue() : 0L);
         return dto;
     }
 
     public static List<ConversationResponseDTO> toDtoList(List<ConversationEntity> entities) {
-        if (entities == null) return Collections.emptyList();
+        if (entities == null)
+            return Collections.emptyList();
         return entities.stream()
                 .map(ConversationMapper::toDto)
                 .collect(Collectors.toList());
     }
 
     public static Long parseDateStringToLong(String timeStr) {
-        if (timeStr == null || timeStr.isEmpty()) return null;
+        if (timeStr == null || timeStr.isEmpty())
+            return null;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             try {
                 return java.time.Instant.parse(timeStr).toEpochMilli();
-            } catch (Exception ignored) {}
+            } catch (Exception ignored) {
+            }
             try {
                 return java.time.OffsetDateTime.parse(timeStr).toInstant().toEpochMilli();
-            } catch (Exception ignored) {}
+            } catch (Exception ignored) {
+            }
             try {
                 return java.time.ZonedDateTime.parse(timeStr).toInstant().toEpochMilli();
-            } catch (Exception ignored) {}
+            } catch (Exception ignored) {
+            }
             try {
                 return java.time.LocalDateTime.parse(timeStr)
                         .atZone(ZoneId.systemDefault())
                         .toInstant()
                         .toEpochMilli();
-            } catch (Exception ignored) {}
+            } catch (Exception ignored) {
+            }
         }
-        
+
         String[] formats = {
-            "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",
-            "yyyy-MM-dd'T'HH:mm:ss'Z'",
-            "yyyy-MM-dd'T'HH:mm:ss.SSSZZZZZ",
-            "yyyy-MM-dd'T'HH:mm:ssZZZZZ",
-            "yyyy-MM-dd'T'HH:mm:ss"
+                "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",
+                "yyyy-MM-dd'T'HH:mm:ss'Z'",
+                "yyyy-MM-dd'T'HH:mm:ss.SSSZZZZZ",
+                "yyyy-MM-dd'T'HH:mm:ssZZZZZ",
+                "yyyy-MM-dd'T'HH:mm:ss"
         };
         for (String format : formats) {
             try {
@@ -130,13 +138,15 @@ public class ConversationMapper {
                     sdf.setTimeZone(java.util.TimeZone.getTimeZone("UTC"));
                 }
                 return sdf.parse(timeStr).getTime();
-            } catch (Exception ignored) {}
+            } catch (Exception ignored) {
+            }
         }
-        
+
         try {
             return Long.parseLong(timeStr);
-        } catch (NumberFormatException ignored) {}
-        
+        } catch (NumberFormatException ignored) {
+        }
+
         return null;
     }
 }
