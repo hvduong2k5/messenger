@@ -128,7 +128,7 @@ class ConversationControllerTest {
                 .participantIds(List.of(1L, 2L))
                 .build();
 
-        Conversation conversation = Conversation.builder()
+        ConversationResponseDTO conversation = ConversationResponseDTO.builder()
                 .id(1L)
                 .name("New Group")
                 .isGroup(true)
