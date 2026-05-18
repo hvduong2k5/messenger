@@ -3,7 +3,6 @@ package com.midterm.team12345.data.mapper;
 import android.os.Build;
 import com.midterm.team12345.data.local.entity.ConversationEntity;
 import com.midterm.team12345.data.remote.dto.response.ConversationResponseDTO;
-import com.midterm.team12345.data.remote.dto.response.ConversationResponse;
 import com.midterm.team12345.domain.model.Conversation;
 
 import java.time.LocalDateTime;
@@ -58,20 +57,7 @@ public class ConversationMapper {
         return entity;
     }
 
-    public static ConversationResponse toResponse(ConversationEntity entity) {
-        if (entity == null) return null;
-        return new ConversationResponse(
-                entity.getId(),
-                entity.getName(),
-                entity.getLastMessageContent(),
-                entity.getAvatarUrl(),
-                entity.getUpdatedAt(),
-                entity.getUnreadCount(),
-                false,
-                false,
-                entity.getIsGroup()
-        );
-    }
+
 
     public static List<Conversation> toDomainList(List<ConversationEntity> entities) {
         if (entities == null) return Collections.emptyList();
@@ -87,12 +73,7 @@ public class ConversationMapper {
                 .collect(Collectors.toList());
     }
 
-    public static List<ConversationResponse> toResponseList(List<ConversationEntity> entities) {
-        if (entities == null) return Collections.emptyList();
-        return entities.stream()
-                .map(ConversationMapper::toResponse)
-                .collect(Collectors.toList());
-    }
+
 
     public static ConversationResponseDTO toDto(ConversationEntity entity) {
         if (entity == null) return null;

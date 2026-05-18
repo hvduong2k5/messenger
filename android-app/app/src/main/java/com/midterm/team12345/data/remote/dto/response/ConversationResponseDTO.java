@@ -1,8 +1,9 @@
 package com.midterm.team12345.data.remote.dto.response;
 
 import com.google.gson.annotations.SerializedName;
+import java.io.Serializable;
 
-public class ConversationResponseDTO {
+public class ConversationResponseDTO implements Serializable {
     @SerializedName("id")
     private Long id;
 

@@ -4,7 +4,7 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
 import com.midterm.team12345.data.remote.dto.request.ConversationRequestDTO;
-import com.midterm.team12345.data.remote.dto.response.ConversationResponse;
+import com.midterm.team12345.data.remote.dto.response.ConversationResponseDTO;
 import com.midterm.team12345.data.remote.dto.response.UserResponseDTO;
 import com.midterm.team12345.domain.repository.ConversationRepository;
 import com.midterm.team12345.domain.repository.FriendRepository;
@@ -24,8 +24,8 @@ public class CreateGroupViewModel extends BaseViewModel {
         return _selectedUsers;
     }
 
-    private final MutableLiveData<Resource<ConversationResponse>> _createState = new MutableLiveData<>();
-    public LiveData<Resource<ConversationResponse>> getCreateState() {
+    private final MutableLiveData<Resource<ConversationResponseDTO>> _createState = new MutableLiveData<>();
+    public LiveData<Resource<ConversationResponseDTO>> getCreateState() {
         return _createState;
     }
 
@@ -89,19 +89,7 @@ public class CreateGroupViewModel extends BaseViewModel {
         
         conversationRepository.createConversation(request).observeForever(resource -> {
             if (resource.status == Resource.Status.SUCCESS && resource.data != null) {
-                com.midterm.team12345.data.remote.dto.response.ConversationResponseDTO dto = resource.data;
-                ConversationResponse domain = new ConversationResponse(
-                        dto.getId(),
-                        dto.getName(),
-                        dto.getLastMessageContent(),
-                        dto.getAvatarUrl(),
-                        System.currentTimeMillis(),
-                        0,
-                        false,
-                        false,
-                        dto.getIsGroup()
-                );
-                _createState.setValue(Resource.success(domain));
+                _createState.setValue(Resource.success(resource.data));
             } else if (resource.status == Resource.Status.ERROR) {
                 _createState.setValue(Resource.error(resource.message, null));
             } else {

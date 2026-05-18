@@ -11,6 +11,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
+import com.midterm.team12345.data.remote.dto.response.ConversationResponseDTO;
 import com.midterm.team12345.data.repository.ConversationRepositoryImpl;
 import com.midterm.team12345.data.repository.FriendRepositoryImpl;
 import com.midterm.team12345.databinding.ActivityCreateGroupBinding;

@@ -14,7 +14,8 @@ import androidx.lifecycle.ViewModelProvider;
 
 import com.bumptech.glide.Glide;
 import com.midterm.team12345.R;
-import com.midterm.team12345.data.remote.dto.response.ConversationResponse;
+import com.midterm.team12345.data.remote.dto.response.ConversationResponseDTO;
+import com.midterm.team12345.domain.model.Conversation;
 import com.midterm.team12345.data.repository.ConversationRepositoryImpl;
 import com.midterm.team12345.data.repository.MessageRepositoryImpl;
 import com.midterm.team12345.data.repository.UserRepositoryImpl;
@@ -36,7 +37,7 @@ public class ChatDetailActivity extends AppCompatActivity {
     private SelectedFilesAdapter selectedFilesAdapter;
     private Long currentUserId = -1L;
     private Long conversationId;
-    private ConversationResponse conversation;
+    private Conversation conversation;
 
     // File Picker Launcher
     private final ActivityResultLauncher<Intent> filePickerLauncher = registerForActivityResult(
@@ -54,7 +55,30 @@ public class ChatDetailActivity extends AppCompatActivity {
         binding = ActivityChatDetailBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
-        conversation = (ConversationResponse) getIntent().getSerializableExtra("conversation");
+        Object conversationExtra = getIntent().getSerializableExtra("conversation");
+        if (conversationExtra instanceof Conversation) {
+            conversation = (Conversation) conversationExtra;
+        } else if (conversationExtra instanceof ConversationResponseDTO) {
+            ConversationResponseDTO conversationDto = (ConversationResponseDTO) conversationExtra;
+            long timestamp = 0;
+            String timeStr = (conversationDto.getLastMessageCreatedAt() != null) ? conversationDto.getLastMessageCreatedAt() : conversationDto.getUpdatedAt();
+            if (timeStr != null && !timeStr.isEmpty()) {
+                try {
+                    timestamp = Long.parseLong(timeStr);
+                } catch (NumberFormatException ignored) {}
+            }
+            conversation = new Conversation(
+                    conversationDto.getId(),
+                    conversationDto.getName(),
+                    conversationDto.getIsGroup(),
+                    conversationDto.getAvatarUrl(),
+                    timestamp,
+                    conversationDto.getLastMessageContent(),
+                    null,
+                    timestamp,
+                    conversationDto.getUnreadCount() != null ? conversationDto.getUnreadCount().intValue() : 0
+            );
+        }
         
         if (conversation != null) {
             conversationId = conversation.getConversationId();
