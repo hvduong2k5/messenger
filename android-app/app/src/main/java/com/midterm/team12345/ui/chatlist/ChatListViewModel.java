@@ -11,6 +11,7 @@ import com.midterm.team12345.domain.repository.ConversationRepository;
 import com.midterm.team12345.domain.repository.UserRepository;
 import com.midterm.team12345.ui.base.BaseViewModel;
 import com.midterm.team12345.utils.Resource;
+import com.midterm.team12345.data.mapper.ConversationMapper;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
@@ -131,9 +132,20 @@ public class ChatListViewModel extends BaseViewModel {
         showLoading();
         conversationRepository.getConversations(0, 50).observeForever(resource -> {
             if (resource.status == Resource.Status.SUCCESS && resource.data != null) {
-                // Thực hiện mapping từ DTO sang Domain model
+                // Thực hiện mapping từ DTO sang Domain model và sắp xếp theo cái mới nhất lên trên
                 List<Conversation> domainList = resource.data.getContent().stream()
                         .map(this::mapToDomain)
+                        .sorted((c1, c2) -> {
+                            long t1 = Math.max(
+                                c1.getLastMessageCreatedAt() != null ? c1.getLastMessageCreatedAt() : 0L,
+                                c1.getUpdatedAt() != null ? c1.getUpdatedAt() : 0L
+                            );
+                            long t2 = Math.max(
+                                c2.getLastMessageCreatedAt() != null ? c2.getLastMessageCreatedAt() : 0L,
+                                c2.getUpdatedAt() != null ? c2.getUpdatedAt() : 0L
+                            );
+                            return Long.compare(t2, t1);
+                        })
                         .collect(Collectors.toList());
 
                 _conversationState.setValue(Resource.success(domainList));
@@ -147,24 +159,9 @@ public class ChatListViewModel extends BaseViewModel {
     }
 
     private Conversation mapToDomain(ConversationResponseDTO dto) {
-        long timestamp = 0;
         String timeStr = (dto.getLastMessageCreatedAt() != null) ? dto.getLastMessageCreatedAt() : dto.getUpdatedAt();
-
-        if (timeStr != null && !timeStr.isEmpty()) {
-            try {
-                // Parse chuỗi ISO sang milliseconds
-                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-                    timestamp = LocalDateTime.parse(timeStr)
-                             .atZone(ZoneId.systemDefault())
-                             .toInstant()
-                             .toEpochMilli();
-                }
-            } catch (Exception e) {
-                try {
-                    timestamp = Long.parseLong(timeStr);
-                } catch (NumberFormatException ignored) {}
-            }
-        }
+        Long parsed = ConversationMapper.parseDateStringToLong(timeStr);
+        long timestamp = parsed != null ? parsed : 0L;
 
         return new Conversation(
                 dto.getId(),
