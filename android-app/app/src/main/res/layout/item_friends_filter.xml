@@ -12,13 +12,12 @@
         android:paddingVertical="8dp">
 
         <TextView
-            style="@style/FriendFilterChip"
+            style="@style/FriendFilterChipSelected"
             android:layout_marginEnd="8dp"
-            android:background="@drawable/bg_filter_chip_selected"
             android:text="Tất cả" />
 
         <TextView
-            style="@style/FriendFilterChip"
+            style="@style/FriendFilterChipUnselected"
             android:text="Mới truy cập" />
 
     </LinearLayout>
