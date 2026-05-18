@@ -28,27 +28,67 @@ public class ConversationResponseDTO implements Serializable {
     @SerializedName("avatarUrl")
     private String avatarUrl;
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public Long getId() {
+        return id;
+    }
 
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    public Boolean getIsGroup() { return isGroup; }
-    public void setIsGroup(Boolean isGroup) { this.isGroup = isGroup; }
+    public String getName() {
+        return name;
+    }
 
-    public String getUpdatedAt() { return updatedAt; }
-    public void setUpdatedAt(String updatedAt) { this.updatedAt = updatedAt; }
+    public void setName(String name) {
+        this.name = name;
+    }
 
-    public String getLastMessageContent() { return lastMessageContent; }
-    public void setLastMessageContent(String lastMessageContent) { this.lastMessageContent = lastMessageContent; }
+    public Boolean getIsGroup() {
+        return isGroup;
+    }
 
-    public String getLastMessageCreatedAt() { return lastMessageCreatedAt; }
-    public void setLastMessageCreatedAt(String lastMessageCreatedAt) { this.lastMessageCreatedAt = lastMessageCreatedAt; }
+    public void setIsGroup(Boolean isGroup) {
+        this.isGroup = isGroup;
+    }
 
-    public Long getUnreadCount() { return unreadCount; }
-    public void setUnreadCount(Long unreadCount) { this.unreadCount = unreadCount; }
+    public String getUpdatedAt() {
+        return updatedAt;
+    }
 
-    public String getAvatarUrl() { return avatarUrl; }
-    public void setAvatarUrl(String avatarUrl) { this.avatarUrl = avatarUrl; }
+    public void setUpdatedAt(String updatedAt) {
+        this.updatedAt = updatedAt;
+    }
+
+    public String getLastMessageContent() {
+        return lastMessageContent;
+    }
+
+    public void setLastMessageContent(String lastMessageContent) {
+        this.lastMessageContent = lastMessageContent;
+    }
+
+    public String getLastMessageCreatedAt() {
+        return lastMessageCreatedAt;
+    }
+
+    public void setLastMessageCreatedAt(String lastMessageCreatedAt) {
+        this.lastMessageCreatedAt = lastMessageCreatedAt;
+    }
+
+    public Long getUnreadCount() {
+        return unreadCount;
+    }
+
+    public void setUnreadCount(Long unreadCount) {
+        this.unreadCount = unreadCount;
+    }
+
+    public String getAvatarUrl() {
+        return avatarUrl;
+    }
+
+    public void setAvatarUrl(String avatarUrl) {
+        this.avatarUrl = avatarUrl;
+    }
 }
