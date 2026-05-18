@@ -63,7 +63,7 @@ public class MainActivity extends AppCompatActivity {
             if (itemId == R.id.nav_chats) {
                 fragment = new ChatListFragment();
             } else if (itemId == R.id.nav_people) {
-                // fragment = new PeopleFragment(); // To be implemented
+                fragment = new com.midterm.team12345.ui.friends.FriendsFragment();
             } else if (itemId == R.id.nav_settings) {
                 fragment = new SettingsFragment();
             }
