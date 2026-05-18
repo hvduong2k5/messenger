@@ -26,13 +26,19 @@ public class FriendRequestAdapter extends ListAdapter<FriendRequestResponseDTO, 
         super(new DiffUtil.ItemCallback<FriendRequestResponseDTO>() {
             @Override
             public boolean areItemsTheSame(@NonNull FriendRequestResponseDTO oldItem, @NonNull FriendRequestResponseDTO newItem) {
-                return oldItem.getId().equals(newItem.getId());
+                if (oldItem.getSenderId() != null && newItem.getSenderId() != null) {
+                    return oldItem.getSenderId().equals(newItem.getSenderId());
+                }
+                return false;
             }
 
             @Override
             public boolean areContentsTheSame(@NonNull FriendRequestResponseDTO oldItem, @NonNull FriendRequestResponseDTO newItem) {
-                return oldItem.getSenderUsername().equals(newItem.getSenderUsername()) &&
-                       (oldItem.getSenderAvatarUrl() != null && oldItem.getSenderAvatarUrl().equals(newItem.getSenderAvatarUrl()));
+                String oldName = oldItem.getSenderUsername() != null ? oldItem.getSenderUsername() : "";
+                String newName = newItem.getSenderUsername() != null ? newItem.getSenderUsername() : "";
+                String oldAvatar = oldItem.getSenderAvatarUrl() != null ? oldItem.getSenderAvatarUrl() : "";
+                String newAvatar = newItem.getSenderAvatarUrl() != null ? newItem.getSenderAvatarUrl() : "";
+                return oldName.equals(newName) && oldAvatar.equals(newAvatar);
             }
         });
         this.listener = listener;
