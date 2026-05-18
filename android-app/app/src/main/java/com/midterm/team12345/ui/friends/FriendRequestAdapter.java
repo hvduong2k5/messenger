@@ -8,29 +8,31 @@ import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.bumptech.glide.Glide;
+import com.midterm.team12345.R;
 import com.midterm.team12345.databinding.ItemFriendRequestBinding;
-import com.midterm.team12345.network.UserResponse;
+import com.midterm.team12345.data.remote.dto.response.FriendRequestResponseDTO;
 
-public class FriendRequestAdapter extends ListAdapter<UserResponse, FriendRequestAdapter.ViewHolder> {
+public class FriendRequestAdapter extends ListAdapter<FriendRequestResponseDTO, FriendRequestAdapter.ViewHolder> {
 
     private final OnRequestActionListener listener;
 
     public interface OnRequestActionListener {
-        void onConfirm(Long userId);
-        void onDelete(Long userId);
+        void onConfirm(Long requestId);
+        void onDelete(Long requestId);
     }
 
     public FriendRequestAdapter(OnRequestActionListener listener) {
-        super(new DiffUtil.ItemCallback<UserResponse>() {
+        super(new DiffUtil.ItemCallback<FriendRequestResponseDTO>() {
             @Override
-            public boolean areItemsTheSame(@NonNull UserResponse oldItem, @NonNull UserResponse newItem) {
+            public boolean areItemsTheSame(@NonNull FriendRequestResponseDTO oldItem, @NonNull FriendRequestResponseDTO newItem) {
                 return oldItem.getId().equals(newItem.getId());
             }
 
             @Override
-            public boolean areContentsTheSame(@NonNull UserResponse oldItem, @NonNull UserResponse newItem) {
-                return oldItem.getUsername().equals(newItem.getUsername()) &&
-                       oldItem.getAvatarUrl().equals(newItem.getAvatarUrl());
+            public boolean areContentsTheSame(@NonNull FriendRequestResponseDTO oldItem, @NonNull FriendRequestResponseDTO newItem) {
+                return oldItem.getSenderUsername().equals(newItem.getSenderUsername()) &&
+                       (oldItem.getSenderAvatarUrl() != null && oldItem.getSenderAvatarUrl().equals(newItem.getSenderAvatarUrl()));
             }
         });
         this.listener = listener;
@@ -56,12 +58,24 @@ public class FriendRequestAdapter extends ListAdapter<UserResponse, FriendReques
             this.binding = binding;
         }
 
-        void bind(UserResponse user) {
-            binding.tvName.setText(user.getUsername());
-            // Glide.with(binding.ivAvatar).load(user.getAvatarUrl()).into(binding.ivAvatar);
+        void bind(FriendRequestResponseDTO request) {
+            binding.tvName.setText(request.getSenderUsername());
+
+            // Load Avatar using Glide
+            String avatarUrl = request.getSenderAvatarUrl();
+            if (avatarUrl != null && !avatarUrl.startsWith("http")) {
+                avatarUrl = com.midterm.team12345.data.remote.RetrofitClient.getBaseUrl() + 
+                            (avatarUrl.startsWith("/") ? "" : "/") + avatarUrl;
+            }
+
+            Glide.with(binding.ivAvatar.getContext())
+                    .load(avatarUrl)
+                    .placeholder(R.drawable.ic_avatar_placeholder)
+                    .error(R.drawable.ic_avatar_placeholder)
+                    .into(binding.ivAvatar);
             
-            binding.btnConfirm.setOnClickListener(v -> listener.onConfirm(user.getId()));
-            binding.btnDelete.setOnClickListener(v -> listener.onDelete(user.getId()));
+            binding.btnConfirm.setOnClickListener(v -> listener.onConfirm(request.getId()));
+            binding.btnDelete.setOnClickListener(v -> listener.onDelete(request.getId()));
         }
     }
 }
