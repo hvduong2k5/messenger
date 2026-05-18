@@ -30,9 +30,9 @@ public interface ConversationService {
      * @param name           the name of the conversation (optional for 1-to-1 chats)
      * @param isGroup        true if it's a group conversation, false for 1-to-1
      * @param participantIds list of user IDs to be added as participants
-     * @return the created Conversation entity
+     * @return the created ConversationResponseDTO
      */
-    Conversation createConversation(Long currentUserId, String name, boolean isGroup, List<Long> participantIds);
+    ConversationResponseDTO createConversation(Long currentUserId, String name, boolean isGroup, List<Long> participantIds);
 
     /**
      * Adds a new participant to an existing conversation.
