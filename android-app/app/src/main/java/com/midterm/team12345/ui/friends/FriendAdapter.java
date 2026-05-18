@@ -24,6 +24,7 @@ public class FriendAdapter extends ListAdapter<UserResponseDTO, FriendAdapter.Vi
         void onFriendClick(UserResponseDTO user);
         void onCallClick(UserResponseDTO user);
         void onVideoCallClick(UserResponseDTO user);
+        void onUnfriendClick(UserResponseDTO user);
     }
 
     public FriendAdapter(OnFriendClickListener listener) {
@@ -91,6 +92,7 @@ public class FriendAdapter extends ListAdapter<UserResponseDTO, FriendAdapter.Vi
             binding.getRoot().setOnClickListener(v -> listener.onFriendClick(user));
             binding.ivCall.setOnClickListener(v -> listener.onCallClick(user));
             binding.ivVideoCall.setOnClickListener(v -> listener.onVideoCallClick(user));
+            binding.ivUnfriend.setOnClickListener(v -> listener.onUnfriendClick(user));
         }
 
         private String formatLastSeenString(String lastSeenStr) {
