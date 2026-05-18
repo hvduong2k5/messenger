@@ -4,6 +4,7 @@ import com.team12345.messenger.dto.response.ConversationResponseDTO;
 import com.team12345.messenger.dto.response.MessageResponseDTO;
 import com.team12345.messenger.entity.*;
 import com.team12345.messenger.repository.*;
+import com.team12345.messenger.exception.UserNotFoundException;
 import com.team12345.messenger.service.impl.ConversationServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -86,10 +87,14 @@ class ConversationServiceTest {
     void testCreateConversation() {
         when(conversationRepository.save(any(Conversation.class))).thenReturn(testConversation);
         when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
+        when(messageRepository.findFirstByConversationIdOrderByCreatedAtDesc(1L)).thenReturn(Optional.empty());
+        when(messageStatusRepository.countUnreadInConversation(1L, 1L, MessageStatusEnum.read)).thenReturn(0L);
 
-        Conversation result = conversationService.createConversation(1L, "New Group", true, new java.util.ArrayList<>(Arrays.asList(1L)));
+        ConversationResponseDTO result = conversationService.createConversation(1L, "New Group", true, new java.util.ArrayList<>(Arrays.asList(1L)));
 
         assertThat(result).isNotNull();
+        assertThat(result.getId()).isEqualTo(1L);
+        assertThat(result.getName()).isEqualTo("Test Group");
         verify(conversationRepository).save(any(Conversation.class));
         verify(participantRepository).save(any(Participant.class));
     }
