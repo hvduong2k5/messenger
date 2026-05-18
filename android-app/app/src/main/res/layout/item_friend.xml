@@ -78,7 +78,19 @@
         android:background="?attr/selectableItemBackgroundBorderless"
         android:padding="10dp"
         android:src="@android:drawable/ic_menu_camera"
-        android:layout_marginEnd="24dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/ivUnfriend"
+        app:layout_constraintTop_toTopOf="parent"
+        app:tint="#8E8E93" />
+
+    <ImageView
+        android:id="@+id/ivUnfriend"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:padding="10dp"
+        android:src="@drawable/ic_remove_friend"
+        android:layout_marginEnd="16dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"

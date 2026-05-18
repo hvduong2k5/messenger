@@ -122,6 +122,7 @@ public class FriendsListAdapter extends ListAdapter<Object, RecyclerView.ViewHol
 
             binding.ivCall.setOnClickListener(v -> listener.onCall(user));
             binding.ivVideoCall.setOnClickListener(v -> listener.onVideoCall(user));
+            binding.ivUnfriend.setOnClickListener(v -> listener.onProfileLongClick(user));
             binding.getRoot().setOnClickListener(v -> listener.onProfileClick(user));
             binding.getRoot().setOnLongClickListener(v -> {
                 listener.onProfileLongClick(user);
