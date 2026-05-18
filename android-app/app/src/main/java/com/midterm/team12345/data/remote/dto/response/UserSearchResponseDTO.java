@@ -14,7 +14,7 @@ public class UserSearchResponseDTO {
     private String avatarUrl;
 
     @SerializedName("friendshipStatus")
-    private String friendshipStatus;
+    private FriendshipStatus friendshipStatus;
 
     @SerializedName("isOnline")
     private Boolean isOnline;
@@ -46,11 +46,11 @@ public class UserSearchResponseDTO {
         this.avatarUrl = avatarUrl;
     }
 
-    public String getFriendshipStatus() {
+    public FriendshipStatus getFriendshipStatus() {
         return friendshipStatus;
     }
 
-    public void setFriendshipStatus(String friendshipStatus) {
+    public void setFriendshipStatus(FriendshipStatus friendshipStatus) {
         this.friendshipStatus = friendshipStatus;
     }
 

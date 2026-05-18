@@ -39,12 +39,21 @@ public class UserRepositoryImpl implements UserRepository {
         userApiService.getMyProfile().enqueue(new Callback<UserProfileResponseDTO>() {
             @Override
             public void onResponse(Call<UserProfileResponseDTO> call, Response<UserProfileResponseDTO> response) {
-                if (response.isSuccessful()) data.setValue(Resource.success(response.body()));
-                else data.setValue(Resource.error("Lỗi lấy thông tin cá nhân", null));
+                if (response.isSuccessful()) {
+                    data.setValue(Resource.success(response.body()));
+                } else {
+                    String errorMsg = "Lỗi lấy thông tin cá nhân (HTTP " + response.code() + ")";
+                    try {
+                        if (response.errorBody() != null) {
+                            errorMsg += ": " + response.errorBody().string();
+                        }
+                    } catch (Exception ignored) {}
+                    data.setValue(Resource.error(errorMsg, null));
+                }
             }
             @Override
             public void onFailure(Call<UserProfileResponseDTO> call, Throwable t) {
-                data.setValue(Resource.error(t.getMessage(), null));
+                data.setValue(Resource.error("Lỗi kết nối: " + t.getMessage(), null));
             }
         });
         return data;
@@ -57,12 +66,21 @@ public class UserRepositoryImpl implements UserRepository {
         userApiService.getUserProfile(id).enqueue(new Callback<UserProfileResponseDTO>() {
             @Override
             public void onResponse(Call<UserProfileResponseDTO> call, Response<UserProfileResponseDTO> response) {
-                if (response.isSuccessful()) data.setValue(Resource.success(response.body()));
-                else data.setValue(Resource.error("Lỗi lấy thông tin người dùng", null));
+                if (response.isSuccessful()) {
+                    data.setValue(Resource.success(response.body()));
+                } else {
+                    String errorMsg = "Lỗi lấy thông tin người dùng (HTTP " + response.code() + ")";
+                    try {
+                        if (response.errorBody() != null) {
+                            errorMsg += ": " + response.errorBody().string();
+                        }
+                    } catch (Exception ignored) {}
+                    data.setValue(Resource.error(errorMsg, null));
+                }
             }
             @Override
             public void onFailure(Call<UserProfileResponseDTO> call, Throwable t) {
-                data.setValue(Resource.error(t.getMessage(), null));
+                data.setValue(Resource.error("Lỗi kết nối: " + t.getMessage(), null));
             }
         });
         return data;
@@ -75,12 +93,21 @@ public class UserRepositoryImpl implements UserRepository {
         userApiService.updateProfile(request).enqueue(new Callback<UserProfileResponseDTO>() {
             @Override
             public void onResponse(Call<UserProfileResponseDTO> call, Response<UserProfileResponseDTO> response) {
-                if (response.isSuccessful()) data.setValue(Resource.success(response.body()));
-                else data.setValue(Resource.error("Lỗi cập nhật profile", null));
+                if (response.isSuccessful()) {
+                    data.setValue(Resource.success(response.body()));
+                } else {
+                    String errorMsg = "Lỗi cập nhật profile (HTTP " + response.code() + ")";
+                    try {
+                        if (response.errorBody() != null) {
+                            errorMsg += ": " + response.errorBody().string();
+                        }
+                    } catch (Exception ignored) {}
+                    data.setValue(Resource.error(errorMsg, null));
+                }
             }
             @Override
             public void onFailure(Call<UserProfileResponseDTO> call, Throwable t) {
-                data.setValue(Resource.error(t.getMessage(), null));
+                data.setValue(Resource.error("Lỗi kết nối: " + t.getMessage(), null));
             }
         });
         return data;
@@ -93,12 +120,21 @@ public class UserRepositoryImpl implements UserRepository {
         userApiService.updateAvatar(file).enqueue(new Callback<UserProfileResponseDTO>() {
             @Override
             public void onResponse(Call<UserProfileResponseDTO> call, Response<UserProfileResponseDTO> response) {
-                if (response.isSuccessful()) data.setValue(Resource.success(response.body()));
-                else data.setValue(Resource.error("Lỗi cập nhật ảnh đại diện", null));
+                if (response.isSuccessful()) {
+                    data.setValue(Resource.success(response.body()));
+                } else {
+                    String errorMsg = "Lỗi cập nhật ảnh đại diện (HTTP " + response.code() + ")";
+                    try {
+                        if (response.errorBody() != null) {
+                            errorMsg += ": " + response.errorBody().string();
+                        }
+                    } catch (Exception ignored) {}
+                    data.setValue(Resource.error(errorMsg, null));
+                }
             }
             @Override
             public void onFailure(Call<UserProfileResponseDTO> call, Throwable t) {
-                data.setValue(Resource.error(t.getMessage(), null));
+                data.setValue(Resource.error("Lỗi kết nối: " + t.getMessage(), null));
             }
         });
         return data;
@@ -111,12 +147,21 @@ public class UserRepositoryImpl implements UserRepository {
         userApiService.searchUsers(query, page, size).enqueue(new Callback<PageResponse<UserSearchResponseDTO>>() {
             @Override
             public void onResponse(Call<PageResponse<UserSearchResponseDTO>> call, Response<PageResponse<UserSearchResponseDTO>> response) {
-                if (response.isSuccessful()) data.setValue(Resource.success(response.body()));
-                else data.setValue(Resource.error("Lỗi tìm kiếm người dùng", null));
+                if (response.isSuccessful()) {
+                    data.setValue(Resource.success(response.body()));
+                } else {
+                    String errorMsg = "Lỗi tìm kiếm người dùng (HTTP " + response.code() + ")";
+                    try {
+                        if (response.errorBody() != null) {
+                            errorMsg += ": " + response.errorBody().string();
+                        }
+                    } catch (Exception ignored) {}
+                    data.setValue(Resource.error(errorMsg, null));
+                }
             }
             @Override
             public void onFailure(Call<PageResponse<UserSearchResponseDTO>> call, Throwable t) {
-                data.setValue(Resource.error(t.getMessage(), null));
+                data.setValue(Resource.error("Lỗi kết nối: " + t.getMessage(), null));
             }
         });
         return data;
