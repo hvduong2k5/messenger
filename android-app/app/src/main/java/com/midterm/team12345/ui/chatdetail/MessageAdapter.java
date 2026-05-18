@@ -157,6 +157,14 @@ public class MessageAdapter extends ListAdapter<MessageResponseDTO, RecyclerView
         }
 
         public void bind(MessageResponseDTO message) {
+            // Set sender name
+            if (message.getSenderUsername() != null && !message.getSenderUsername().trim().isEmpty()) {
+                binding.tvSenderName.setText(message.getSenderUsername());
+                binding.tvSenderName.setVisibility(View.VISIBLE);
+            } else {
+                binding.tvSenderName.setVisibility(View.GONE);
+            }
+
             if (message.getDeleted() != null && message.getDeleted()) {
                 binding.tvMessageContent.setText("Tin nhắn đã bị thu hồi");
                 binding.tvMessageContent.setAlpha(0.6f);
