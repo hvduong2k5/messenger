@@ -9,9 +9,13 @@ import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.bumptech.glide.Glide;
+import com.midterm.team12345.R;
 import com.midterm.team12345.databinding.ItemAlphabetHeaderBinding;
 import com.midterm.team12345.databinding.ItemFriendBinding;
-import com.midterm.team12345.network.UserResponse;
+import com.midterm.team12345.data.remote.dto.response.UserResponseDTO;
+
+import java.time.LocalDateTime;
 
 public class FriendsListAdapter extends ListAdapter<Object, RecyclerView.ViewHolder> {
 
@@ -21,9 +25,9 @@ public class FriendsListAdapter extends ListAdapter<Object, RecyclerView.ViewHol
     private final OnFriendActionListener listener;
 
     public interface OnFriendActionListener {
-        void onCall(UserResponse user);
-        void onVideoCall(UserResponse user);
-        void onProfileClick(UserResponse user);
+        void onCall(UserResponseDTO user);
+        void onVideoCall(UserResponseDTO user);
+        void onProfileClick(UserResponseDTO user);
     }
 
     protected FriendsListAdapter(OnFriendActionListener listener) {
@@ -33,8 +37,8 @@ public class FriendsListAdapter extends ListAdapter<Object, RecyclerView.ViewHol
                 if (oldItem instanceof String && newItem instanceof String) {
                     return oldItem.equals(newItem);
                 }
-                if (oldItem instanceof UserResponse && newItem instanceof UserResponse) {
-                    return ((UserResponse) oldItem).getId().equals(((UserResponse) newItem).getId());
+                if (oldItem instanceof UserResponseDTO && newItem instanceof UserResponseDTO) {
+                    return ((UserResponseDTO) oldItem).getId().equals(((UserResponseDTO) newItem).getId());
                 }
                 return false;
             }
@@ -69,7 +73,7 @@ public class FriendsListAdapter extends ListAdapter<Object, RecyclerView.ViewHol
         if (holder instanceof HeaderViewHolder) {
             ((HeaderViewHolder) holder).bind((String) getItem(position));
         } else {
-            ((FriendViewHolder) holder).bind((UserResponse) getItem(position));
+            ((FriendViewHolder) holder).bind((UserResponseDTO) getItem(position));
         }
     }
 
@@ -90,12 +94,76 @@ public class FriendsListAdapter extends ListAdapter<Object, RecyclerView.ViewHol
             super(binding.getRoot());
             this.binding = binding;
         }
-        void bind(UserResponse user) {
+        void bind(UserResponseDTO user) {
             binding.tvName.setText(user.getUsername());
-            // Glide.with(binding.ivAvatar).load(user.getAvatarUrl()).into(binding.ivAvatar);
+            
+            // Presence status and Last Seen
+            if (user.getIsOnline() != null && user.getIsOnline()) {
+                binding.ivPresenceStatus.setVisibility(View.VISIBLE);
+                binding.tvStatus.setText("Đang hoạt động");
+            } else {
+                binding.ivPresenceStatus.setVisibility(View.GONE);
+                binding.tvStatus.setText(formatLastSeenString(user.getLastSeen()));
+            }
+
+            // Load Avatar using Glide
+            String avatarUrl = user.getAvatarUrl();
+            if (avatarUrl != null && !avatarUrl.startsWith("http")) {
+                avatarUrl = com.midterm.team12345.data.remote.RetrofitClient.getBaseUrl() + 
+                            (avatarUrl.startsWith("/") ? "" : "/") + avatarUrl;
+            }
+
+            Glide.with(binding.ivAvatar.getContext())
+                    .load(avatarUrl)
+                    .placeholder(R.drawable.ic_avatar_placeholder)
+                    .error(R.drawable.ic_avatar_placeholder)
+                    .into(binding.ivAvatar);
+
             binding.ivCall.setOnClickListener(v -> listener.onCall(user));
             binding.ivVideoCall.setOnClickListener(v -> listener.onVideoCall(user));
             binding.getRoot().setOnClickListener(v -> listener.onProfileClick(user));
+        }
+
+        private String formatLastSeenString(String lastSeenStr) {
+            if (lastSeenStr == null || lastSeenStr.trim().isEmpty()) return "Ngoại tuyến";
+            try {
+                LocalDateTime ldt = LocalDateTime.parse(lastSeenStr);
+                return formatLastSeen(ldt);
+            } catch (Exception e) {
+                try {
+                    java.time.ZonedDateTime zdt = java.time.ZonedDateTime.parse(lastSeenStr);
+                    return formatLastSeen(zdt.toLocalDateTime());
+                } catch (Exception e2) {
+                    return "Hoạt động gần đây";
+                }
+            }
+        }
+
+        private String formatLastSeen(LocalDateTime lastSeen) {
+            if (lastSeen == null) return "Ngoại tuyến";
+            try {
+                java.time.Duration duration = java.time.Duration.between(lastSeen, LocalDateTime.now());
+                long minutes = duration.toMinutes();
+                if (minutes < 1) {
+                    return "Vừa mới hoạt động";
+                } else if (minutes < 60) {
+                    return "Hoạt động " + minutes + " phút trước";
+                } else {
+                    long hours = duration.toHours();
+                    if (hours < 24) {
+                        return "Hoạt động " + hours + " giờ trước";
+                    } else {
+                        long days = duration.toDays();
+                        if (days < 7) {
+                            return "Hoạt động " + days + " ngày trước";
+                        } else {
+                            return "Hoạt động ngày " + lastSeen.format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                return "Ngoại tuyến";
+            }
         }
     }
 }
