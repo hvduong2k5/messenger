@@ -139,6 +139,7 @@ public class FriendsViewModel extends BaseViewModel {
     public void onAddFriend(Long userId) {
         friendRepository.sendFriendRequest(userId).observeForever(resource -> {
             if (resource != null && resource.status == Resource.Status.SUCCESS) {
+                updateLocalSearchFriendshipStatus(userId, com.midterm.team12345.data.remote.dto.response.FriendshipStatus.SENDER_PENDING);
                 // Once invitation is sent, refresh the search results so that status changes to SENDER_PENDING
                 if (lastSearchQuery != null && !lastSearchQuery.trim().isEmpty()) {
                     searchUser(lastSearchQuery);
@@ -152,6 +153,7 @@ public class FriendsViewModel extends BaseViewModel {
     public void onCancelFriendRequest(Long userId) {
         friendRepository.cancelFriendRequest(userId).observeForever(resource -> {
             if (resource != null && resource.status == Resource.Status.SUCCESS) {
+                updateLocalSearchFriendshipStatus(userId, com.midterm.team12345.data.remote.dto.response.FriendshipStatus.STRANGER);
                 // Once cancelled, refresh the search results so status returns to STRANGER
                 if (lastSearchQuery != null && !lastSearchQuery.trim().isEmpty()) {
                     searchUser(lastSearchQuery);
@@ -160,6 +162,42 @@ public class FriendsViewModel extends BaseViewModel {
                 setError(resource.message);
             }
         });
+    }
+
+    public void onUnfriend(Long userId) {
+        friendRepository.unfriend(userId).observeForever(resource -> {
+            if (resource != null && resource.status == Resource.Status.SUCCESS) {
+                updateLocalSearchFriendshipStatus(userId, com.midterm.team12345.data.remote.dto.response.FriendshipStatus.STRANGER);
+                fetchFriends(); // Refresh friends list
+                if (lastSearchQuery != null && !lastSearchQuery.trim().isEmpty()) {
+                    searchUser(lastSearchQuery);
+                }
+            } else if (resource != null && resource.status == Resource.Status.ERROR) {
+                setError(resource.message);
+            }
+        });
+    }
+
+    private void updateLocalSearchFriendshipStatus(Long userId, com.midterm.team12345.data.remote.dto.response.FriendshipStatus status) {
+        Resource<List<UserSearchResponseDTO>> currentResource = _searchResults.getValue();
+        if (currentResource != null && currentResource.data != null) {
+            List<UserSearchResponseDTO> list = new ArrayList<>();
+            for (UserSearchResponseDTO u : currentResource.data) {
+                UserSearchResponseDTO copy = new UserSearchResponseDTO();
+                copy.setId(u.getId());
+                copy.setUsername(u.getUsername());
+                copy.setAvatarUrl(u.getAvatarUrl());
+                copy.setIsOnline(u.getIsOnline());
+                copy.setLastSeen(u.getLastSeen());
+                if (u.getId().equals(userId)) {
+                    copy.setFriendshipStatus(status);
+                } else {
+                    copy.setFriendshipStatus(u.getFriendshipStatus());
+                }
+                list.add(copy);
+            }
+            _searchResults.setValue(Resource.success(list));
+        }
     }
 
     public void checkFriendshipStatus(Long userId) {
