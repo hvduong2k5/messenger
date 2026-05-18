@@ -4,13 +4,11 @@ import android.os.Bundle;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.content.ContextCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.Fragment;
 
-import com.google.android.material.badge.BadgeDrawable;
 import com.midterm.team12345.databinding.ActivityMainBinding;
 import com.midterm.team12345.ui.chatlist.ChatListFragment;
 import com.midterm.team12345.ui.settings.SettingsFragment;
@@ -33,7 +31,6 @@ public class MainActivity extends AppCompatActivity {
         });
 
         setupNavigation();
-        setupBadges();
 
         // Set default fragment
         if (savedInstanceState == null) {
@@ -76,14 +73,7 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private void setupBadges() {
-        // Tạo badge cho mục People (số 2 màu xanh lá)
-        BadgeDrawable badge = binding.bottomNavigation.getOrCreateBadge(R.id.nav_people);
-        badge.setVisible(true);
-        badge.setNumber(2);
-        badge.setBackgroundColor(ContextCompat.getColor(this, R.color.badge_green));
-        badge.setBadgeTextColor(ContextCompat.getColor(this, R.color.white));
-    }
+
 
     private void loadFragment(Fragment fragment) {
         getSupportFragmentManager()
