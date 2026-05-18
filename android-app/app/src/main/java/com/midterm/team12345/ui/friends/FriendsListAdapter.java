@@ -28,6 +28,7 @@ public class FriendsListAdapter extends ListAdapter<Object, RecyclerView.ViewHol
         void onCall(UserResponseDTO user);
         void onVideoCall(UserResponseDTO user);
         void onProfileClick(UserResponseDTO user);
+        void onProfileLongClick(UserResponseDTO user);
     }
 
     protected FriendsListAdapter(OnFriendActionListener listener) {
@@ -122,6 +123,10 @@ public class FriendsListAdapter extends ListAdapter<Object, RecyclerView.ViewHol
             binding.ivCall.setOnClickListener(v -> listener.onCall(user));
             binding.ivVideoCall.setOnClickListener(v -> listener.onVideoCall(user));
             binding.getRoot().setOnClickListener(v -> listener.onProfileClick(user));
+            binding.getRoot().setOnLongClickListener(v -> {
+                listener.onProfileLongClick(user);
+                return true;
+            });
         }
 
         private String formatLastSeenString(String lastSeenStr) {
