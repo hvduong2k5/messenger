@@ -5,6 +5,10 @@ import com.team12345.messenger.dto.request.UpdateProfileRequestDTO;
 import com.team12345.messenger.dto.response.UserProfileResponseDTO;
 import com.team12345.messenger.dto.response.UserResponseDTO;
 import com.team12345.messenger.entity.User;
+import com.team12345.messenger.exception.GlobalExceptionHandler;
+import com.team12345.messenger.exception.InvalidCredentialsException;
+import com.team12345.messenger.exception.ResourceNotFoundException;
+import com.team12345.messenger.exception.UserAlreadyExistsException;
 import com.team12345.messenger.security.CustomUserDetails;
 import com.team12345.messenger.security.JwtUtils;
 import com.team12345.messenger.service.MediaService;
@@ -26,9 +30,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -104,7 +106,9 @@ class UserControllerTest {
 
     @Test
     void updateProfile_ShouldReturnUpdatedProfile() throws Exception {
-        UpdateProfileRequestDTO request = new UpdateProfileRequestDTO("Away");
+        UpdateProfileRequestDTO request = UpdateProfileRequestDTO.builder()
+                .status("Away")
+                .build();
         UserProfileResponseDTO updatedProfile = UserProfileResponseDTO.builder()
                 .id(1L)
                 .username("testuser")
@@ -147,6 +151,252 @@ class UserControllerTest {
 
         verify(mediaService, times(1)).uploadFile(any());
         verify(userService, times(1)).updateAvatar(1L, "http://new-avatar-url.com");
+    }
+
+    @Test
+    void updateProfileComplete_OnlyAvatar_Success() throws Exception {
+        MockMultipartFile avatarFile = new MockMultipartFile(
+                "avatar",
+                "avatar.jpg",
+                MediaType.IMAGE_JPEG_VALUE,
+                "image-content".getBytes()
+        );
+
+        when(userService.updateProfile(eq(1L), any(MockMultipartFile.class), isNull()))
+                .thenReturn(mockProfileResponse);
+
+        mockMvc.perform(multipart("/users/me")
+                        .file(avatarFile)
+                        .with(request -> {
+                            request.setMethod("PATCH");
+                            return request;
+                        })
+                        .contentType(MediaType.MULTIPART_FORM_DATA_VALUE))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(1L))
+                .andExpect(jsonPath("$.username").value("testuser"));
+
+        verify(userService).updateProfile(eq(1L), any(MockMultipartFile.class), isNull());
+    }
+
+    @Test
+    void updateProfileComplete_OnlyEmail_Success() throws Exception {
+        UpdateProfileRequestDTO request = UpdateProfileRequestDTO.builder()
+                .email("newemail@example.com")
+                .oldPassword("oldPassword")
+                .build();
+
+        MockMultipartFile dataFile = new MockMultipartFile(
+                "data",
+                "data",
+                MediaType.APPLICATION_JSON_VALUE,
+                objectMapper.writeValueAsBytes(request)
+        );
+
+        when(userService.updateProfile(eq(1L), isNull(), any(UpdateProfileRequestDTO.class)))
+                .thenReturn(mockProfileResponse);
+
+        mockMvc.perform(multipart("/users/me")
+                        .file(dataFile)
+                        .with(request1 -> {
+                            request1.setMethod("PATCH");
+                            return request1;
+                        })
+                        .contentType(MediaType.MULTIPART_FORM_DATA_VALUE))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(1L));
+
+        verify(userService).updateProfile(eq(1L), isNull(), any(UpdateProfileRequestDTO.class));
+    }
+
+    @Test
+    void updateProfileComplete_OnlyPassword_Success() throws Exception {
+        UpdateProfileRequestDTO request = UpdateProfileRequestDTO.builder()
+                .password("newPassword123")
+                .oldPassword("oldPassword")
+                .build();
+
+        MockMultipartFile dataFile = new MockMultipartFile(
+                "data",
+                "data",
+                MediaType.APPLICATION_JSON_VALUE,
+                objectMapper.writeValueAsBytes(request)
+        );
+
+        when(userService.updateProfile(eq(1L), isNull(), any(UpdateProfileRequestDTO.class)))
+                .thenReturn(mockProfileResponse);
+
+        mockMvc.perform(multipart("/users/me")
+                        .file(dataFile)
+                        .with(request1 -> {
+                            request1.setMethod("PATCH");
+                            return request1;
+                        })
+                        .contentType(MediaType.MULTIPART_FORM_DATA_VALUE))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(1L));
+
+        verify(userService).updateProfile(eq(1L), isNull(), any(UpdateProfileRequestDTO.class));
+    }
+
+    @Test
+    void updateProfileComplete_AllFields_Success() throws Exception {
+        UpdateProfileRequestDTO request = UpdateProfileRequestDTO.builder()
+                .email("newemail@example.com")
+                .password("newPassword123")
+                .oldPassword("oldPassword")
+                .build();
+
+        MockMultipartFile avatarFile = new MockMultipartFile(
+                "avatar",
+                "avatar.jpg",
+                MediaType.IMAGE_JPEG_VALUE,
+                "image-content".getBytes()
+        );
+
+        MockMultipartFile dataFile = new MockMultipartFile(
+                "data",
+                "data",
+                MediaType.APPLICATION_JSON_VALUE,
+                objectMapper.writeValueAsBytes(request)
+        );
+
+        when(userService.updateProfile(eq(1L), any(MockMultipartFile.class), any(UpdateProfileRequestDTO.class)))
+                .thenReturn(mockProfileResponse);
+
+        mockMvc.perform(multipart("/users/me")
+                        .file(avatarFile)
+                        .file(dataFile)
+                        .with(request1 -> {
+                            request1.setMethod("PATCH");
+                            return request1;
+                        })
+                        .contentType(MediaType.MULTIPART_FORM_DATA_VALUE))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(1L))
+                .andExpect(jsonPath("$.email").value("test@example.com"));
+
+        verify(userService).updateProfile(eq(1L), any(MockMultipartFile.class), any(UpdateProfileRequestDTO.class));
+    }
+
+    @Test
+    void updateProfileComplete_UserNotFound() throws Exception {
+        UpdateProfileRequestDTO request = UpdateProfileRequestDTO.builder()
+                .email("newemail@example.com")
+                .oldPassword("oldPassword")
+                .build();
+
+        MockMultipartFile dataFile = new MockMultipartFile(
+                "data",
+                "data",
+                MediaType.APPLICATION_JSON_VALUE,
+                objectMapper.writeValueAsBytes(request)
+        );
+
+        when(userService.updateProfile(eq(1L), isNull(), any(UpdateProfileRequestDTO.class)))
+                .thenThrow(new ResourceNotFoundException("User not found with id: 1"));
+
+        mockMvc.perform(multipart("/users/me")
+                        .file(dataFile)
+                        .with(request1 -> {
+                            request1.setMethod("PATCH");
+                            return request1;
+                        })
+                        .contentType(MediaType.MULTIPART_FORM_DATA_VALUE))
+                .andExpect(status().isNotFound())
+                .andExpect(content().string("User not found with id: 1"));
+
+        verify(userService).updateProfile(eq(1L), isNull(), any(UpdateProfileRequestDTO.class));
+    }
+
+    @Test
+    void updateProfileComplete_IncorrectOldPassword() throws Exception {
+        UpdateProfileRequestDTO request = UpdateProfileRequestDTO.builder()
+                .email("newemail@example.com")
+                .oldPassword("wrongPassword")
+                .build();
+
+        MockMultipartFile dataFile = new MockMultipartFile(
+                "data",
+                "data",
+                MediaType.APPLICATION_JSON_VALUE,
+                objectMapper.writeValueAsBytes(request)
+        );
+
+        when(userService.updateProfile(eq(1L), isNull(), any(UpdateProfileRequestDTO.class)))
+                .thenThrow(new InvalidCredentialsException("Mật khẩu cũ không chính xác"));
+
+        mockMvc.perform(multipart("/users/me")
+                        .file(dataFile)
+                        .with(request1 -> {
+                            request1.setMethod("PATCH");
+                            return request1;
+                        })
+                        .contentType(MediaType.MULTIPART_FORM_DATA_VALUE))
+                .andExpect(status().isUnauthorized())
+                .andExpect(content().string("Mật khẩu cũ không chính xác"));
+
+        verify(userService).updateProfile(eq(1L), isNull(), any(UpdateProfileRequestDTO.class));
+    }
+
+    @Test
+    void updateProfileComplete_DuplicateEmail() throws Exception {
+        UpdateProfileRequestDTO request = UpdateProfileRequestDTO.builder()
+                .email("existing@example.com")
+                .oldPassword("correctPassword")
+                .build();
+
+        MockMultipartFile dataFile = new MockMultipartFile(
+                "data",
+                "data",
+                MediaType.APPLICATION_JSON_VALUE,
+                objectMapper.writeValueAsBytes(request)
+        );
+
+        when(userService.updateProfile(eq(1L), isNull(), any(UpdateProfileRequestDTO.class)))
+                .thenThrow(new UserAlreadyExistsException("Email is already registered: existing@example.com"));
+
+        mockMvc.perform(multipart("/users/me")
+                        .file(dataFile)
+                        .with(request1 -> {
+                            request1.setMethod("PATCH");
+                            return request1;
+                        })
+                        .contentType(MediaType.MULTIPART_FORM_DATA_VALUE))
+                .andExpect(status().isConflict())
+                .andExpect(content().string("Email is already registered: existing@example.com"));
+
+        verify(userService).updateProfile(eq(1L), isNull(), any(UpdateProfileRequestDTO.class));
+    }
+
+    @Test
+    void updateProfileComplete_MissingOldPassword() throws Exception {
+        UpdateProfileRequestDTO request = UpdateProfileRequestDTO.builder()
+                .email("newemail@example.com")
+                .oldPassword(null)
+                .build();
+
+        MockMultipartFile dataFile = new MockMultipartFile(
+                "data",
+                "data",
+                MediaType.APPLICATION_JSON_VALUE,
+                objectMapper.writeValueAsBytes(request)
+        );
+
+        when(userService.updateProfile(eq(1L), isNull(), any(UpdateProfileRequestDTO.class)))
+                .thenThrow(new IllegalArgumentException("Mật khẩu cũ là bắt buộc"));
+
+        mockMvc.perform(multipart("/users/me")
+                        .file(dataFile)
+                        .with(request1 -> {
+                            request1.setMethod("PATCH");
+                            return request1;
+                        })
+                        .contentType(MediaType.MULTIPART_FORM_DATA_VALUE))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string("Mật khẩu cũ là bắt buộc"));
+
+        verify(userService).updateProfile(eq(1L), isNull(), any(UpdateProfileRequestDTO.class));
     }
 
     @Test
