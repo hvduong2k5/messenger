@@ -11,7 +11,9 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -55,6 +57,18 @@ public class UserController {
         String avatarUrl = (String) uploadResult.get("url");
 
         return ResponseEntity.ok(userService.updateAvatar(currentUserId, avatarUrl));
+    }
+
+    @Operation(summary = "Update profile with avatar, email, and password")
+    @PatchMapping(value = "/me", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<UserProfileResponseDTO> updateProfileComplete(
+            @RequestPart(value = "avatar", required = false) MultipartFile avatar,
+            @RequestPart(value = "data", required = false) @Valid UpdateProfileRequestDTO request,
+            @AuthenticationPrincipal CustomUserDetails currentUser) {
+
+        Long userId = currentUser != null ? currentUser.getId() : getCurrentUserId();
+        UserProfileResponseDTO response = userService.updateProfile(userId, avatar, request);
+        return ResponseEntity.ok(response);
     }
 
     // Keep only one mapping for /users/search
