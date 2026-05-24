@@ -6,7 +6,6 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -46,32 +45,35 @@ public class MyProfileFragment extends BaseFragment<FragmentMyProfileBinding, My
         setupMenuUI();
         
         binding.toolbar.setNavigationOnClickListener(v -> {
-            // Logic quay lại màn hình Chat (Tab 1)
             if (getActivity() instanceof com.midterm.team12345.MainActivity) {
                 ((com.midterm.team12345.MainActivity) getActivity()).switchToChats();
             }
         });
 
-        viewModel.refreshProfile(); // Đồng bộ dữ liệu từ server lần đầu
+        binding.ivSettingsGear.setOnClickListener(v -> {
+            // General settings logic
+        });
+
+        viewModel.refreshProfile();
     }
 
     private void setupMenuUI() {
-        // Cấu hình các mục theo đúng hình thiết kế
+        // Cấu hình icon và màu sắc cho từng mục menu như hình thiết kế
         setupRow(binding.itemDarkMode, "Dark Mode", null, R.drawable.ic_lock, R.color.black, true);
         setupRow(binding.itemActiveStatus, "Active Status", "On", R.drawable.bg_online_status, R.color.badge_green, false);
         
-        setupRow(binding.itemEditProfile, "Edit Profile", null, R.drawable.ic_person, R.color.messenger_blue, false);
-        binding.itemEditProfile.getRoot().setOnClickListener(v -> {
+        setupRow(binding.itemMyAccount, "My Account", null, R.drawable.ic_person, R.color.messenger_blue, false);
+        binding.itemMyAccount.getRoot().setOnClickListener(v -> {
             startActivity(new Intent(getActivity(), EditProfileActivity.class));
         });
 
-        // Preferences Section
-        setupRow(binding.itemNotifications, "Notifications & Sounds", null, R.drawable.ic_notifications_none, R.color.brand_5, false);
-        setupRow(binding.itemPeople, "People", null, R.drawable.ic_person, R.color.messenger_blue, false);
-        setupRow(binding.itemMessaging, "Messaging Settings", null, R.drawable.ic_chat_bubble, R.color.messenger_blue, false);
         setupRow(binding.itemPrivacy, "Privacy", null, R.drawable.ic_lock, R.color.messenger_blue, false);
+        setupRow(binding.itemNotifications, "Notifications & Sounds", null, R.drawable.ic_notifications_none, R.color.brand_5, false);
+        setupRow(binding.itemStorageData, "Storage and Data", null, R.drawable.ic_attach, R.color.brand_2, false);
+        setupRow(binding.itemHelp, "Help", null, R.drawable.ic_email, R.color.brand_1, false);
+        setupRow(binding.itemInviteFriend, "Invite a Friend", null, R.drawable.ic_send, R.color.messenger_blue, false);
 
-        // Nút Logout (Text đỏ, Icon đỏ)
+        // Nút Logout đỏ rực cảnh báo
         binding.itemLogout.tvTitle.setText("Log Out");
         binding.itemLogout.tvTitle.setTextColor(ContextCompat.getColor(requireContext(), R.color.messenger_pink));
         binding.itemLogout.ivIcon.setImageResource(R.drawable.ic_lock);
@@ -114,10 +116,12 @@ public class MyProfileFragment extends BaseFragment<FragmentMyProfileBinding, My
     protected void observeViewModel() {
         super.observeViewModel();
         
-        // Lắng nghe dữ liệu SSOT từ Room DB
+        // SSOT: Cập nhật UI tức thì khi dữ liệu Room DB thay đổi
         viewModel.getUserProfile().observe(getViewLifecycleOwner(), user -> {
             if (user != null) {
                 binding.tvFullName.setText(user.getUsername());
+                binding.tvUsername.setText("@" + user.getUsername().toLowerCase().replace(" ", "_"));
+                binding.tvBio.setText(user.getBio() != null ? user.getBio() : "Available");
                 binding.onlineIndicator.setVisibility(user.getIsOnline() ? View.VISIBLE : View.GONE);
 
                 Glide.with(this)
