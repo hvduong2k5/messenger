@@ -86,4 +86,23 @@ public interface ConversationService {
      * @throws RuntimeException if the conversation is not found
      */
     Page<MessageResponseDTO> getConversationMessages(Long conversationId, Long userId, Pageable pageable);
+
+    /**
+     * Retrieves a paginated list of participants for a specific conversation with optional search.
+     *
+     * @param conversationId the ID of the conversation
+     * @param currentUserId  the ID of the current user
+     * @param keyword        optional search keyword
+     * @param pageable       pagination information
+     * @return a page of ParticipantResponseDTO objects
+     */
+    Page<com.team12345.messenger.dto.response.ParticipantResponseDTO> getParticipants(Long conversationId, Long currentUserId, String keyword, Pageable pageable);
+
+    /**
+     * Current user leaves the conversation.
+     *
+     * @param conversationId the ID of the conversation
+     * @param currentUserId  the ID of the current user
+     */
+    void leaveConversation(Long conversationId, Long currentUserId);
 }
