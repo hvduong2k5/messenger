@@ -5,12 +5,12 @@ plugins {
 
 android {
     namespace = "com.midterm.team12345"
-    compileSdk = 35
+    compileSdk = 34
 
     defaultConfig {
         applicationId = "com.midterm.team12345"
         minSdk = 26
-        targetSdk = 35
+        targetSdk = 34
         versionCode = 1
         versionName = "1.0"
 
