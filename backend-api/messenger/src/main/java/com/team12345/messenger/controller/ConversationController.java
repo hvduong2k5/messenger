@@ -144,4 +144,40 @@ public class ConversationController {
             return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         }
     }
+
+    @Operation(summary = "Get participants", description = "Get a paginated list of participants with optional search keyword")
+    @GetMapping("/{id}/participants")
+    public ResponseEntity<?> getParticipants(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable Long id,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        try {
+            Pageable pageable = PageRequest.of(page, size);
+            Page<com.team12345.messenger.dto.response.ParticipantResponseDTO> participants = conversationService.getParticipants(id, userDetails.getId(), keyword, pageable);
+            return ResponseEntity.ok(participants);
+        } catch (org.springframework.security.access.AccessDeniedException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("message", e.getMessage()));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("message", e.getMessage()));
+        }
+    }
+
+    @Operation(summary = "Leave conversation", description = "Current user leaves a group conversation")
+    @PostMapping("/{id}/leave")
+    public ResponseEntity<?> leaveConversation(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable Long id) {
+        try {
+            conversationService.leaveConversation(id, userDetails.getId());
+            return ResponseEntity.ok(Map.of("message", "Left conversation successfully"));
+        } catch (org.springframework.security.access.AccessDeniedException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("message", e.getMessage()));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("message", e.getMessage()));
+        }
+    }
 }

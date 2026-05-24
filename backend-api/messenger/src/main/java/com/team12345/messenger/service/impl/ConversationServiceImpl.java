@@ -15,8 +15,12 @@ import com.team12345.messenger.repository.MessageStatusRepository;
 import com.team12345.messenger.repository.ParticipantRepository;
 import com.team12345.messenger.repository.UserRepository;
 import com.team12345.messenger.service.ConversationService;
+import com.team12345.messenger.dto.response.ParticipantResponseDTO;
 import com.team12345.messenger.exception.UserNotFoundException;
+import com.team12345.messenger.gateway.MqttGateway;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -25,6 +29,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -33,6 +38,7 @@ import java.util.stream.Collectors;
  */
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ConversationServiceImpl implements ConversationService {
 
     private final ConversationRepository conversationRepository;
@@ -40,6 +46,8 @@ public class ConversationServiceImpl implements ConversationService {
     private final MessageRepository messageRepository;
     private final MessageStatusRepository messageStatusRepository;
     private final UserRepository userRepository;
+    private final MqttGateway mqttGateway;
+    private final ObjectMapper objectMapper;
 
     @Override
     @Transactional(readOnly = true)
@@ -251,5 +259,76 @@ public class ConversationServiceImpl implements ConversationService {
         }
         participantRepository.deleteById(targetId);
     }
-}
 
+    @Override
+    @Transactional(readOnly = true)
+    public Page<ParticipantResponseDTO> getParticipants(Long conversationId, Long currentUserId, String keyword, Pageable pageable) {
+        if (!participantRepository.existsById(new ParticipantId(conversationId, currentUserId))) {
+            throw new org.springframework.security.access.AccessDeniedException("User is not a participant of this conversation");
+        }
+
+        Page<Participant> participantPage;
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            participantPage = participantRepository.findById_ConversationIdAndUser_UsernameContainingIgnoreCase(conversationId, keyword.trim(), pageable);
+        } else {
+            participantPage = participantRepository.findById_ConversationId(conversationId, pageable);
+        }
+
+        return participantPage.map(p -> ParticipantResponseDTO.builder()
+                .userId(p.getUser().getId())
+                .username(p.getUser().getUsername())
+                .avatarUrl(p.getUser().getAvatarUrl())
+                .role(p.getRole().name().toUpperCase())
+                .joinedAt(p.getJoinedAt())
+                .build());
+    }
+
+    @Override
+    @Transactional
+    public void leaveConversation(Long conversationId, Long currentUserId) {
+        Participant currentParticipant = participantRepository.findById(new ParticipantId(conversationId, currentUserId))
+                .orElseThrow(() -> new org.springframework.security.access.AccessDeniedException("User is not a participant of this conversation"));
+
+        Conversation conversation = conversationRepository.findById(conversationId)
+                .orElseThrow(() -> new RuntimeException("Conversation not found"));
+
+        if (!conversation.getIsGroup()) {
+            throw new IllegalArgumentException("Cannot leave a 1-to-1 conversation");
+        }
+
+        if (currentParticipant.getRole() == com.team12345.messenger.entity.ParticipantRole.admin) {
+            long adminCount = participantRepository.countById_ConversationIdAndRole(conversationId, com.team12345.messenger.entity.ParticipantRole.admin);
+            if (adminCount == 1) {
+                throw new IllegalArgumentException("You are the only admin. Please transfer admin rights before leaving.");
+            }
+        }
+
+        participantRepository.delete(currentParticipant);
+
+        // Notify other participants via MQTT
+        List<Participant> remainingParticipants = participantRepository.findById_ConversationId(conversationId);
+        
+        ParticipantResponseDTO leftParticipantDTO = ParticipantResponseDTO.builder()
+                .userId(currentUserId)
+                .username(currentParticipant.getUser().getUsername())
+                .avatarUrl(currentParticipant.getUser().getAvatarUrl())
+                .role(currentParticipant.getRole().name().toUpperCase())
+                .joinedAt(currentParticipant.getJoinedAt())
+                .build();
+
+        for (Participant p : remainingParticipants) {
+            if (!p.getUser().getId().equals(currentUserId)) {
+                String topic = "user/" + p.getUser().getId() + "/messages";
+                try {
+                    mqttGateway.sendToMqtt(objectMapper.writeValueAsString(Map.of(
+                            "action", "LEAVE_CONVERSATION", 
+                            "data", leftParticipantDTO,
+                            "conversationId", conversationId
+                    )), topic);
+                } catch (Exception e) {
+                    log.error("[MQTT] Failed to notify {} on {}: {}", p.getUser().getId(), topic, e.getMessage());
+                }
+            }
+        }
+    }
+}
