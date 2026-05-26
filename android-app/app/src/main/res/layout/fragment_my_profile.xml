@@ -62,14 +62,6 @@
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent">
 
-                    <!-- Dash Circle (Messenger Code) -->
-                    <View
-                        android:layout_width="160dp"
-                        android:layout_height="160dp"
-                        android:layout_gravity="center"
-                        android:background="@drawable/bg_messenger_code_placeholder"
-                        android:backgroundTint="@color/messenger_blue" />
-
                     <de.hdodenhof.circleimageview.CircleImageView
                         android:id="@+id/ivAvatar"
                         android:layout_width="110dp"
@@ -84,8 +76,8 @@
                         android:layout_width="26dp"
                         android:layout_height="26dp"
                         android:layout_gravity="bottom|end"
-                        android:layout_marginEnd="18dp"
-                        android:layout_marginBottom="18dp"
+                        android:layout_marginEnd="4dp"
+                        android:layout_marginBottom="4dp"
                         android:background="@drawable/shape_online_status" />
                 </FrameLayout>
 
