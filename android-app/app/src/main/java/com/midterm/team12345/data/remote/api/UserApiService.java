@@ -6,6 +6,7 @@ import com.midterm.team12345.data.remote.dto.response.UserProfileResponseDTO;
 import com.midterm.team12345.data.remote.dto.response.UserSearchResponseDTO;
 
 import okhttp3.MultipartBody;
+import okhttp3.RequestBody;
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.GET;
@@ -30,6 +31,13 @@ public interface UserApiService {
     @Multipart
     @PATCH("users/avatar")
     Call<UserProfileResponseDTO> updateAvatar(@Part MultipartBody.Part file);
+
+    @Multipart
+    @PATCH("users/me")
+    Call<UserProfileResponseDTO> updateProfileComplete(
+            @Part MultipartBody.Part avatar,
+            @Part("data") RequestBody data
+    );
 
     @GET("users/search/paged")
     Call<PageResponse<UserSearchResponseDTO>> searchUsers(

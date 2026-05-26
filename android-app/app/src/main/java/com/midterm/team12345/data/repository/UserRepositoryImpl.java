@@ -1,6 +1,7 @@
 package com.midterm.team12345.data.repository;
 
 import android.app.Application;
+import androidx.annotation.NonNull;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
@@ -16,6 +17,7 @@ import com.midterm.team12345.domain.repository.UserRepository;
 import com.midterm.team12345.utils.Resource;
 
 import okhttp3.MultipartBody;
+import okhttp3.RequestBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -46,7 +48,7 @@ public class UserRepositoryImpl implements UserRepository {
         data.setValue(Resource.loading(null));
         userApiService.getMyProfile().enqueue(new Callback<UserProfileResponseDTO>() {
             @Override
-            public void onResponse(Call<UserProfileResponseDTO> call, Response<UserProfileResponseDTO> response) {
+            public void onResponse(@NonNull Call<UserProfileResponseDTO> call, @NonNull Response<UserProfileResponseDTO> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     saveUserToLocal(response.body());
                     data.setValue(Resource.success(response.body()));
@@ -55,7 +57,7 @@ public class UserRepositoryImpl implements UserRepository {
                 }
             }
             @Override
-            public void onFailure(Call<UserProfileResponseDTO> call, Throwable t) {
+            public void onFailure(@NonNull Call<UserProfileResponseDTO> call, @NonNull Throwable t) {
                 data.setValue(Resource.error("Lỗi kết nối", null));
             }
         });
@@ -82,8 +84,18 @@ public class UserRepositoryImpl implements UserRepository {
 
     @Override
     public LiveData<Resource<UserProfileResponseDTO>> getUserProfile(Long id) {
-        // Implement similarly...
-        return new MutableLiveData<>();
+        MutableLiveData<Resource<UserProfileResponseDTO>> data = new MutableLiveData<>();
+        userApiService.getUserProfile(id).enqueue(new Callback<UserProfileResponseDTO>() {
+            @Override
+            public void onResponse(@NonNull Call<UserProfileResponseDTO> call, @NonNull Response<UserProfileResponseDTO> response) {
+                if (response.isSuccessful()) {
+                    data.setValue(Resource.success(response.body()));
+                }
+            }
+            @Override
+            public void onFailure(@NonNull Call<UserProfileResponseDTO> call, @NonNull Throwable t) {}
+        });
+        return data;
     }
 
     @Override
@@ -91,25 +103,73 @@ public class UserRepositoryImpl implements UserRepository {
         MutableLiveData<Resource<UserProfileResponseDTO>> data = new MutableLiveData<>();
         userApiService.updateProfile(request).enqueue(new Callback<UserProfileResponseDTO>() {
             @Override
-            public void onResponse(Call<UserProfileResponseDTO> call, Response<UserProfileResponseDTO> response) {
+            public void onResponse(@NonNull Call<UserProfileResponseDTO> call, @NonNull Response<UserProfileResponseDTO> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     saveUserToLocal(response.body());
                     data.setValue(Resource.success(response.body()));
                 }
             }
             @Override
-            public void onFailure(Call<UserProfileResponseDTO> call, Throwable t) {}
+            public void onFailure(@NonNull Call<UserProfileResponseDTO> call, @NonNull Throwable t) {}
         });
         return data;
     }
 
     @Override
     public LiveData<Resource<UserProfileResponseDTO>> updateAvatar(MultipartBody.Part file) {
-        return new MutableLiveData<>();
+        MutableLiveData<Resource<UserProfileResponseDTO>> data = new MutableLiveData<>();
+        userApiService.updateAvatar(file).enqueue(new Callback<UserProfileResponseDTO>() {
+            @Override
+            public void onResponse(@NonNull Call<UserProfileResponseDTO> call, @NonNull Response<UserProfileResponseDTO> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    saveUserToLocal(response.body());
+                    data.setValue(Resource.success(response.body()));
+                }
+            }
+            @Override
+            public void onFailure(@NonNull Call<UserProfileResponseDTO> call, @NonNull Throwable t) {}
+        });
+        return data;
+    }
+
+    @Override
+    public LiveData<Resource<UserProfileResponseDTO>> updateProfileComplete(MultipartBody.Part avatar, RequestBody dataPayload) {
+        MutableLiveData<Resource<UserProfileResponseDTO>> result = new MutableLiveData<>();
+        result.setValue(Resource.loading(null));
+        userApiService.updateProfileComplete(avatar, dataPayload).enqueue(new Callback<UserProfileResponseDTO>() {
+            @Override
+            public void onResponse(@NonNull Call<UserProfileResponseDTO> call, @NonNull Response<UserProfileResponseDTO> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    saveUserToLocal(response.body());
+                    result.setValue(Resource.success(response.body()));
+                } else {
+                    String msg = "Cập nhật thất bại";
+                    if (response.code() == 400) msg = "Mật khẩu hiện tại không chính xác hoặc dữ liệu không hợp lệ";
+                    result.setValue(Resource.error(msg, null));
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<UserProfileResponseDTO> call, @NonNull Throwable t) {
+                result.setValue(Resource.error("Lỗi kết nối mạng: " + t.getMessage(), null));
+            }
+        });
+        return result;
     }
 
     @Override
     public LiveData<Resource<PageResponse<UserSearchResponseDTO>>> searchUsers(String query, int page, int size) {
-        return new MutableLiveData<>();
+        MutableLiveData<Resource<PageResponse<UserSearchResponseDTO>>> data = new MutableLiveData<>();
+        userApiService.searchUsers(query, page, size).enqueue(new Callback<PageResponse<UserSearchResponseDTO>>() {
+            @Override
+            public void onResponse(@NonNull Call<PageResponse<UserSearchResponseDTO>> call, @NonNull Response<PageResponse<UserSearchResponseDTO>> response) {
+                if (response.isSuccessful()) {
+                    data.setValue(Resource.success(response.body()));
+                }
+            }
+            @Override
+            public void onFailure(@NonNull Call<PageResponse<UserSearchResponseDTO>> call, @NonNull Throwable t) {}
+        });
+        return data;
     }
 }

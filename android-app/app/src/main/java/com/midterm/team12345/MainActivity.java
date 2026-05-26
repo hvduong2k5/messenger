@@ -30,7 +30,7 @@ public class MainActivity extends AppCompatActivity {
         EdgeToEdge.enable(this);
         setContentView(binding.getRoot());
 
-        ViewCompat.setOnApplyWindowInsetsListener(binding.main, (v, insets) -> {
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
@@ -69,6 +69,7 @@ public class MainActivity extends AppCompatActivity {
             } else if (itemId == R.id.nav_people) {
                 fragment = new FriendsFragment();
             } else if (itemId == R.id.nav_settings) {
+                // Sử dụng MyProfileFragment cho Issue #100
                 fragment = new MyProfileFragment();
             }
 
@@ -81,7 +82,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setupBadges() {
-        // Hiển thị số 2 màu hồng cho tab Friends như yêu cầu thiết kế
+        // Hiển thị badge số 2 màu hồng cho tab Friends (nav_people)
         BadgeDrawable badge = binding.bottomNavigation.getOrCreateBadge(R.id.nav_people);
         badge.setVisible(true);
         badge.setNumber(2);
