@@ -88,13 +88,15 @@ public class MqttManager {
     }
 
     private void connect(MqttConnectOptions options) {
-        try {
-            if (!mqttClient.isConnected()) {
-                mqttClient.connect(options);
+        new Thread(() -> {
+            try {
+                if (mqttClient != null && !mqttClient.isConnected()) {
+                    mqttClient.connect(options);
+                }
+            } catch (MqttException e) {
+                Log.e(TAG, "Connection failed", e);
             }
-        } catch (MqttException e) {
-            Log.e(TAG, "Connection failed", e);
-        }
+        }).start();
     }
 
     public void subscribe(String topic) {
