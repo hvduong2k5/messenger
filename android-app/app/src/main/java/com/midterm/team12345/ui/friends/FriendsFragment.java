@@ -51,7 +51,7 @@ public class FriendsFragment extends BaseFragment<FragmentFriendsBinding, Friend
     protected FriendsViewModel createViewModel() {
         FriendsViewModelFactory factory = new FriendsViewModelFactory(
                 com.midterm.team12345.data.repository.FriendRepositoryImpl.getInstance(requireContext()),
-                com.midterm.team12345.data.repository.UserRepositoryImpl.getInstance(requireContext())
+                com.midterm.team12345.data.repository.UserRepositoryImpl.getInstance(requireActivity().getApplication())
         );
         return new ViewModelProvider(this, factory).get(FriendsViewModel.class);
     }

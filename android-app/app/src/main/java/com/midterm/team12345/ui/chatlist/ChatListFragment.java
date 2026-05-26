@@ -32,8 +32,8 @@ public class ChatListFragment extends BaseFragment<FragmentChatListBinding, Chat
     @Override
     protected ChatListViewModel createViewModel() {
         ChatListViewModelFactory factory = new ChatListViewModelFactory(
-                ConversationRepositoryImpl.getInstance(requireContext()),
-                UserRepositoryImpl.getInstance(requireContext())
+                ConversationRepositoryImpl.getInstance(requireActivity().getApplication()),
+                UserRepositoryImpl.getInstance(requireActivity().getApplication())
         );
         return new ViewModelProvider(this, factory).get(ChatListViewModel.class);
     }

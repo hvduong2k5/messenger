@@ -58,9 +58,9 @@ public class GroupInfoActivity extends BaseActivity<ActivityGroupInfoBinding, Gr
         });
 
         // Button 2: Video (Changed label from "Call" to "Video")
-        binding.btnCall.ivActionIcon.setImageResource(R.drawable.ic_video_call);
-        binding.btnCall.tvActionLabel.setText("Video");
-        binding.btnCall.getRoot().setOnClickListener(v -> {
+        binding.btnVideo.ivActionIcon.setImageResource(R.drawable.ic_video_call);
+        binding.btnVideo.tvActionLabel.setText("Video");
+        binding.btnVideo.getRoot().setOnClickListener(v -> {
             Toast.makeText(this, "Video Call Clicked", Toast.LENGTH_SHORT).show();
         });
 

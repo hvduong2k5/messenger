@@ -91,19 +91,19 @@ public class MessagingService extends Service {
                 }
 
                 // Emit real-time message to let other components handle it if necessary
-                ConversationRepositoryImpl.getInstance(getApplicationContext()).emitRealTimeMessage(message);
+                ConversationRepositoryImpl.getInstance(getApplication()).emitRealTimeMessage(message);
             }
 
             @Override
             public void onConnectionLost(Throwable cause) {
                 updateNotification("Connection lost. Retrying...");
-                ConversationRepositoryImpl.getInstance(getApplicationContext()).updateConnectionStatus(false);
+                ConversationRepositoryImpl.getInstance(getApplication()).updateConnectionStatus(false);
             }
 
             @Override
             public void onConnectComplete(boolean reconnect, String serverURI) {
                 updateNotification("Connected to Messenger");
-                ConversationRepositoryImpl.getInstance(getApplicationContext()).updateConnectionStatus(true);
+                ConversationRepositoryImpl.getInstance(getApplication()).updateConnectionStatus(true);
                 mqttManager.subscribe("user/" + userId + "/messages");
                 mqttManager.subscribe("user/" + userId + "/presence");
             }
@@ -164,7 +164,7 @@ public class MessagingService extends Service {
 
     @Override
     public void onDestroy() {
-        ConversationRepositoryImpl.getInstance(getApplicationContext()).updateConnectionStatus(false);
+        ConversationRepositoryImpl.getInstance(getApplication()).updateConnectionStatus(false);
         mqttManager.disconnect();
         super.onDestroy();
     }

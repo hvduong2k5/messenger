@@ -24,7 +24,7 @@ public class MediaPreviewAdapter extends ListAdapter<AttachmentResponseDTO, Medi
 
             @Override
             public boolean areContentsTheSame(@NonNull AttachmentResponseDTO oldItem, @NonNull AttachmentResponseDTO newItem) {
-                return oldItem.getFileUrl().equals(newItem.getFileUrl());
+                return oldItem.getUrl().equals(newItem.getUrl());
             }
         });
     }
@@ -51,7 +51,7 @@ public class MediaPreviewAdapter extends ListAdapter<AttachmentResponseDTO, Medi
 
         void bind(AttachmentResponseDTO media) {
             Glide.with(binding.ivMediaThumbnail.getContext())
-                    .load(media.getFileUrl())
+                    .load(media.getUrl())
                     .placeholder(R.color.btn_background_gray)
                     .centerCrop()
                     .into(binding.ivMediaThumbnail);
