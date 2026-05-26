@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -42,23 +43,20 @@ public class MyProfileFragment extends BaseFragment<FragmentMyProfileBinding, My
 
     @Override
     protected void setupViews() {
-        setupMenuUI();
+        // Ẩn nút back nếu là fragment chính trong tab bar (Lưu ý UX)
+        binding.toolbar.setNavigationIcon(null);
         
-        binding.toolbar.setNavigationOnClickListener(v -> {
-            if (getActivity() instanceof com.midterm.team12345.MainActivity) {
-                ((com.midterm.team12345.MainActivity) getActivity()).switchToChats();
-            }
-        });
+        setupMenuUI();
 
         binding.ivSettingsGear.setOnClickListener(v -> {
-            // General settings logic
+            Toast.makeText(requireContext(), "General Settings", Toast.LENGTH_SHORT).show();
         });
 
         viewModel.refreshProfile();
     }
 
     private void setupMenuUI() {
-        // Cấu hình icon và màu sắc cho từng mục menu như hình thiết kế
+        // Cấu hình các mục menu theo thiết kế Messenger
         setupRow(binding.itemDarkMode, "Dark Mode", null, R.drawable.ic_lock, R.color.black, true);
         setupRow(binding.itemActiveStatus, "Active Status", "On", R.drawable.bg_online_status, R.color.badge_green, false);
         
@@ -73,7 +71,7 @@ public class MyProfileFragment extends BaseFragment<FragmentMyProfileBinding, My
         setupRow(binding.itemHelp, "Help", null, R.drawable.ic_email, R.color.brand_1, false);
         setupRow(binding.itemInviteFriend, "Invite a Friend", null, R.drawable.ic_send, R.color.messenger_blue, false);
 
-        // Nút Logout đỏ rực cảnh báo
+        // Nút Logout đỏ
         binding.itemLogout.tvTitle.setText("Log Out");
         binding.itemLogout.tvTitle.setTextColor(ContextCompat.getColor(requireContext(), R.color.messenger_pink));
         binding.itemLogout.ivIcon.setImageResource(R.drawable.ic_lock);
@@ -106,7 +104,7 @@ public class MyProfileFragment extends BaseFragment<FragmentMyProfileBinding, My
     private void showLogoutConfirmation() {
         new AlertDialog.Builder(requireContext())
                 .setTitle("Đăng xuất")
-                .setMessage("Bạn có chắc chắn muốn đăng xuất khỏi tài khoản này?")
+                .setMessage("Bạn có chắc chắn muốn đăng xuất?")
                 .setPositiveButton("Đăng xuất", (dialog, which) -> viewModel.logout())
                 .setNegativeButton("Hủy", null)
                 .show();
@@ -116,7 +114,6 @@ public class MyProfileFragment extends BaseFragment<FragmentMyProfileBinding, My
     protected void observeViewModel() {
         super.observeViewModel();
         
-        // SSOT: Cập nhật UI tức thì khi dữ liệu Room DB thay đổi
         viewModel.getUserProfile().observe(getViewLifecycleOwner(), user -> {
             if (user != null) {
                 binding.tvFullName.setText(user.getUsername());
@@ -137,6 +134,10 @@ public class MyProfileFragment extends BaseFragment<FragmentMyProfileBinding, My
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             startActivity(intent);
             requireActivity().finish();
+        });
+
+        viewModel.isLoading.observe(getViewLifecycleOwner(), isLoading -> {
+            // Hiển thị loading nếu cần
         });
     }
 }
