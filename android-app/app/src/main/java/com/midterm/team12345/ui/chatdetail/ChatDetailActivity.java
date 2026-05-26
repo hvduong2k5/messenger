@@ -230,8 +230,8 @@ public class ChatDetailActivity extends AppCompatActivity {
     private void setupViewModel() {
         ChatDetailViewModelFactory factory = new ChatDetailViewModelFactory(
                 MessageRepositoryImpl.getInstance(this),
-                ConversationRepositoryImpl.getInstance(this),
-                UserRepositoryImpl.getInstance(this));
+                ConversationRepositoryImpl.getInstance(getApplication()),
+                UserRepositoryImpl.getInstance(getApplication()));
         viewModel = new ViewModelProvider(this, factory).get(ChatDetailViewModel.class);
     }
 

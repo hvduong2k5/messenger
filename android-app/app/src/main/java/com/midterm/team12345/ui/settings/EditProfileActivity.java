@@ -78,7 +78,6 @@ public class EditProfileActivity extends BaseActivity<ActivityEditProfileBinding
 
         // 3. Nút Lưu
         binding.btnUpdate.setOnClickListener(v -> performUpdate());
-        binding.btnSave.setOnClickListener(v -> performUpdate());
 
         setupChangeDetection();
         loadCurrentUserData();

@@ -61,8 +61,8 @@ public class AddMembersActivity extends AppCompatActivity implements AddMembersA
         binding.toolbar.setNavigationOnClickListener(v -> finish());
 
         adapter = new AddMembersAdapter(this);
-        binding.rvFriends.setLayoutManager(new LinearLayoutManager(this));
-        binding.rvFriends.setAdapter(adapter);
+        binding.rvMembers.setLayoutManager(new LinearLayoutManager(this));
+        binding.rvMembers.setAdapter(adapter);
 
         binding.etSearch.addTextChangedListener(new TextWatcher() {
             @Override
@@ -77,7 +77,7 @@ public class AddMembersActivity extends AppCompatActivity implements AddMembersA
             public void afterTextChanged(Editable s) {}
         });
 
-        binding.btnDone.setOnClickListener(v -> {
+        binding.btnAddMembers.setOnClickListener(v -> {
             if (selectedUserIds != null && !selectedUserIds.isEmpty()) {
                 viewModel.addParticipants(conversationId, selectedUserIds);
             }
@@ -103,8 +103,8 @@ public class AddMembersActivity extends AppCompatActivity implements AddMembersA
 
         viewModel.isLoading.observe(this, isLoading -> {
             // Nút Done mờ đi khi đang xử lý
-            binding.btnDone.setEnabled(!isLoading);
-            binding.btnDone.setAlpha(isLoading ? 0.5f : 1.0f);
+            binding.btnAddMembers.setEnabled(!isLoading);
+            binding.btnAddMembers.setAlpha(isLoading ? 0.5f : 1.0f);
         });
     }
 
@@ -113,9 +113,10 @@ public class AddMembersActivity extends AppCompatActivity implements AddMembersA
         this.selectedUserIds = selectedIds;
         // Logic: Nếu size == 0: Disable nút ✓, ngược lại Enable
         boolean hasSelection = count > 0;
-        binding.btnDone.setEnabled(hasSelection);
-        binding.btnDone.setAlpha(hasSelection ? 1.0f : 0.5f);
-        binding.btnDone.setClickable(hasSelection);
+        binding.btnAddMembers.setEnabled(hasSelection);
+        binding.btnAddMembers.setAlpha(hasSelection ? 1.0f : 0.5f);
+        binding.btnAddMembers.setClickable(hasSelection);
+        binding.btnAddMembers.setText("Add " + count + " Members");
     }
 
     private void showKeyboard(View view) {

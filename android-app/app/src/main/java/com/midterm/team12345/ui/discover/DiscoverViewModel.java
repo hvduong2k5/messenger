@@ -29,22 +29,7 @@ public class DiscoverViewModel extends BaseViewModel {
     private final Handler searchHandler = new Handler(Looper.getMainLooper());
     private Runnable searchRunnable;
 
-    // Sử dụng switchMap để tự động hủy bỏ các kết quả cũ khi query thay đổi
-    public final LiveData<Resource<List<UserSearchResponseDTO>>> searchResult = Transformations.switchMap(_query, query -> {
-        if (query == null || query.trim().isEmpty()) {
-            MutableLiveData<Resource<List<UserSearchResponseDTO>>> empty = new MutableLiveData<>();
-            empty.setValue(Resource.success(new ArrayList<>()));
-            return empty;
-        }
-        return Transformations.map(userRepository.searchUsers(query, 0, 50), resource -> {
-            if (resource.status == Resource.Status.SUCCESS && resource.data != null) {
-                return Resource.success(resource.data.getContent());
-            } else if (resource.status == Resource.Status.ERROR) {
-                return Resource.error(resource.message, null);
-            }
-            return Resource.loading(null);
-        });
-    });
+    public final LiveData<Resource<List<UserSearchResponseDTO>>> searchResult;
 
     private final MutableLiveData<List<UserSearchResponseDTO>> _userList = new MutableLiveData<>(new ArrayList<>());
     public final LiveData<List<UserSearchResponseDTO>> userList = _userList;
@@ -53,6 +38,23 @@ public class DiscoverViewModel extends BaseViewModel {
         super();
         this.userRepository = UserRepositoryImpl.getInstance(application);
         this.friendRepository = FriendRepositoryImpl.getInstance(application);
+        
+        // Sử dụng switchMap để tự động hủy bỏ các kết quả cũ khi query thay đổi
+        this.searchResult = Transformations.switchMap(_query, query -> {
+            if (query == null || query.trim().isEmpty()) {
+                MutableLiveData<Resource<List<UserSearchResponseDTO>>> empty = new MutableLiveData<>();
+                empty.setValue(Resource.success(new ArrayList<>()));
+                return empty;
+            }
+            return Transformations.map(userRepository.searchUsers(query, 0, 50), resource -> {
+                if (resource.status == Resource.Status.SUCCESS && resource.data != null) {
+                    return Resource.success(resource.data.getContent());
+                } else if (resource.status == Resource.Status.ERROR) {
+                    return Resource.error(resource.message, null);
+                }
+                return Resource.loading(null);
+            });
+        });
     }
 
     public void onSearchQueryChanged(String query) {

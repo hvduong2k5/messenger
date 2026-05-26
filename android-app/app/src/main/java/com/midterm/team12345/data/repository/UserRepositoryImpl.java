@@ -71,7 +71,7 @@ public class UserRepositoryImpl implements UserRepository {
             entity.setUsername(dto.getUsername());
             entity.setEmail(dto.getEmail());
             entity.setAvatarUrl(dto.getAvatarUrl());
-            entity.setBio(dto.getBio());
+            entity.setBio(dto.getStatus());
             entity.setIsOnline(true);
             database.userDao().insertUser(entity);
         }).start();
