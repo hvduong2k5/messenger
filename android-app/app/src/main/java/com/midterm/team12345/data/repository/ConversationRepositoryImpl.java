@@ -192,12 +192,26 @@ public class ConversationRepositoryImpl implements ConversationRepository {
         return data;
     }
 
+    private final MutableLiveData<MqttMessageDTO> realTimeMessages = new MutableLiveData<>();
+    private final MutableLiveData<Boolean> connectionStatus = new MutableLiveData<>();
+
     @Override
-    public LiveData<MqttMessageDTO> getRealTimeMessages() { return null; }
+    public LiveData<MqttMessageDTO> getRealTimeMessages() {
+        return realTimeMessages;
+    }
+
     @Override
-    public LiveData<Boolean> getConnectionStatus() { return null; }
+    public LiveData<Boolean> getConnectionStatus() {
+        return connectionStatus;
+    }
+
     @Override
-    public void emitRealTimeMessage(MqttMessageDTO message) {}
+    public void emitRealTimeMessage(MqttMessageDTO message) {
+        realTimeMessages.postValue(message);
+    }
+
     @Override
-    public void updateConnectionStatus(boolean connected) {}
+    public void updateConnectionStatus(boolean connected) {
+        connectionStatus.postValue(connected);
+    }
 }
