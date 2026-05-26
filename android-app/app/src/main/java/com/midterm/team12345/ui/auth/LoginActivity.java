@@ -20,6 +20,7 @@ import com.midterm.team12345.MainActivity;
 import com.midterm.team12345.R;
 import com.midterm.team12345.data.repository.AuthRepositoryImpl;
 import com.midterm.team12345.databinding.ActivityLoginBinding;
+import com.midterm.team12345.ui.auth.forgotpassword.ForgotPasswordActivity;
 import com.midterm.team12345.utils.Resource;
 
 public class LoginActivity extends AppCompatActivity {
@@ -76,6 +77,10 @@ public class LoginActivity extends AppCompatActivity {
             } catch (Exception e) {
                 Toast.makeText(this, "RegisterActivity chưa sẵn sàng", Toast.LENGTH_SHORT).show();
             }
+        });
+
+        binding.tvForgotPassword.setOnClickListener(v -> {
+            startActivity(new Intent(LoginActivity.this, ForgotPasswordActivity.class));
         });
     }
 
