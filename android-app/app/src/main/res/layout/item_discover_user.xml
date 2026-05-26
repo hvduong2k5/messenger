@@ -10,8 +10,8 @@
 
     <de.hdodenhof.circleimageview.CircleImageView
         android:id="@+id/ivAvatar"
-        android:layout_width="52dp"
-        android:layout_height="52dp"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
         android:src="@drawable/ic_avatar_placeholder"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -22,42 +22,50 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
+        android:layout_marginEnd="12dp"
         android:ellipsize="end"
         android:maxLines="1"
-        android:text="Member Name"
         android:textColor="@color/black"
         android:textSize="17sp"
         android:textStyle="bold"
-        app:layout_constraintBottom_toTopOf="@id/tvUsername"
-        app:layout_constraintEnd_toStartOf="@id/cbSelect"
+        app:layout_constraintBottom_toTopOf="@id/tvSubtitle"
+        app:layout_constraintEnd_toStartOf="@id/btnAction"
         app:layout_constraintStart_toEndOf="@id/ivAvatar"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_chainStyle="packed" />
+        app:layout_constraintVertical_chainStyle="packed"
+        tools:text="Nguyen Van A" />
 
     <TextView
-        android:id="@+id/tvUsername"
+        android:id="@+id/tvSubtitle"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
+        android:layout_marginEnd="12dp"
+        android:ellipsize="end"
+        android:maxLines="1"
         android:textColor="@color/gray_text"
         android:textSize="14sp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@id/cbSelect"
+        app:layout_constraintEnd_toStartOf="@id/btnAction"
         app:layout_constraintStart_toEndOf="@id/ivAvatar"
         app:layout_constraintTop_toBottomOf="@id/tvFullName"
         tools:text="@username" />
 
-    <com.google.android.material.checkbox.MaterialCheckBox
-        android:id="@+id/cbSelect"
-        android:layout_width="26dp"
-        android:layout_height="26dp"
-        android:button="@drawable/sl_checkbox_circle"
-        android:clickable="false"
-        android:focusable="false"
-        app:buttonTint="@null"
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnAction"
+        style="@style/Widget.MaterialComponents.Button.TextButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:minWidth="80dp"
+        android:textAllCaps="false"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        app:cornerRadius="20dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:useMaterialThemeColors="false" />
+        tools:backgroundTint="@color/messenger_blue"
+        tools:text="Thêm"
+        tools:textColor="@color/white" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

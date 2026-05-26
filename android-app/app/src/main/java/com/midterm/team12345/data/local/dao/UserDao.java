@@ -40,6 +40,8 @@ public interface UserDao {
     @Query("SELECT * FROM users WHERE is_friend = 1 ORDER BY friendship_established_at DESC")
     List<UserEntity> getFriendsByNewestSync();
 
+    @Query("SELECT * FROM users WHERE is_friend = 1 AND (username LIKE '%' || :searchQuery || '%') ORDER BY username ASC")
+    LiveData<List<UserEntity>> searchFriendsLocally(String searchQuery);
 
     @Query("DELETE FROM users")
     void deleteAllUsers();

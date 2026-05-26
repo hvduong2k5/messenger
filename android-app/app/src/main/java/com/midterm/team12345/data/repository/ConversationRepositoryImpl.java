@@ -5,7 +5,6 @@ import androidx.annotation.NonNull;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
-import com.midterm.team12345.data.local.TokenManager;
 import com.midterm.team12345.data.remote.RetrofitClient;
 import com.midterm.team12345.data.remote.api.ConversationApiService;
 import com.midterm.team12345.data.remote.dto.request.ConversationRequestDTO;
@@ -18,7 +17,9 @@ import com.midterm.team12345.data.remote.dto.MqttMessageDTO;
 import com.midterm.team12345.domain.repository.ConversationRepository;
 import com.midterm.team12345.utils.Resource;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -113,26 +114,68 @@ public class ConversationRepositoryImpl implements ConversationRepository {
 
     @Override
     public LiveData<Resource<Void>> addParticipant(Long conversationId, Long userId) {
-        // Implement
-        return null;
+        MutableLiveData<Resource<Void>> data = new MutableLiveData<>();
+        data.setValue(Resource.loading(null));
+        Map<String, Long> body = Collections.singletonMap("userId", userId);
+        apiService.addParticipant(conversationId, body).enqueue(new Callback<Void>() {
+            @Override
+            public void onResponse(@NonNull Call<Void> call, @NonNull Response<Void> response) {
+                if (response.isSuccessful()) data.setValue(Resource.success(null));
+                else data.setValue(Resource.error("Failed to add participant", null));
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<Void> call, @NonNull Throwable t) {
+                data.setValue(Resource.error(t.getMessage(), null));
+            }
+        });
+        return data;
     }
 
     @Override
     public LiveData<Resource<Void>> removeParticipant(Long conversationId, Long userId) {
-        // Implement
-        return null;
+        MutableLiveData<Resource<Void>> data = new MutableLiveData<>();
+        data.setValue(Resource.loading(null));
+        apiService.removeParticipant(conversationId, userId).enqueue(new Callback<Void>() {
+            @Override
+            public void onResponse(@NonNull Call<Void> call, @NonNull Response<Void> response) {
+                if (response.isSuccessful()) data.setValue(Resource.success(null));
+                else data.setValue(Resource.error("Failed to remove participant", null));
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<Void> call, @NonNull Throwable t) {
+                data.setValue(Resource.error(t.getMessage(), null));
+            }
+        });
+        return data;
     }
 
     @Override
     public LiveData<Resource<Void>> updateConversation(Long id, ConversationUpdateDTO request) {
-        // Implement
-        return null;
+        MutableLiveData<Resource<Void>> data = new MutableLiveData<>();
+        data.setValue(Resource.loading(null));
+        apiService.updateConversation(id, request).enqueue(new Callback<ConversationResponseDTO>() {
+            @Override
+            public void onResponse(@NonNull Call<ConversationResponseDTO> call, @NonNull Response<ConversationResponseDTO> response) {
+                if (response.isSuccessful()) data.setValue(Resource.success(null));
+                else data.setValue(Resource.error("Failed to update conversation", null));
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<ConversationResponseDTO> call, @NonNull Throwable t) {
+                data.setValue(Resource.error(t.getMessage(), null));
+            }
+        });
+        return data;
     }
 
     @Override
     public LiveData<Resource<Void>> leaveConversation(Long conversationId) {
-        // Implement
-        return null;
+        // Typically leave is removing oneself. Need current user ID.
+        // For now, assuming it's handled or we need a specific API.
+        // Usually, removing oneself from participants works if the backend allows it.
+        return null; 
     }
 
     @Override

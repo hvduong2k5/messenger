@@ -160,15 +160,20 @@ public class UserRepositoryImpl implements UserRepository {
     @Override
     public LiveData<Resource<PageResponse<UserSearchResponseDTO>>> searchUsers(String query, int page, int size) {
         MutableLiveData<Resource<PageResponse<UserSearchResponseDTO>>> data = new MutableLiveData<>();
+        data.setValue(Resource.loading(null)); // Phát tín hiệu Loading ngay lập tức
         userApiService.searchUsers(query, page, size).enqueue(new Callback<PageResponse<UserSearchResponseDTO>>() {
             @Override
             public void onResponse(@NonNull Call<PageResponse<UserSearchResponseDTO>> call, @NonNull Response<PageResponse<UserSearchResponseDTO>> response) {
                 if (response.isSuccessful()) {
                     data.setValue(Resource.success(response.body()));
+                } else {
+                    data.setValue(Resource.error("Không thể tìm kiếm người dùng", null));
                 }
             }
             @Override
-            public void onFailure(@NonNull Call<PageResponse<UserSearchResponseDTO>> call, @NonNull Throwable t) {}
+            public void onFailure(@NonNull Call<PageResponse<UserSearchResponseDTO>> call, @NonNull Throwable t) {
+                data.setValue(Resource.error("Lỗi kết nối mạng", null));
+            }
         });
         return data;
     }
