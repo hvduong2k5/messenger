@@ -84,8 +84,8 @@ public class MainActivity extends AppCompatActivity {
     private void setupBadges() {
         // Hiển thị badge số 2 màu hồng cho tab Friends (nav_people)
         BadgeDrawable badge = binding.bottomNavigation.getOrCreateBadge(R.id.nav_people);
-        badge.setVisible(true);
-        badge.setNumber(2);
+        badge.setVisible(false);
+        // badge.setNumber(2);
         badge.setBackgroundColor(getColor(R.color.messenger_pink));
     }
 
