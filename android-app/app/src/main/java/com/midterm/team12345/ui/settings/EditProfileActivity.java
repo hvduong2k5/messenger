@@ -73,10 +73,7 @@ public class EditProfileActivity extends BaseActivity<ActivityEditProfileBinding
                 .build())
         );
 
-        // 2. DatePicker cho ngày sinh
-        binding.etBirthday.setOnClickListener(v -> showDatePicker());
-
-        // 3. Nút Lưu
+        // 2. Nút Lưu
         binding.btnUpdate.setOnClickListener(v -> performUpdate());
 
         setupChangeDetection();
@@ -90,9 +87,6 @@ public class EditProfileActivity extends BaseActivity<ActivityEditProfileBinding
                 if (user != null && currentUser == null) {
                     currentUser = user;
                     binding.tvDisplayFullName.setText(user.getUsername());
-                    binding.etFullName.setText(user.getUsername());
-                    binding.etUsername.setText(user.getUsername().toLowerCase().replace(" ", "_"));
-                    binding.etBio.setText(user.getBio() != null ? user.getBio() : "");
                     binding.etEmail.setText(user.getEmail());
                     
                     Glide.with(this)
@@ -125,16 +119,9 @@ public class EditProfileActivity extends BaseActivity<ActivityEditProfileBinding
         binding.etNewPassword.addTextChangedListener(watcher);
     }
 
-    private void showDatePicker() {
-        final Calendar c = Calendar.getInstance();
-        new DatePickerDialog(this, (view, year, month, day) -> 
-            binding.etBirthday.setText(day + "/" + (month + 1) + "/" + year),
-            c.get(Calendar.YEAR), c.get(Calendar.MONTH), c.get(Calendar.DAY_OF_MONTH)).show();
-    }
-
     private void performUpdate() {
         String email = binding.etEmail.getText().toString().trim();
-        String status = binding.etBio.getText().toString().trim();
+        String status = currentUser != null ? currentUser.getBio() : null;
         String newPassword = binding.etNewPassword.getText().toString().trim();
         String oldPassword = binding.etCurrentPassword.getText().toString().trim();
 
