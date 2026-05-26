@@ -14,8 +14,7 @@
         app:layout_constraintTop_toTopOf="parent"
         app:navigationIcon="@drawable/ic_back_arrow"
         app:title="Edit Profile"
-        app:titleCentered="true"
-        app:titleTextAppearance="@style/TextAppearance.MaterialComponents.Subtitle1" />
+        app:titleCentered="true" />
 
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
@@ -30,47 +29,60 @@
             android:orientation="vertical"
             android:padding="24dp">
 
-            <!-- Avatar Edit Section -->
-            <FrameLayout
+            <!-- Avatar Section -->
+            <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
-                android:layout_marginBottom="32dp">
+                android:layout_marginBottom="16dp">
 
                 <de.hdodenhof.circleimageview.CircleImageView
                     android:id="@+id/ivAvatar"
-                    android:layout_width="100dp"
-                    android:layout_height="100dp"
+                    android:layout_width="110dp"
+                    android:layout_height="110dp"
                     android:src="@drawable/ic_avatar_placeholder"
                     app:civ_border_color="#F2F2F7"
                     app:civ_border_width="2dp" />
 
                 <ImageView
+                    android:id="@+id/ivChangeAvatar"
                     android:layout_width="32dp"
                     android:layout_height="32dp"
-                    android:layout_gravity="bottom|end"
                     android:background="@drawable/bg_settings_icon_circle"
                     android:backgroundTint="@color/messenger_blue"
-                    android:padding="8dp"
+                    android:padding="6dp"
                     android:src="@android:drawable/ic_menu_camera"
+                    app:layout_constraintBottom_toBottomOf="@id/ivAvatar"
+                    app:layout_constraintEnd_toEndOf="@id/ivAvatar"
                     app:tint="@color/white" />
-            </FrameLayout>
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+            <TextView
+                android:id="@+id/tvDisplayFullName"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:text="Jacob West"
+                android:textColor="@color/black"
+                android:textSize="24sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="32dp"/>
 
             <TextView style="@style/EditProfileLabel" android:text="What's your name?" />
-            <EditText android:id="@+id/etFullName" style="@style/EditProfileInput" android:hint="What's your name?" />
+            <EditText android:id="@+id/etFullName" style="@style/EditProfileInput" android:hint="Full Name" />
 
             <TextView style="@style/EditProfileLabel" android:text="Username" />
             <EditText android:id="@+id/etUsername" style="@style/EditProfileInput" android:hint="Username" />
 
             <TextView style="@style/EditProfileLabel" android:text="Bio" />
-            <EditText android:id="@+id/etBio" style="@style/EditProfileInput" android:hint="Bio" android:minLines="1" />
+            <EditText android:id="@+id/etBio" style="@style/EditProfileInput" android:hint="Tell something about yourself" />
 
             <TextView style="@style/EditProfileLabel" android:text="Email" />
-            <EditText android:id="@+id/etEmail" style="@style/EditProfileInput" android:hint="Email" android:inputType="textEmailAddress" />
+            <EditText android:id="@+id/etEmail" style="@style/EditProfileInput" android:hint="Email" />
 
             <TextView style="@style/EditProfileLabel" android:text="What is your date of birth?" />
             <FrameLayout android:layout_width="match_parent" android:layout_height="wrap_content">
-                <EditText android:id="@+id/etBirthday" style="@style/EditProfileInput" android:focusable="false" android:hint="What is your date of birth?" />
+                <EditText android:id="@+id/etBirthday" style="@style/EditProfileInput" android:focusable="false" android:hint="Select date" />
                 <ImageView
                     android:layout_width="20dp"
                     android:layout_height="20dp"
@@ -79,6 +91,44 @@
                     android:src="@android:drawable/ic_menu_my_calendar"
                     app:tint="@color/messenger_blue" />
             </FrameLayout>
+
+            <!-- Security Fields (Visible when needed) -->
+            <LinearLayout
+                android:id="@+id/layoutSecurity"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone"
+                tools:visibility="visible">
+
+                <TextView style="@style/EditProfileLabel" android:text="New Password" android:textColor="@color/messenger_blue" />
+                <com.google.android.material.textfield.TextInputLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:hintEnabled="false"
+                    app:passwordToggleEnabled="true">
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/etNewPassword"
+                        style="@style/EditProfileInput"
+                        android:layout_marginTop="0dp"
+                        android:hint="New password (optional)"
+                        android:inputType="textPassword" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <TextView style="@style/EditProfileLabel" android:text="Current Password (Required)" android:textColor="@color/messenger_pink" />
+                <com.google.android.material.textfield.TextInputLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:hintEnabled="false"
+                    app:passwordToggleEnabled="true">
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/etCurrentPassword"
+                        style="@style/EditProfileInput"
+                        android:layout_marginTop="0dp"
+                        android:hint="Confirm with current password"
+                        android:inputType="textPassword" />
+                </com.google.android.material.textfield.TextInputLayout>
+            </LinearLayout>
 
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
@@ -95,5 +145,15 @@
         app:backgroundTint="@color/messenger_blue"
         app:cornerRadius="16dp"
         app:layout_constraintBottom_toBottomOf="parent" />
+
+    <ProgressBar
+        android:id="@+id/progressBar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

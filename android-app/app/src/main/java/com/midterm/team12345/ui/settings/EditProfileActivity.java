@@ -1,25 +1,45 @@
 package com.midterm.team12345.ui.settings;
 
 import android.app.DatePickerDialog;
+import android.net.Uri;
+import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.PickVisualMediaRequest;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.bumptech.glide.Glide;
+import com.google.gson.Gson;
 import com.midterm.team12345.R;
 import com.midterm.team12345.data.local.TokenManager;
+import com.midterm.team12345.data.local.entity.UserEntity;
+import com.midterm.team12345.data.remote.dto.request.UpdateProfileRequestDTO;
 import com.midterm.team12345.data.repository.UserRepositoryImpl;
 import com.midterm.team12345.databinding.ActivityEditProfileBinding;
 import com.midterm.team12345.ui.base.BaseActivity;
 import com.midterm.team12345.utils.Resource;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.util.Calendar;
+
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
+import okhttp3.RequestBody;
 
 public class EditProfileActivity extends BaseActivity<ActivityEditProfileBinding, EditProfileViewModel> {
 
     private TokenManager tokenManager;
+    private UserEntity currentUser;
+    private Uri selectedImageUri;
+    private ActivityResultLauncher<PickVisualMediaRequest> pickMedia;
 
     @Override
     protected ActivityEditProfileBinding inflateBinding(LayoutInflater inflater) {
@@ -37,29 +57,43 @@ public class EditProfileActivity extends BaseActivity<ActivityEditProfileBinding
     @Override
     protected void setupViews() {
         tokenManager = new TokenManager(this);
-        
         binding.toolbar.setNavigationOnClickListener(v -> finish());
 
-        binding.etBirthday.setOnClickListener(v -> showDatePicker());
-
-        binding.btnUpdate.setOnClickListener(v -> {
-            String email = binding.etEmail.getText().toString().trim();
-            String status = binding.etBio.getText().toString().trim();
-            // In a real app, you might have separate fields for passwords
-            viewModel.updateProfile(email, status, null, null);
+        // 1. Tích hợp Image Picker
+        pickMedia = registerForActivityResult(new ActivityResultContracts.PickVisualMedia(), uri -> {
+            if (uri != null) {
+                selectedImageUri = uri;
+                Glide.with(this).load(uri).circleCrop().into(binding.ivAvatar);
+            }
         });
 
+        binding.ivChangeAvatar.setOnClickListener(v -> 
+            pickMedia.launch(new PickVisualMediaRequest.Builder()
+                .setMediaType(ActivityResultContracts.PickVisualMedia.ImageOnly.INSTANCE)
+                .build())
+        );
+
+        // 2. DatePicker cho ngày sinh
+        binding.etBirthday.setOnClickListener(v -> showDatePicker());
+
+        // 3. Nút Lưu
+        binding.btnUpdate.setOnClickListener(v -> performUpdate());
+        binding.btnSave.setOnClickListener(v -> performUpdate());
+
+        setupChangeDetection();
         loadCurrentUserData();
     }
 
     private void loadCurrentUserData() {
         Long userId = tokenManager.getUserId();
-        if (userId != null && userId != -1L) {
+        if (userId != null) {
             viewModel.getLocalUser(userId).observe(this, user -> {
-                if (user != null) {
+                if (user != null && currentUser == null) {
+                    currentUser = user;
+                    binding.tvDisplayFullName.setText(user.getUsername());
                     binding.etFullName.setText(user.getUsername());
-                    binding.etUsername.setText(user.getUsername());
-                    binding.etBio.setText(user.getBio());
+                    binding.etUsername.setText(user.getUsername().toLowerCase().replace(" ", "_"));
+                    binding.etBio.setText(user.getBio() != null ? user.getBio() : "");
                     binding.etEmail.setText(user.getEmail());
                     
                     Glide.with(this)
@@ -72,29 +106,88 @@ public class EditProfileActivity extends BaseActivity<ActivityEditProfileBinding
         }
     }
 
+    private void setupChangeDetection() {
+        TextWatcher watcher = new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                if (currentUser != null) {
+                    String inputEmail = binding.etEmail.getText().toString().trim();
+                    String inputPassword = binding.etNewPassword.getText().toString().trim();
+                    boolean passwordRequired = !inputEmail.equals(currentUser.getEmail()) || !inputPassword.isEmpty();
+                    binding.layoutSecurity.setVisibility(passwordRequired ? View.VISIBLE : View.GONE);
+                }
+            }
+            @Override
+            public void afterTextChanged(Editable s) {}
+        };
+        binding.etEmail.addTextChangedListener(watcher);
+        binding.etNewPassword.addTextChangedListener(watcher);
+    }
+
     private void showDatePicker() {
         final Calendar c = Calendar.getInstance();
-        int year = c.get(Calendar.YEAR);
-        int month = c.get(Calendar.MONTH);
-        int day = c.get(Calendar.DAY_OF_MONTH);
+        new DatePickerDialog(this, (view, year, month, day) -> 
+            binding.etBirthday.setText(day + "/" + (month + 1) + "/" + year),
+            c.get(Calendar.YEAR), c.get(Calendar.MONTH), c.get(Calendar.DAY_OF_MONTH)).show();
+    }
 
-        DatePickerDialog datePickerDialog = new DatePickerDialog(this,
-                (view, year1, monthOfYear, dayOfMonth) -> 
-                        binding.etBirthday.setText(dayOfMonth + "/" + (monthOfYear + 1) + "/" + year1), 
-                year, month, day);
-        datePickerDialog.show();
+    private void performUpdate() {
+        String email = binding.etEmail.getText().toString().trim();
+        String status = binding.etBio.getText().toString().trim();
+        String newPassword = binding.etNewPassword.getText().toString().trim();
+        String oldPassword = binding.etCurrentPassword.getText().toString().trim();
+
+        if (binding.layoutSecurity.getVisibility() == View.VISIBLE && oldPassword.isEmpty()) {
+            Toast.makeText(this, "Vui lòng nhập mật khẩu hiện tại để xác nhận", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        MultipartBody.Part avatarPart = null;
+        if (selectedImageUri != null) {
+            avatarPart = prepareFilePart("avatar", selectedImageUri);
+        }
+
+        UpdateProfileRequestDTO dto = new UpdateProfileRequestDTO();
+        if (!email.equals(currentUser.getEmail())) dto.setEmail(email);
+        dto.setStatus(status);
+        if (!newPassword.isEmpty()) dto.setPassword(newPassword);
+        if (!oldPassword.isEmpty()) dto.setOldPassword(oldPassword);
+
+        RequestBody dataPayload = RequestBody.create(
+                MediaType.parse("application/json"), new Gson().toJson(dto));
+
+        viewModel.updateProfile(avatarPart, dataPayload);
+    }
+
+    private MultipartBody.Part prepareFilePart(String partName, Uri fileUri) {
+        try {
+            File file = new File(getCacheDir(), "upload_avatar.jpg");
+            InputStream is = getContentResolver().openInputStream(fileUri);
+            FileOutputStream os = new FileOutputStream(file);
+            byte[] buffer = new byte[1024];
+            int length;
+            while ((length = is.read(buffer)) > 0) os.write(buffer, 0, length);
+            os.close(); is.close();
+            return MultipartBody.Part.createFormData(partName, file.getName(), 
+                RequestBody.create(MediaType.parse(getContentResolver().getType(fileUri)), file));
+        } catch (Exception e) { return null; }
     }
 
     @Override
     protected void observeViewModel() {
         super.observeViewModel();
-        
         viewModel.updateResult.observe(this, resource -> {
-            if (resource.status == Resource.Status.SUCCESS) {
-                Toast.makeText(this, "Profile updated successfully!", Toast.LENGTH_SHORT).show();
+            if (resource.status == Resource.Status.LOADING) {
+                binding.progressBar.setVisibility(View.VISIBLE);
+            } else if (resource.status == Resource.Status.SUCCESS) {
+                binding.progressBar.setVisibility(View.GONE);
+                Toast.makeText(this, "Cập nhật thành công!", Toast.LENGTH_SHORT).show();
                 finish();
             } else if (resource.status == Resource.Status.ERROR) {
-                Toast.makeText(this, "Update failed: " + resource.message, Toast.LENGTH_LONG).show();
+                binding.progressBar.setVisibility(View.GONE);
+                Toast.makeText(this, resource.message, Toast.LENGTH_LONG).show();
             }
         });
     }

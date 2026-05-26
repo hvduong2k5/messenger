@@ -8,6 +8,7 @@ import com.midterm.team12345.data.remote.dto.response.UserProfileResponseDTO;
 import com.midterm.team12345.data.remote.dto.response.UserSearchResponseDTO;
 import com.midterm.team12345.utils.Resource;
 import okhttp3.MultipartBody;
+import okhttp3.RequestBody;
 
 public interface UserRepository {
     LiveData<Resource<UserProfileResponseDTO>> getMyProfile();
@@ -15,5 +16,9 @@ public interface UserRepository {
     LiveData<Resource<UserProfileResponseDTO>> getUserProfile(Long id);
     LiveData<Resource<UserProfileResponseDTO>> updateProfile(UpdateProfileRequestDTO request);
     LiveData<Resource<UserProfileResponseDTO>> updateAvatar(MultipartBody.Part file);
+    
+    // Thêm hàm cho Issue #101
+    LiveData<Resource<UserProfileResponseDTO>> updateProfileComplete(MultipartBody.Part avatar, RequestBody data);
+    
     LiveData<Resource<PageResponse<UserSearchResponseDTO>>> searchUsers(String query, int page, int size);
 }

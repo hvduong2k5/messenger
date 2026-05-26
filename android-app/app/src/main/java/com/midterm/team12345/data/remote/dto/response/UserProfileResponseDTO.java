@@ -16,7 +16,7 @@ public class UserProfileResponseDTO {
     private String avatarUrl;
 
     @SerializedName("status")
-    private String status;
+    private String status; // Thường dùng làm Bio trong Messenger
 
     public Long getId() { return id; }
     public String getUsername() { return username; }
