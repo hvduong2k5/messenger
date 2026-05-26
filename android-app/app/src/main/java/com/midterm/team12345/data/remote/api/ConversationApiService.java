@@ -5,6 +5,7 @@ import com.midterm.team12345.data.remote.dto.request.ConversationUpdateDTO;
 import com.midterm.team12345.data.remote.dto.response.ConversationResponseDTO;
 import com.midterm.team12345.data.remote.dto.response.PageResponse;
 import com.midterm.team12345.data.remote.dto.response.MessageResponseDTO;
+import com.midterm.team12345.data.remote.dto.response.ParticipantResponseDTO;
 
 import java.util.Map;
 
@@ -38,6 +39,14 @@ public interface ConversationApiService {
 
     @DELETE("conversations/{id}/participants/{userId}")
     Call<Void> removeParticipant(@Path("id") Long id, @Path("userId") Long userId);
+
+    @GET("conversations/{id}/participants")
+    Call<PageResponse<ParticipantResponseDTO>> getParticipants(
+            @Path("id") Long id,
+            @Query("keyword") String keyword,
+            @Query("page") int page,
+            @Query("size") int size
+    );
 
     @GET("conversations/{conversationId}/messages")
     Call<PageResponse<MessageResponseDTO>> getMessages(
