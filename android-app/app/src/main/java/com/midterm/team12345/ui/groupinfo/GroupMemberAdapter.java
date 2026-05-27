@@ -13,6 +13,7 @@ import com.bumptech.glide.Glide;
 import com.midterm.team12345.R;
 import com.midterm.team12345.data.remote.dto.response.ParticipantResponseDTO;
 import com.midterm.team12345.databinding.ItemGroupMemberBinding;
+import com.midterm.team12345.utils.NavigationUtils;
 
 public class GroupMemberAdapter extends ListAdapter<ParticipantResponseDTO, GroupMemberAdapter.ViewHolder> {
 
@@ -91,6 +92,12 @@ public class GroupMemberAdapter extends ListAdapter<ParticipantResponseDTO, Grou
             boolean canConfigure = amIAdmin && myUserId != null && !member.getUserId().equals(myUserId);
             binding.btnSettings.setVisibility(canConfigure ? View.VISIBLE : View.GONE);
             binding.btnSettings.setOnClickListener(v -> listener.onMemberClick(member, binding.btnSettings));
+
+            // Navigate to profile on row click (Avatar or Name)
+            View.OnClickListener toProfile = v -> NavigationUtils.navigateToProfile(v.getContext(), member.getUserId());
+            binding.ivAvatar.setOnClickListener(toProfile);
+            binding.tvName.setOnClickListener(toProfile);
+            binding.getRoot().setOnClickListener(toProfile);
         }
     }
 }

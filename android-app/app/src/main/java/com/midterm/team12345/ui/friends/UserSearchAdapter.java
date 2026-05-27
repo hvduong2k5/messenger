@@ -14,6 +14,7 @@ import com.midterm.team12345.R;
 import com.midterm.team12345.data.remote.dto.response.FriendshipStatus;
 import com.midterm.team12345.data.remote.dto.response.UserSearchResponseDTO;
 import com.midterm.team12345.databinding.ItemFriendRequestBinding;
+import com.midterm.team12345.utils.NavigationUtils;
 
 public class UserSearchAdapter extends ListAdapter<UserSearchResponseDTO, UserSearchAdapter.ViewHolder> {
 
@@ -81,6 +82,11 @@ public class UserSearchAdapter extends ListAdapter<UserSearchResponseDTO, UserSe
                     .fallback(R.drawable.ic_avatar_placeholder)
                     .error(R.drawable.ic_avatar_placeholder)
                     .into(binding.ivAvatar);
+
+            // Navigate to profile on avatar or name click
+            View.OnClickListener toProfile = v -> NavigationUtils.navigateToProfile(v.getContext(), user.getId());
+            binding.ivAvatar.setOnClickListener(toProfile);
+            binding.tvName.setOnClickListener(toProfile);
 
             FriendshipStatus status = user.getFriendshipStatus();
             if (status == null) {

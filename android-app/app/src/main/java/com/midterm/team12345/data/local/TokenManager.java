@@ -12,6 +12,8 @@ public class TokenManager {
     private static final String KEY_ACCESS_TOKEN = "access_token";
     private static final String KEY_USERNAME = "username";
     private static final String KEY_USER_ID = "user_id";
+    
+    private static volatile TokenManager instance;
     private SharedPreferences sharedPreferences;
 
     public TokenManager(Context context) {
@@ -20,13 +22,24 @@ public class TokenManager {
             sharedPreferences = EncryptedSharedPreferences.create(
                     PREF_NAME,
                     masterKeyAlias,
-                    context,
+                    context.getApplicationContext(),
                     EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
                     EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
             );
         } catch (GeneralSecurityException | IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public static TokenManager getInstance(Context context) {
+        if (instance == null) {
+            synchronized (TokenManager.class) {
+                if (instance == null) {
+                    instance = new TokenManager(context);
+                }
+            }
+        }
+        return instance;
     }
 
     public void saveToken(String token) {

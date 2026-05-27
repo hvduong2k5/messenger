@@ -14,6 +14,7 @@ import com.midterm.team12345.data.remote.dto.response.AttachmentResponseDTO;
 import com.midterm.team12345.data.remote.dto.response.MessageResponseDTO;
 import com.midterm.team12345.databinding.ItemMessageReceivedBinding;
 import com.midterm.team12345.databinding.ItemMessageSentBinding;
+import com.midterm.team12345.utils.NavigationUtils;
 
 import java.util.List;
 
@@ -199,6 +200,11 @@ public class MessageAdapter extends ListAdapter<MessageResponseDTO, RecyclerView
                     .fallback(R.drawable.ic_avatar_placeholder)
                     .error(R.drawable.ic_avatar_placeholder)
                     .into(binding.ivAvatar);
+
+            // Navigate to profile on avatar click
+            binding.ivAvatar.setOnClickListener(v -> {
+                NavigationUtils.navigateToProfile(v.getContext(), message.getSenderId());
+            });
         }
     }
 }

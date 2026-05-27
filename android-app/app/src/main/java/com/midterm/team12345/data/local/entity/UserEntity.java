@@ -5,6 +5,7 @@ import androidx.room.ColumnInfo;
 import androidx.room.Entity;
 import androidx.room.Ignore;
 import androidx.room.PrimaryKey;
+import com.midterm.team12345.data.remote.dto.response.FriendshipStatus;
 
 @Entity(tableName = "users")
 public class UserEntity {
@@ -43,9 +44,13 @@ public class UserEntity {
     @ColumnInfo(name = "is_blocked")
     private Boolean isBlocked;
 
+    @ColumnInfo(name = "friendship_status")
+    private FriendshipStatus friendshipStatus;
+
     public UserEntity() {
         this.isFriend = false;
         this.isBlocked = false;
+        this.friendshipStatus = FriendshipStatus.STRANGER;
     }
 
     @Ignore
@@ -60,21 +65,7 @@ public class UserEntity {
         this.lastSeenAt = lastSeenAt;
         this.isFriend = false;
         this.isBlocked = false;
-    }
-
-    @Ignore
-    public UserEntity(@NonNull Long id, String username, String email, String avatarUrl, String bio, String presenceStatus, Boolean isOnline, Long lastSeenAt, Boolean isFriend, Long friendshipEstablishedAt, Boolean isBlocked) {
-        this.id = id;
-        this.username = username;
-        this.email = email;
-        this.avatarUrl = avatarUrl;
-        this.bio = bio;
-        this.presenceStatus = presenceStatus;
-        this.isOnline = isOnline;
-        this.lastSeenAt = lastSeenAt;
-        this.isFriend = isFriend;
-        this.friendshipEstablishedAt = friendshipEstablishedAt;
-        this.isBlocked = isBlocked;
+        this.friendshipStatus = FriendshipStatus.STRANGER;
     }
 
     @NonNull
@@ -164,5 +155,13 @@ public class UserEntity {
 
     public void setIsBlocked(Boolean blocked) {
         isBlocked = blocked;
+    }
+
+    public FriendshipStatus getFriendshipStatus() {
+        return friendshipStatus;
+    }
+
+    public void setFriendshipStatus(FriendshipStatus friendshipStatus) {
+        this.friendshipStatus = friendshipStatus;
     }
 }

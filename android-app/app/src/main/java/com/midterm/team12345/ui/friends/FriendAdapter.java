@@ -13,6 +13,7 @@ import com.bumptech.glide.Glide;
 import com.midterm.team12345.R;
 import com.midterm.team12345.databinding.ItemFriendBinding;
 import com.midterm.team12345.data.remote.dto.response.UserResponseDTO;
+import com.midterm.team12345.utils.NavigationUtils;
 
 import java.time.LocalDateTime;
 
@@ -89,6 +90,11 @@ public class FriendAdapter extends ListAdapter<UserResponseDTO, FriendAdapter.Vi
                     .fallback(R.drawable.ic_avatar_placeholder)
                     .error(R.drawable.ic_avatar_placeholder)
                     .into(binding.ivAvatar);
+
+            // Navigate to profile on avatar or name click
+            View.OnClickListener toProfile = v -> NavigationUtils.navigateToProfile(v.getContext(), user.getId());
+            binding.ivAvatar.setOnClickListener(toProfile);
+            binding.tvName.setOnClickListener(toProfile);
 
             binding.getRoot().setOnClickListener(v -> listener.onFriendClick(user));
             binding.ivCall.setOnClickListener(v -> listener.onCallClick(user));

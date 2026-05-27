@@ -1,6 +1,7 @@
 package com.midterm.team12345.ui.friends;
 
 import android.view.LayoutInflater;
+import android.view.View;
 import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
@@ -12,6 +13,7 @@ import com.bumptech.glide.Glide;
 import com.midterm.team12345.R;
 import com.midterm.team12345.databinding.ItemFriendRequestBinding;
 import com.midterm.team12345.data.remote.dto.response.FriendRequestResponseDTO;
+import com.midterm.team12345.utils.NavigationUtils;
 
 public class FriendRequestAdapter extends ListAdapter<FriendRequestResponseDTO, FriendRequestAdapter.ViewHolder> {
 
@@ -81,6 +83,11 @@ public class FriendRequestAdapter extends ListAdapter<FriendRequestResponseDTO, 
                     .error(R.drawable.ic_avatar_placeholder)
                     .into(binding.ivAvatar);
             
+            // Navigate to profile on click
+            View.OnClickListener toProfile = v -> NavigationUtils.navigateToProfile(v.getContext(), request.getSenderId());
+            binding.ivAvatar.setOnClickListener(toProfile);
+            binding.tvName.setOnClickListener(toProfile);
+
             binding.btnConfirm.setOnClickListener(v -> listener.onConfirm(request.getSenderId()));
             binding.btnDelete.setOnClickListener(v -> listener.onDelete(request.getSenderId()));
         }

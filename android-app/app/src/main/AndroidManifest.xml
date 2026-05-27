@@ -60,12 +60,14 @@
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
 
+        <activity
+            android:name=".ui.settings.UserProfileActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
 
         <activity
             android:name=".ui.groupinfo.GroupMembersActivity"
             android:exported="false" />
-
-
 
         <activity
             android:name=".ui.chatdetail.ChatDetailActivity"

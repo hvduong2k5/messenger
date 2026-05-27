@@ -114,8 +114,8 @@ public class FriendsFragment extends BaseFragment<FragmentFriendsBinding, Friend
             }
 
             @Override
-            public void onProfileClick(UserResponseDTO user) {
-                Log.d("FriendsFragment", "Opening Profile: " + user.getUsername());
+            public void onFriendClick(UserResponseDTO user) {
+                Log.d("FriendsFragment", "Opening Chat with: " + user.getUsername());
                 // Open chat session with friend
                 Intent intent = new Intent(requireContext(), ChatDetailActivity.class);
                 intent.putExtra("PARTNER_NAME", user.getUsername());
@@ -231,18 +231,6 @@ public class FriendsFragment extends BaseFragment<FragmentFriendsBinding, Friend
         
         // Clear empty state temporarily until search results load
         binding.tvEmptyState.setVisibility(View.GONE);
-    }
-
-    private Long findRequestIdForSender(Long senderId) {
-        if (viewModel.pendingRequests.getValue() != null && 
-            viewModel.pendingRequests.getValue().data != null) {
-            for (FriendRequestResponseDTO req : viewModel.pendingRequests.getValue().data) {
-                if (req.getSenderId() != null && req.getSenderId().equals(senderId)) {
-                    return req.getId();
-                }
-            }
-        }
-        return null;
     }
 
     private void showPendingRequestsBottomSheet() {
