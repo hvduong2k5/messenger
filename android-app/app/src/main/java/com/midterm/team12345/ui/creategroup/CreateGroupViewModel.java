@@ -64,14 +64,14 @@ public class CreateGroupViewModel extends BaseViewModel {
      * Thực hiện tạo nhóm mới
      */
     public void createGroup(String groupName) {
-        if (groupName.trim().isEmpty()) {
-            setError("Please enter group name");
+        if (groupName == null || groupName.trim().isEmpty()) {
+            setError("Vui lòng nhập tên nhóm");
             return;
         }
 
         List<UserResponseDTO> selected = _selectedUsers.getValue();
         if (selected == null || selected.size() < 2) {
-            setError("Select at least 2 members");
+            setError("Vui lòng chọn ít nhất 2 thành viên");
             return;
         }
 
