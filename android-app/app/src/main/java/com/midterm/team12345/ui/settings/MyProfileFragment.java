@@ -124,6 +124,8 @@ public class MyProfileFragment extends BaseFragment<FragmentMyProfileBinding, My
                 Glide.with(this)
                         .load(user.getAvatarUrl())
                         .placeholder(R.drawable.ic_avatar_placeholder)
+                        .fallback(R.drawable.ic_avatar_placeholder)
+                        .error(R.drawable.ic_avatar_placeholder)
                         .circleCrop()
                         .into(binding.ivAvatar);
             }

@@ -73,6 +73,8 @@ public class AddMemberAdapter extends ListAdapter<UserEntity, AddMemberAdapter.V
             Glide.with(binding.ivAvatar.getContext())
                     .load(user.getAvatarUrl())
                     .placeholder(R.drawable.ic_avatar_placeholder)
+                    .fallback(R.drawable.ic_avatar_placeholder)
+                    .error(R.drawable.ic_avatar_placeholder)
                     .into(binding.ivAvatar);
 
             boolean isSelected = selectedUserIds.contains(user.getId());

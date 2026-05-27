@@ -107,6 +107,7 @@ public class ChatListFragment extends BaseFragment<FragmentChatListBinding, Chat
                 Glide.with(this)
                         .load(avatarUrl)
                         .placeholder(R.drawable.ic_avatar_placeholder)
+                        .fallback(R.drawable.ic_avatar_placeholder)
                         .error(R.drawable.ic_avatar_placeholder)
                         .into(binding.ivMyProfile);
             }

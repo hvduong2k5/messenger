@@ -77,6 +77,7 @@ public class FriendRequestAdapter extends ListAdapter<FriendRequestResponseDTO, 
             Glide.with(binding.ivAvatar.getContext())
                     .load(avatarUrl)
                     .placeholder(R.drawable.ic_avatar_placeholder)
+                    .fallback(R.drawable.ic_avatar_placeholder)
                     .error(R.drawable.ic_avatar_placeholder)
                     .into(binding.ivAvatar);
             

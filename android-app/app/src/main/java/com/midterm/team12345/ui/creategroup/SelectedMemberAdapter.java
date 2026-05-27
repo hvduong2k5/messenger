@@ -58,6 +58,7 @@ public class SelectedMemberAdapter extends RecyclerView.Adapter<SelectedMemberAd
         Glide.with(holder.itemView.getContext())
                 .load(avatarUrl)
                 .placeholder(R.drawable.ic_avatar_placeholder)
+                .fallback(R.drawable.ic_avatar_placeholder)
                 .error(R.drawable.ic_avatar_placeholder)
                 .into(holder.binding.ivAvatar);
         
