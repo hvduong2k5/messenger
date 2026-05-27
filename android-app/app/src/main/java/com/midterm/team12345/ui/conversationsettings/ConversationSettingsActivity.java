@@ -3,6 +3,7 @@ package com.midterm.team12345.ui.conversationsettings;
 import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.lifecycle.ViewModelProvider;
@@ -61,17 +62,15 @@ public class ConversationSettingsActivity extends BaseActivity<ActivityConversat
 
     private void findPartnerId() {
         Long myId = TokenManager.getInstance(this).getUserId();
-        java.util.concurrent.Executors.newSingleThreadExecutor().execute(() -> {
-            java.util.List<com.midterm.team12345.data.local.entity.ConversationParticipantEntity> participants = 
-                com.midterm.team12345.data.local.database.DatabaseProvider.getInstance(getApplicationContext())
-                    .getConversationParticipantDao()
-                    .getParticipantsForConversationSync(conversation.getConversationId());
-            
-            if (participants != null) {
-                for (com.midterm.team12345.data.local.entity.ConversationParticipantEntity p : participants) {
-                    if (!p.getUserId().equals(myId)) {
-                        partnerId = p.getUserId();
-                        break;
+        viewModel.getParticipants(conversation.getConversationId()).observe(this, resource -> {
+            if (resource != null && resource.status == Resource.Status.SUCCESS && resource.data != null) {
+                java.util.List<com.midterm.team12345.data.remote.dto.response.ParticipantResponseDTO> list = resource.data.getContent();
+                if (list != null) {
+                    for (com.midterm.team12345.data.remote.dto.response.ParticipantResponseDTO p : list) {
+                        if (!p.getUserId().equals(myId)) {
+                            partnerId = p.getUserId();
+                            break;
+                        }
                     }
                 }
             }
@@ -125,8 +124,7 @@ public class ConversationSettingsActivity extends BaseActivity<ActivityConversat
             binding.tvAddAction.setText("Add");
         } else {
             binding.itemViewMembers.getRoot().setVisibility(View.GONE);
-            binding.itemAddMember.getRoot().setVisibility(View.VISIBLE);
-            bindRow(binding.itemAddMember, "View Profile", null, R.drawable.ic_back_arrow);
+            binding.itemAddMember.getRoot().setVisibility(View.GONE); // Hide duplicate list row in 1-1
             binding.tvAddAction.setText("Profile");
         }
 
@@ -156,6 +154,8 @@ public class ConversationSettingsActivity extends BaseActivity<ActivityConversat
             } else {
                 if (partnerId != null) {
                     NavigationUtils.navigateToProfile(this, partnerId);
+                } else {
+                    Toast.makeText(this, "Đang tải thông tin cá nhân...", Toast.LENGTH_SHORT).show();
                 }
             }
         });
@@ -166,6 +166,8 @@ public class ConversationSettingsActivity extends BaseActivity<ActivityConversat
             } else {
                 if (partnerId != null) {
                     NavigationUtils.navigateToProfile(this, partnerId);
+                } else {
+                    Toast.makeText(this, "Đang tải thông tin cá nhân...", Toast.LENGTH_SHORT).show();
                 }
             }
         });

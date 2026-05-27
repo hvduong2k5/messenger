@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:orientation="vertical"
     android:background="@color/white">
 
     <com.google.android.material.appbar.MaterialToolbar
@@ -11,123 +12,215 @@
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
         android:background="@color/white"
-        app:layout_constraintTop_toTopOf="parent"
-        app:navigationIcon="@drawable/ic_back_arrow" />
+        app:navigationIcon="@drawable/ic_back_arrow"
+        app:navigationIconTint="@color/black" />
 
-    <androidx.core.widget.NestedScrollView
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:fillViewport="true"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/toolbar">
+        android:layout_weight="1">
 
-        <LinearLayout
+        <ScrollView
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center_horizontal"
-            android:orientation="vertical"
-            android:padding="24dp">
+            android:layout_height="match_parent"
+            android:fillViewport="true">
 
-            <de.hdodenhof.circleimageview.CircleImageView
-                android:id="@+id/ivAvatar"
-                android:layout_width="120dp"
-                android:layout_height="120dp"
-                android:src="@drawable/ic_avatar_placeholder"
-                app:civ_border_color="@color/white"
-                app:civ_border_width="2dp" />
-
-            <TextView
-                android:id="@+id/tvFullName"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:text="User Name"
-                android:textColor="@color/black"
-                android:textSize="24sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:id="@+id/tvUsername"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@username"
-                android:textColor="@color/gray_text"
-                android:textSize="16sp" />
-
-            <TextView
-                android:id="@+id/tvBio"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:text="Bio goes here"
-                android:textColor="@color/black"
-                android:textSize="14sp" />
-
-            <!-- Action Buttons -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="32dp"
-                android:gravity="center"
-                android:orientation="horizontal">
+                android:orientation="vertical"
+                android:gravity="center_horizontal"
+                android:paddingHorizontal="24dp"
+                android:paddingVertical="32dp">
 
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnMessage"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="8dp"
-                    android:layout_weight="1"
-                    android:paddingVertical="12dp"
-                    android:text="Message"
-                    android:textAllCaps="false"
-                    app:cornerRadius="12dp" />
+                <!-- Avatar -->
+                <de.hdodenhof.circleimageview.CircleImageView
+                    android:id="@+id/ivAvatar"
+                    android:layout_width="140dp"
+                    android:layout_height="140dp"
+                    android:src="@drawable/ic_avatar_placeholder" />
 
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnFriendAction"
-                    style="@style/Widget.MaterialComponents.Button.TextButton"
-                    android:layout_width="0dp"
+                <!-- User Name -->
+                <TextView
+                    android:id="@+id/tvFullName"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
-                    android:layout_weight="1"
-                    android:backgroundTint="#F0F0F0"
-                    android:paddingVertical="12dp"
-                    android:text="Add Friend"
-                    android:textAllCaps="false"
+                    android:layout_marginTop="20dp"
                     android:textColor="@color/black"
-                    app:cornerRadius="12dp" />
+                    android:textSize="22sp"
+                    android:textStyle="bold"
+                    tools:text="Martha Craig" />
+
+                <!-- Status/Username -->
+                <TextView
+                    android:id="@+id/tvUsername"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:textColor="@color/gray_text"
+                    android:textSize="14sp"
+                    tools:text="Messenger" />
+
+                <!-- Bio -->
+                <TextView
+                    android:id="@+id/tvBio"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:textColor="@color/black"
+                    android:textSize="14sp"
+                    tools:text="Bio goes here" />
+
+                <!-- Action Buttons Row -->
+                <LinearLayout
+                    android:id="@+id/layoutActionButtons"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center"
+                    android:layout_marginTop="28dp">
+
+                    <!-- Audio -->
+                    <LinearLayout
+                        android:id="@+id/btnAudio"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:background="?attr/selectableItemBackground"
+                        android:clickable="true"
+                        android:focusable="true">
+
+                        <ImageView
+                            android:layout_width="44dp"
+                            android:layout_height="44dp"
+                            android:background="@drawable/bg_profile_circular_btn"
+                            android:padding="12dp"
+                            android:src="@drawable/ic_call"
+                            app:tint="@color/black" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="6dp"
+                            android:text="Audio"
+                            android:textSize="12sp"
+                            android:textColor="@color/black" />
+                    </LinearLayout>
+
+                    <!-- Video -->
+                    <LinearLayout
+                        android:id="@+id/btnVideo"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:background="?attr/selectableItemBackground"
+                        android:clickable="true"
+                        android:focusable="true">
+
+                        <ImageView
+                            android:layout_width="44dp"
+                            android:layout_height="44dp"
+                            android:background="@drawable/bg_profile_circular_btn"
+                            android:padding="12dp"
+                            android:src="@drawable/ic_video_call"
+                            app:tint="@color/black" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="6dp"
+                            android:text="Video"
+                            android:textSize="12sp"
+                            android:textColor="@color/black" />
+                    </LinearLayout>
+
+                    <!-- Add Friend -->
+                    <LinearLayout
+                        android:id="@+id/btnAdd"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:background="?attr/selectableItemBackground"
+                        android:clickable="true"
+                        android:focusable="true">
+
+                        <ImageView
+                            android:layout_width="44dp"
+                            android:layout_height="44dp"
+                            android:background="@drawable/bg_profile_circular_btn"
+                            android:padding="12dp"
+                            android:src="@drawable/ic_add_friend"
+                            app:tint="@color/black" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="6dp"
+                            android:text="Add"
+                            android:textSize="12sp"
+                            android:textColor="@color/black" />
+                    </LinearLayout>
+
+                    <!-- Chat -->
+                    <LinearLayout
+                        android:id="@+id/btnChat"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:background="?attr/selectableItemBackground"
+                        android:clickable="true"
+                        android:focusable="true">
+
+                        <ImageView
+                            android:layout_width="44dp"
+                            android:layout_height="44dp"
+                            android:background="@drawable/bg_profile_circular_btn"
+                            android:padding="12dp"
+                            android:src="@drawable/ic_chat_bubble"
+                            app:tint="@color/black" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="6dp"
+                            android:text="Chat"
+                            android:textSize="12sp"
+                            android:textColor="@color/black" />
+                    </LinearLayout>
+                </LinearLayout>
+
             </LinearLayout>
+        </ScrollView>
 
-            <!-- More Info / Options -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="32dp"
-                android:orientation="vertical">
+        <ProgressBar
+            android:id="@+id/progressBar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:visibility="gone" />
+    </FrameLayout>
 
-                <include
-                    android:id="@+id/itemSharedMedia"
-                    layout="@layout/item_settings_row" />
-
-                <include
-                    android:id="@+id/itemCommonGroups"
-                    layout="@layout/item_settings_row" />
-
-                <include
-                    android:id="@+id/itemBlock"
-                    layout="@layout/item_settings_row" />
-            </LinearLayout>
-
-        </LinearLayout>
-    </androidx.core.widget.NestedScrollView>
-
-    <ProgressBar
-        android:id="@+id/progressBar"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+    <!-- Bottom Button -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnFriendAction"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:layout_margin="16dp"
+        android:textAllCaps="false"
+        android:text="Add friend"
+        android:textSize="16sp"
+        android:textColor="@color/white"
+        android:backgroundTint="@color/messenger_blue"
         android:visibility="gone"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        tools:visibility="visible"
+        app:cornerRadius="12dp" />
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+</LinearLayout>
