@@ -163,6 +163,9 @@ public class MessagingService extends Service {
                 ConversationRepositoryImpl.getInstance(getApplication()).updateConnectionStatus(true);
                 mqttManager.subscribe("user/" + userId + "/messages");
                 mqttManager.subscribe("user/" + userId + "/presence");
+
+                // Sync pending messages when connection is complete
+                com.midterm.team12345.data.repository.MessageRepositoryImpl.getInstance(getApplicationContext()).syncPendingMessages();
             }
         });
     }

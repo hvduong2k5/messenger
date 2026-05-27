@@ -29,4 +29,9 @@ public interface MessageRepository {
     LiveData<Resource<Void>> markConversationAsRead(Long conversationId);
     LiveData<Resource<Void>> updateMessageStatus(Long messageId, String status);
     LiveData<Resource<List<MessageStatusResponseDTO>>> getMessageStatuses(Long messageId);
+
+    /**
+     * Đồng bộ hóa tin nhắn đang chờ gửi khi có mạng trở lại.
+     */
+    void syncPendingMessages();
 }

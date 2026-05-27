@@ -29,34 +29,73 @@ public class ConversationRepositoryImpl implements ConversationRepository {
 
     private static ConversationRepositoryImpl instance;
     private final ConversationApiService apiService;
+    private final com.midterm.team12345.data.local.dao.ConversationDao conversationDao;
 
-    private ConversationRepositoryImpl(ConversationApiService apiService) {
+    private ConversationRepositoryImpl(ConversationApiService apiService, com.midterm.team12345.data.local.dao.ConversationDao conversationDao) {
         this.apiService = apiService;
+        this.conversationDao = conversationDao;
     }
 
     public static synchronized ConversationRepositoryImpl getInstance(Application application) {
         if (instance == null) {
-            instance = new ConversationRepositoryImpl(RetrofitClient.getConversationApiService(application));
+            instance = new ConversationRepositoryImpl(
+                RetrofitClient.getConversationApiService(application),
+                com.midterm.team12345.data.local.database.MessengerDatabase.getInstance(application).conversationDao()
+            );
         }
         return instance;
     }
 
     @Override
     public LiveData<Resource<PageResponse<ConversationResponseDTO>>> getConversations(int page, int size) {
-        MutableLiveData<Resource<PageResponse<ConversationResponseDTO>>> data = new MutableLiveData<>();
-        data.setValue(Resource.loading(null));
+        androidx.lifecycle.MediatorLiveData<Resource<PageResponse<ConversationResponseDTO>>> mediator = new androidx.lifecycle.MediatorLiveData<>();
+        mediator.setValue(Resource.loading(null));
+
+        // 1. Get LiveData source from Room DB
+        LiveData<List<com.midterm.team12345.data.local.entity.ConversationEntity>> dbSource = conversationDao.getConversations();
+
+        // 2. Add dbSource to MediatorLiveData
+        mediator.addSource(dbSource, localEntities -> {
+            new java.lang.Thread(() -> {
+                try {
+                    List<ConversationResponseDTO> dtos = com.midterm.team12345.data.mapper.ConversationMapper.toDtoList(localEntities);
+                    PageResponse<ConversationResponseDTO> pageResponse = new PageResponse<>();
+                    pageResponse.setContent(dtos);
+                    pageResponse.setTotalElements((long) dtos.size());
+                    pageResponse.setTotalPages(1);
+                    mediator.postValue(Resource.success(pageResponse));
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }).start();
+        });
+
+        // 3. Fetch from network in background to sync local DB
         apiService.getConversations(page, size).enqueue(new Callback<PageResponse<ConversationResponseDTO>>() {
             @Override
             public void onResponse(@NonNull Call<PageResponse<ConversationResponseDTO>> call, @NonNull Response<PageResponse<ConversationResponseDTO>> response) {
-                if (response.isSuccessful()) data.setValue(Resource.success(response.body()));
-                else data.setValue(Resource.error("Failed to load conversations", null));
+                if (response.isSuccessful() && response.body() != null) {
+                    new java.lang.Thread(() -> {
+                        try {
+                            List<ConversationResponseDTO> remoteDtos = response.body().getContent();
+                            if (remoteDtos != null) {
+                                List<com.midterm.team12345.data.local.entity.ConversationEntity> entities = 
+                                        com.midterm.team12345.data.mapper.ConversationMapper.toEntityList(remoteDtos);
+                                conversationDao.insertConversations(entities);
+                            }
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }).start();
+                }
             }
             @Override
             public void onFailure(@NonNull Call<PageResponse<ConversationResponseDTO>> call, @NonNull Throwable t) {
-                data.setValue(Resource.error(t.getMessage(), null));
+                // Ignore network sync failures in background
             }
         });
-        return data;
+
+        return mediator;
     }
 
     @Override

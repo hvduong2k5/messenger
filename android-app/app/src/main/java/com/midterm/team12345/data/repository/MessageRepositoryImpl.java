@@ -475,4 +475,67 @@ public class MessageRepositoryImpl implements MessageRepository {
         attachmentDao.deleteAttachmentsByClientMessageId(clientMessageId);
         attachmentDao.insertAttachments(attachmentEntities);
     }
+
+    @Override
+    public void syncPendingMessages() {
+        new java.lang.Thread(() -> {
+            try {
+                List<com.midterm.team12345.data.local.entity.SyncQueueEntity> pendingTasks = 
+                        syncQueueDao.getTasksByStatusSync(com.midterm.team12345.data.local.entity.SyncStatus.PENDING);
+                
+                if (pendingTasks == null || pendingTasks.isEmpty()) return;
+                
+                com.google.gson.Gson gson = new com.google.gson.Gson();
+                
+                for (com.midterm.team12345.data.local.entity.SyncQueueEntity task : pendingTasks) {
+                    if (task.getOperationType() == com.midterm.team12345.data.local.entity.SyncOperationType.SEND_MESSAGE) {
+                        task.setStatus(com.midterm.team12345.data.local.entity.SyncStatus.PROCESSING);
+                        syncQueueDao.updateTask(task);
+                        
+                        MessageRequestDTO request = gson.fromJson(task.getPayload(), MessageRequestDTO.class);
+                        String clientMessageId = request.getClientMessageId();
+                        
+                        messageApiService.sendMessage(
+                                request.getSenderId(),
+                                request.getConversationId(),
+                                request.getContent(),
+                                clientMessageId
+                        ).enqueue(new Callback<MessageResponseDTO>() {
+                            @Override
+                            public void onResponse(Call<MessageResponseDTO> call, Response<MessageResponseDTO> response) {
+                                new java.lang.Thread(() -> {
+                                    if (response.isSuccessful() && response.body() != null) {
+                                        MessageResponseDTO responseDto = response.body();
+                                        messageDao.updateSyncSuccess(
+                                                clientMessageId,
+                                                responseDto.getMessageId(),
+                                                responseDto.getCreatedAt() != null ? responseDto.getCreatedAt() : System.currentTimeMillis(),
+                                                com.midterm.team12345.data.local.entity.SyncState.SENT,
+                                                com.midterm.team12345.data.local.entity.DeliveryStatus.SENT
+                                        );
+                                        syncQueueDao.deleteTask(task);
+                                    } else {
+                                        task.setStatus(com.midterm.team12345.data.local.entity.SyncStatus.PENDING);
+                                        task.setRetryCount(task.getRetryCount() + 1);
+                                        syncQueueDao.updateTask(task);
+                                    }
+                                }).start();
+                            }
+
+                            @Override
+                            public void onFailure(Call<MessageResponseDTO> call, Throwable t) {
+                                new java.lang.Thread(() -> {
+                                    task.setStatus(com.midterm.team12345.data.local.entity.SyncStatus.PENDING);
+                                    task.setRetryCount(task.getRetryCount() + 1);
+                                    syncQueueDao.updateTask(task);
+                                }).start();
+                            }
+                        });
+                    }
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }).start();
+    }
 }
