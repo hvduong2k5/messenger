@@ -85,7 +85,7 @@ public class DeleteMemberActivity extends BaseActivity<ActivityDeleteMemberBindi
             public void afterTextChanged(Editable s) {}
         });
 
-        viewModel.fetchGroupMembers(conversationId);
+        viewModel.fetchGroupMembers(conversationId, true);
     }
 
     private void removeSelectedMembers() {
