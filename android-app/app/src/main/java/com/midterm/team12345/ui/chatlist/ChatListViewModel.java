@@ -2,6 +2,7 @@ package com.midterm.team12345.ui.chatlist;
 
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
+import androidx.lifecycle.Observer;
 import com.midterm.team12345.data.remote.dto.MqttMessageDTO;
 import com.midterm.team12345.data.remote.dto.response.ConversationResponseDTO;
 import com.midterm.team12345.domain.model.Conversation;
@@ -21,6 +22,7 @@ import java.util.stream.Collectors;
 public class ChatListViewModel extends BaseViewModel {
     private final ConversationRepository conversationRepository;
     private final UserRepository userRepository;
+    private Observer<MqttMessageDTO> realTimeMessageObserver;
 
     private final MutableLiveData<Resource<List<Conversation>>> _conversationState = new MutableLiveData<>();
     public final LiveData<Resource<List<Conversation>>> conversationState = _conversationState;
@@ -39,7 +41,7 @@ public class ChatListViewModel extends BaseViewModel {
     }
 
     private void observeRealTimeMessages() {
-        conversationRepository.getRealTimeMessages().observeForever(mqttMessage -> {
+        realTimeMessageObserver = mqttMessage -> {
             if (mqttMessage != null) {
                 String type = mqttMessage.getType();
                 if ("NEW_MESSAGE".equals(type) || "text".equalsIgnoreCase(type) || "media".equalsIgnoreCase(type)) {
@@ -48,7 +50,8 @@ public class ChatListViewModel extends BaseViewModel {
                     updateConversationListOnEditOrRevoke(mqttMessage);
                 }
             }
-        });
+        };
+        conversationRepository.getRealTimeMessages().observeForever(realTimeMessageObserver);
     }
 
     private void updateConversationList(MqttMessageDTO mqttMessage) {
@@ -183,5 +186,13 @@ public class ChatListViewModel extends BaseViewModel {
                 setError(resource.message);
             }
         });
+    }
+
+    @Override
+    protected void onCleared() {
+        super.onCleared();
+        if (realTimeMessageObserver != null) {
+            conversationRepository.getRealTimeMessages().removeObserver(realTimeMessageObserver);
+        }
     }
 }
