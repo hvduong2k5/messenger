@@ -31,7 +31,7 @@ import com.midterm.team12345.data.local.entity.UserEntity;
         SyncQueueEntity.class,
         DraftMessageEntity.class
     },
-    version = 1,
+    version = 3,
     exportSchema = false
 )
 @TypeConverters({Converters.class})

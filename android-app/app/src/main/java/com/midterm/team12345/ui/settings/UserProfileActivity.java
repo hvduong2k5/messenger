@@ -80,11 +80,11 @@ public class UserProfileActivity extends AppCompatActivity {
             }
         });
 
-        viewModel.getLoading().observe(this, isLoading -> {
+        viewModel.isLoading.observe(this, isLoading -> {
             binding.progressBar.setVisibility(isLoading ? View.VISIBLE : View.GONE);
         });
 
-        viewModel.getError().observe(this, error -> {
+        viewModel.errorMessage.observe(this, error -> {
             if (error != null) {
                 Toast.makeText(this, error, Toast.LENGTH_SHORT).show();
             }
