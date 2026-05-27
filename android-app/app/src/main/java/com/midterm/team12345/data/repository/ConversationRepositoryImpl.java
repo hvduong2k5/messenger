@@ -128,6 +128,25 @@ public class ConversationRepositoryImpl implements ConversationRepository {
             public void onFailure(@NonNull Call<Void> call, @NonNull Throwable t) {
                 data.setValue(Resource.error(t.getMessage(), null));
             }
+        return data;
+    }
+
+    @Override
+    public LiveData<Resource<Void>> addParticipants(Long conversationId, List<Long> userIds) {
+        MutableLiveData<Resource<Void>> data = new MutableLiveData<>();
+        data.setValue(Resource.loading(null));
+        Map<String, List<Long>> body = Collections.singletonMap("userIds", userIds);
+        apiService.addParticipants(conversationId, body).enqueue(new Callback<Map<String, String>>() {
+            @Override
+            public void onResponse(@NonNull Call<Map<String, String>> call, @NonNull Response<Map<String, String>> response) {
+                if (response.isSuccessful()) data.setValue(Resource.success(null));
+                else data.setValue(Resource.error("Failed to add participants", null));
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<Map<String, String>> call, @NonNull Throwable t) {
+                data.setValue(Resource.error(t.getMessage(), null));
+            }
         });
         return data;
     }

@@ -15,6 +15,7 @@ public interface ConversationRepository {
     LiveData<Resource<ConversationResponseDTO>> getConversationDetails(Long id);
     LiveData<Resource<ConversationResponseDTO>> createConversation(ConversationRequestDTO request);
     LiveData<Resource<Void>> addParticipant(Long conversationId, Long userId);
+    LiveData<Resource<Void>> addParticipants(Long conversationId, java.util.List<Long> userIds);
     LiveData<Resource<Void>> removeParticipant(Long conversationId, Long userId);
     LiveData<Resource<Void>> updateConversation(Long id, ConversationUpdateDTO request);
     LiveData<Resource<Void>> leaveConversation(Long conversationId);

@@ -7,6 +7,7 @@ import com.midterm.team12345.data.remote.dto.response.PageResponse;
 import com.midterm.team12345.data.remote.dto.response.MessageResponseDTO;
 import com.midterm.team12345.data.remote.dto.response.ParticipantResponseDTO;
 
+import java.util.List;
 import java.util.Map;
 
 import retrofit2.Call;
@@ -37,6 +38,9 @@ public interface ConversationApiService {
 
     @POST("conversations/{id}/participants")
     Call<Void> addParticipant(@Path("id") Long id, @Body Map<String, Long> body);
+
+    @POST("conversations/{id}/participants")
+    Call<Map<String, String>> addParticipants(@Path("id") Long conversationId, @Body Map<String, List<Long>> body);
 
     @DELETE("conversations/{id}/participants/{userId}")
     Call<Void> removeParticipant(@Path("id") Long id, @Path("userId") Long userId);
