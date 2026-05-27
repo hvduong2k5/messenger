@@ -54,6 +54,9 @@ public class CreateGroupViewModel extends BaseViewModel {
             }
         });
         
+        // Trigger remote sync of friends list
+        friendRepository.getFriends().observeForever(resource -> {});
+        
         searchQuery.observeForever(this::filterFriends);
     }
 

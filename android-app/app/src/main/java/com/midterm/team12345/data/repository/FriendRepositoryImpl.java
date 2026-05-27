@@ -138,6 +138,7 @@ public class FriendRepositoryImpl implements FriendRepository {
             @Override
             public void onResponse(Call<List<UserResponseDTO>> call, Response<List<UserResponseDTO>> response) {
                 if (response.isSuccessful() && response.body() != null) {
+                    saveFriendsToLocal(response.body());
                     data.setValue(Resource.success(response.body()));
                 } else {
                     String errorMsg = "Không thể lấy danh sách bạn bè (HTTP " + response.code() + ")";
@@ -161,6 +162,28 @@ public class FriendRepositoryImpl implements FriendRepository {
     @Override
     public LiveData<Resource<List<UserResponseDTO>>> getFriendsList() {
         return getFriends();
+    }
+
+    private void saveFriendsToLocal(List<UserResponseDTO> list) {
+        new Thread(() -> {
+            try {
+                java.util.List<UserEntity> entities = new java.util.ArrayList<>();
+                for (UserResponseDTO dto : list) {
+                    UserEntity entity = new UserEntity();
+                    entity.setId(dto.getId());
+                    entity.setUsername(dto.getUsername());
+                    entity.setEmail(dto.getEmail());
+                    entity.setAvatarUrl(dto.getAvatarUrl());
+                    entity.setBio(dto.getStatus());
+                    entity.setIsOnline(dto.getIsOnline() != null && dto.getIsOnline());
+                    entity.setIsFriend(true);
+                    entities.add(entity);
+                }
+                database.userDao().insertUsers(entities);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }).start();
     }
 
     @Override
