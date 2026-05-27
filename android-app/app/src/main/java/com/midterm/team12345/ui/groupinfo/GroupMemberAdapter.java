@@ -22,6 +22,15 @@ public class GroupMemberAdapter extends ListAdapter<ParticipantResponseDTO, Grou
         void onMemberClick(ParticipantResponseDTO member, View anchor);
     }
 
+    private Long myUserId;
+    private boolean amIAdmin;
+
+    public void setAdminStatus(Long myUserId, boolean amIAdmin) {
+        this.myUserId = myUserId;
+        this.amIAdmin = amIAdmin;
+        notifyDataSetChanged();
+    }
+
     public GroupMemberAdapter(OnMemberClickListener listener) {
         super(new DiffUtil.ItemCallback<ParticipantResponseDTO>() {
             @Override
@@ -77,7 +86,9 @@ public class GroupMemberAdapter extends ListAdapter<ParticipantResponseDTO, Grou
                     .circleCrop()
                     .into(binding.ivAvatar);
 
-            binding.getRoot().setOnClickListener(v -> listener.onMemberClick(member, binding.getRoot()));
+            boolean canConfigure = amIAdmin && myUserId != null && !member.getUserId().equals(myUserId);
+            binding.btnSettings.setVisibility(canConfigure ? View.VISIBLE : View.GONE);
+            binding.btnSettings.setOnClickListener(v -> listener.onMemberClick(member, binding.btnSettings));
         }
     }
 }

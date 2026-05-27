@@ -26,6 +26,7 @@ public class GroupMembersActivity extends BaseActivity<ActivityGroupMembersBindi
     private Long conversationId;
     private GroupMemberAdapter adapter;
     private List<ParticipantResponseDTO> allMembers = new ArrayList<>();
+    private boolean amIAdmin = false;
 
     public static void start(Context context, Long conversationId) {
         Intent intent = new Intent(context, GroupMembersActivity.class);
@@ -60,29 +61,60 @@ public class GroupMembersActivity extends BaseActivity<ActivityGroupMembersBindi
         Long myId = tokenManager.getUserId();
 
         adapter = new GroupMemberAdapter((member, anchor) -> {
-            boolean amIAdmin = false;
-            for (ParticipantResponseDTO m : allMembers) {
-                if (m.getUserId().equals(myId) && ("ADMIN".equalsIgnoreCase(m.getRole()) || "OWNER".equalsIgnoreCase(m.getRole()))) {
-                    amIAdmin = true;
-                    break;
-                }
-            }
-
             if (!amIAdmin) return;
             if (member.getUserId().equals(myId)) return;
 
             android.widget.PopupMenu popup = new android.widget.PopupMenu(this, anchor);
-            popup.getMenu().add(0, 1, 0, "Chỉ định làm Admin");
-            popup.getMenu().add(0, 2, 0, "Gỡ tư cách Admin");
+            if ("ADMIN".equalsIgnoreCase(member.getRole())) {
+                popup.getMenu().add(0, 2, 0, "Gỡ tư cách Admin");
+            } else {
+                popup.getMenu().add(0, 1, 0, "Chỉ định làm Admin");
+            }
+            popup.getMenu().add(0, 3, 0, "Xóa khỏi nhóm");
             popup.setOnMenuItemClickListener(item -> {
-                String newRole = item.getItemId() == 1 ? "ADMIN" : "MEMBER";
-                viewModel.updateParticipantRole(conversationId, member.getUserId(), newRole);
+                if (item.getItemId() == 3) {
+                    new androidx.appcompat.app.AlertDialog.Builder(this)
+                        .setMessage("Bạn có chắc chắn muốn xóa " + member.getUsername() + " khỏi nhóm?")
+                        .setPositiveButton("Có", (dialog, which) -> {
+                            viewModel.removeMember(conversationId, member.getUserId()).observe(this, resource -> {
+                                if (resource.status == Resource.Status.SUCCESS) {
+                                    android.widget.Toast.makeText(this, "Đã xóa thành viên khỏi nhóm", android.widget.Toast.LENGTH_SHORT).show();
+                                    viewModel.fetchGroupMembers(conversationId, true);
+                                } else if (resource.status == Resource.Status.ERROR) {
+                                    android.widget.Toast.makeText(this, "Lỗi: " + resource.message, android.widget.Toast.LENGTH_SHORT).show();
+                                }
+                            });
+                        })
+                        .setNegativeButton("Không", null)
+                        .show();
+                } else {
+                    String newRole = item.getItemId() == 1 ? "ADMIN" : "MEMBER";
+                    viewModel.updateParticipantRole(conversationId, member.getUserId(), newRole);
+                }
                 return true;
             });
             popup.show();
         });
         binding.rvMembers.setLayoutManager(new LinearLayoutManager(this));
         binding.rvMembers.setAdapter(adapter);
+
+        java.util.concurrent.Executors.newSingleThreadExecutor().execute(() -> {
+            java.util.List<com.midterm.team12345.data.local.entity.ConversationParticipantEntity> participants = 
+                com.midterm.team12345.data.local.database.DatabaseProvider.getInstance(getApplicationContext())
+                    .getConversationParticipantDao()
+                    .getParticipantsForConversationSync(conversationId);
+            if (participants != null) {
+                for (com.midterm.team12345.data.local.entity.ConversationParticipantEntity p : participants) {
+                    if (p.getUserId().equals(myId)) {
+                        amIAdmin = "ADMIN".equalsIgnoreCase(p.getRole()) || "OWNER".equalsIgnoreCase(p.getRole());
+                        break;
+                    }
+                }
+                runOnUiThread(() -> {
+                    adapter.setAdminStatus(myId, amIAdmin);
+                });
+            }
+        });
 
         binding.rvMembers.addOnScrollListener(new androidx.recyclerview.widget.RecyclerView.OnScrollListener() {
             @Override
@@ -124,6 +156,15 @@ public class GroupMembersActivity extends BaseActivity<ActivityGroupMembersBindi
         viewModel.members.observe(this, resource -> {
             if (resource.status == Resource.Status.SUCCESS && resource.data != null) {
                 allMembers = resource.data;
+                com.midterm.team12345.data.local.TokenManager tokenManager = new com.midterm.team12345.data.local.TokenManager(this);
+                Long myId = tokenManager.getUserId();
+                for (ParticipantResponseDTO m : allMembers) {
+                    if (m.getUserId().equals(myId)) {
+                        amIAdmin = "ADMIN".equalsIgnoreCase(m.getRole()) || "OWNER".equalsIgnoreCase(m.getRole());
+                        break;
+                    }
+                }
+                adapter.setAdminStatus(myId, amIAdmin);
                 adapter.submitList(allMembers);
             }
         });
