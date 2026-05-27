@@ -133,6 +133,9 @@ public class GroupInfoActivity extends BaseActivity<ActivityGroupInfoBinding, Gr
 
         viewModel.leaveGroupState.observe(this, resource -> {
             if (resource.status == Resource.Status.SUCCESS) {
+                java.util.concurrent.Executors.newSingleThreadExecutor().execute(() -> {
+                    com.midterm.team12345.data.local.database.DatabaseProvider.getInstance(getApplicationContext()).getConversationDao().deleteConversationById(conversationId);
+                });
                 Toast.makeText(this, "Bạn đã rời nhóm", Toast.LENGTH_SHORT).show();
                 android.content.Intent intent = new android.content.Intent(this, com.midterm.team12345.MainActivity.class);
                 intent.addFlags(android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP | android.content.Intent.FLAG_ACTIVITY_NEW_TASK);
