@@ -115,11 +115,12 @@ public class ConversationController {
         try {
             conversationService.removeParticipant(id, userDetails.getId(), userId);
             return ResponseEntity.noContent().build();
+        } catch (org.springframework.security.access.AccessDeniedException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("message", e.getMessage()));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("message", e.getMessage()));
         } catch (RuntimeException e) {
-            if (e.getMessage().contains("not a participant") || e.getMessage().contains("Only admins")) {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("message", e.getMessage()));
-            }
-            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("message", e.getMessage()));
         }
     }
 
@@ -172,6 +173,28 @@ public class ConversationController {
         try {
             conversationService.leaveConversation(id, userDetails.getId());
             return ResponseEntity.ok(Map.of("message", "Left conversation successfully"));
+        } catch (org.springframework.security.access.AccessDeniedException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("message", e.getMessage()));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("message", e.getMessage()));
+        }
+    }
+    @Operation(summary = "Update participant role", description = "Admin updates role of a member")
+    @PatchMapping("/{id}/participants/{participantId}/role")
+    public ResponseEntity<?> updateParticipantRole(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable Long id,
+            @PathVariable Long participantId,
+            @RequestBody Map<String, String> body) {
+        String newRole = body.get("role");
+        if (newRole == null) {
+            return ResponseEntity.badRequest().body(Map.of("message", "role is required"));
+        }
+        try {
+            conversationService.updateParticipantRole(id, userDetails.getId(), participantId, newRole);
+            return ResponseEntity.ok(Map.of("message", "Role updated successfully"));
         } catch (org.springframework.security.access.AccessDeniedException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("message", e.getMessage()));
         } catch (IllegalArgumentException e) {
