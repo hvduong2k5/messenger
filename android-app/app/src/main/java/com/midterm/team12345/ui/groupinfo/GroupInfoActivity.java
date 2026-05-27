@@ -90,6 +90,18 @@ public class GroupInfoActivity extends BaseActivity<ActivityGroupInfoBinding, Gr
         binding.itemDeleteMember.getRoot().setOnClickListener(v -> {
             DeleteMemberActivity.start(this, conversationId);
         });
+
+        // Leave Group Action
+        setupRow(binding.itemLeaveGroup.getRoot(), "Leave Group", R.drawable.ic_remove_friend, android.R.color.holo_red_dark);
+        binding.itemLeaveGroup.getRoot().setOnClickListener(v -> {
+            new androidx.appcompat.app.AlertDialog.Builder(this)
+                .setMessage("Are you sure you want to leave this group?")
+                .setPositiveButton("Yes", (dialog, which) -> {
+                    viewModel.leaveGroup(conversationId);
+                })
+                .setNegativeButton("No", null)
+                .show();
+        });
     }
 
     private void setupRow(View rowView, String title, int iconRes, int colorRes) {
@@ -116,6 +128,18 @@ public class GroupInfoActivity extends BaseActivity<ActivityGroupInfoBinding, Gr
             if (resource.status == Resource.Status.SUCCESS && resource.data != null) {
                 // Update total members count
                 binding.tvMemberCount.setText(resource.data.size() + " Members");
+            }
+        });
+
+        viewModel.leaveGroupState.observe(this, resource -> {
+            if (resource.status == Resource.Status.SUCCESS) {
+                Toast.makeText(this, "Bạn đã rời nhóm", Toast.LENGTH_SHORT).show();
+                android.content.Intent intent = new android.content.Intent(this, com.midterm.team12345.MainActivity.class);
+                intent.addFlags(android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP | android.content.Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(intent);
+                finish();
+            } else if (resource.status == Resource.Status.ERROR) {
+                Toast.makeText(this, "Lỗi: " + resource.message, Toast.LENGTH_SHORT).show();
             }
         });
     }

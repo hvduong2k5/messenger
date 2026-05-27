@@ -108,6 +108,7 @@
             <include android:id="@+id/itemViewMembers" layout="@layout/item_settings_row_main" />
             <include android:id="@+id/itemAddMember" layout="@layout/item_settings_row_main" />
             <include android:id="@+id/itemDeleteMember" layout="@layout/item_settings_row_main" />
+            <include android:id="@+id/itemLeaveGroup" layout="@layout/item_settings_row_main" />
 
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
