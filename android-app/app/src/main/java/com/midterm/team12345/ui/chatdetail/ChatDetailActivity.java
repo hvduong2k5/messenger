@@ -268,7 +268,7 @@ public class ChatDetailActivity extends AppCompatActivity {
                     if (resource.data != null) {
                         adapter.submitList(resource.data, () -> {
                             if (adapter.getItemCount() > 0) {
-                                binding.rvMessages.smoothScrollToPosition(0);
+                                binding.rvMessages.scrollToPosition(0);
                             }
                         });
                     }
