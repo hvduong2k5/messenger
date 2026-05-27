@@ -16,11 +16,15 @@ public class UserProfileResponseDTO {
     private String avatarUrl;
 
     @SerializedName("status")
-    private String status; // Thường dùng làm Bio trong Messenger
+    private String status;
+
+    @SerializedName("friendshipStatus")
+    private FriendshipStatus friendshipStatus;
 
     public Long getId() { return id; }
     public String getUsername() { return username; }
     public String getEmail() { return email; }
     public String getAvatarUrl() { return avatarUrl; }
     public String getStatus() { return status; }
+    public FriendshipStatus getFriendshipStatus() { return friendshipStatus; }
 }

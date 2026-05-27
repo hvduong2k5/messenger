@@ -23,7 +23,7 @@ public interface UserApiService {
     Call<UserProfileResponseDTO> getMyProfile();
 
     @GET("users/{id}")
-    Call<UserProfileResponseDTO> getUserProfile(@Path("id") Long id);
+    Call<UserProfileResponseDTO> getUserProfileById(@Path("id") Long id);
 
     @PUT("users/profile")
     Call<UserProfileResponseDTO> updateProfile(@Body UpdateProfileRequestDTO request);

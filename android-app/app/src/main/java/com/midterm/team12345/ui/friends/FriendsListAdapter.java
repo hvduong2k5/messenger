@@ -14,6 +14,7 @@ import com.midterm.team12345.R;
 import com.midterm.team12345.databinding.ItemAlphabetHeaderBinding;
 import com.midterm.team12345.databinding.ItemFriendBinding;
 import com.midterm.team12345.data.remote.dto.response.UserResponseDTO;
+import com.midterm.team12345.utils.NavigationUtils;
 
 import java.time.LocalDateTime;
 
@@ -27,7 +28,7 @@ public class FriendsListAdapter extends ListAdapter<Object, RecyclerView.ViewHol
     public interface OnFriendActionListener {
         void onCall(UserResponseDTO user);
         void onVideoCall(UserResponseDTO user);
-        void onProfileClick(UserResponseDTO user);
+        void onFriendClick(UserResponseDTO user); // Opens Chat
         void onProfileLongClick(UserResponseDTO user);
     }
 
@@ -98,7 +99,6 @@ public class FriendsListAdapter extends ListAdapter<Object, RecyclerView.ViewHol
         void bind(UserResponseDTO user) {
             binding.tvName.setText(user.getUsername());
             
-            // Presence status and Last Seen
             if (user.getIsOnline() != null && user.getIsOnline()) {
                 binding.ivPresenceStatus.setVisibility(View.VISIBLE);
                 binding.tvStatus.setText("Đang hoạt động");
@@ -107,7 +107,6 @@ public class FriendsListAdapter extends ListAdapter<Object, RecyclerView.ViewHol
                 binding.tvStatus.setText(formatLastSeenString(user.getLastSeen()));
             }
 
-            // Load Avatar using Glide
             String avatarUrl = user.getAvatarUrl();
             if (avatarUrl != null && !avatarUrl.startsWith("http")) {
                 avatarUrl = com.midterm.team12345.data.remote.RetrofitClient.getBaseUrl() + 
@@ -121,10 +120,17 @@ public class FriendsListAdapter extends ListAdapter<Object, RecyclerView.ViewHol
                     .error(R.drawable.ic_avatar_placeholder)
                     .into(binding.ivAvatar);
 
+            // Per Requirement: Click Avatar or Name to view Profile
+            View.OnClickListener toProfile = v -> NavigationUtils.navigateToProfile(v.getContext(), user.getId());
+            binding.ivAvatar.setOnClickListener(toProfile);
+            binding.tvName.setOnClickListener(toProfile);
+
             binding.ivCall.setOnClickListener(v -> listener.onCall(user));
             binding.ivVideoCall.setOnClickListener(v -> listener.onVideoCall(user));
             binding.ivUnfriend.setOnClickListener(v -> listener.onProfileLongClick(user));
-            binding.getRoot().setOnClickListener(v -> listener.onProfileClick(user));
+            
+            // Root click opens Chat
+            binding.getRoot().setOnClickListener(v -> listener.onFriendClick(user));
             binding.getRoot().setOnLongClickListener(v -> {
                 listener.onProfileLongClick(user);
                 return true;

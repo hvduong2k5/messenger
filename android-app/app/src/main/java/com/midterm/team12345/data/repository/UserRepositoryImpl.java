@@ -66,13 +66,23 @@ public class UserRepositoryImpl implements UserRepository {
 
     private void saveUserToLocal(UserProfileResponseDTO dto) {
         new Thread(() -> {
-            UserEntity entity = new UserEntity();
-            entity.setId(dto.getId());
+            // SSOT: Merge with existing data to avoid losing fields not in the profile DTO (like online status)
+            UserEntity entity = database.userDao().getUserByIdSync(dto.getId());
+            if (entity == null) {
+                entity = new UserEntity();
+                entity.setId(dto.getId());
+            }
+            
             entity.setUsername(dto.getUsername());
             entity.setEmail(dto.getEmail());
             entity.setAvatarUrl(dto.getAvatarUrl());
             entity.setBio(dto.getStatus());
-            entity.setIsOnline(true);
+            
+            if (dto.getFriendshipStatus() != null) {
+                entity.setFriendshipStatus(dto.getFriendshipStatus());
+                entity.setIsFriend(dto.getFriendshipStatus() == com.midterm.team12345.data.remote.dto.response.FriendshipStatus.FRIEND);
+            }
+            
             database.userDao().insertUser(entity);
         }).start();
     }
@@ -85,15 +95,21 @@ public class UserRepositoryImpl implements UserRepository {
     @Override
     public LiveData<Resource<UserProfileResponseDTO>> getUserProfile(Long id) {
         MutableLiveData<Resource<UserProfileResponseDTO>> data = new MutableLiveData<>();
-        userApiService.getUserProfile(id).enqueue(new Callback<UserProfileResponseDTO>() {
+        data.setValue(Resource.loading(null));
+        userApiService.getUserProfileById(id).enqueue(new Callback<UserProfileResponseDTO>() {
             @Override
             public void onResponse(@NonNull Call<UserProfileResponseDTO> call, @NonNull Response<UserProfileResponseDTO> response) {
-                if (response.isSuccessful()) {
+                if (response.isSuccessful() && response.body() != null) {
+                    saveUserToLocal(response.body());
                     data.setValue(Resource.success(response.body()));
+                } else {
+                    data.setValue(Resource.error("Không thể tải thông tin người dùng", null));
                 }
             }
             @Override
-            public void onFailure(@NonNull Call<UserProfileResponseDTO> call, @NonNull Throwable t) {}
+            public void onFailure(@NonNull Call<UserProfileResponseDTO> call, @NonNull Throwable t) {
+                data.setValue(Resource.error("Lỗi kết nối: " + t.getMessage(), null));
+            }
         });
         return data;
     }
@@ -160,7 +176,7 @@ public class UserRepositoryImpl implements UserRepository {
     @Override
     public LiveData<Resource<PageResponse<UserSearchResponseDTO>>> searchUsers(String query, int page, int size) {
         MutableLiveData<Resource<PageResponse<UserSearchResponseDTO>>> data = new MutableLiveData<>();
-        data.setValue(Resource.loading(null)); // Phát tín hiệu Loading ngay lập tức
+        data.setValue(Resource.loading(null));
         userApiService.searchUsers(query, page, size).enqueue(new Callback<PageResponse<UserSearchResponseDTO>>() {
             @Override
             public void onResponse(@NonNull Call<PageResponse<UserSearchResponseDTO>> call, @NonNull Response<PageResponse<UserSearchResponseDTO>> response) {

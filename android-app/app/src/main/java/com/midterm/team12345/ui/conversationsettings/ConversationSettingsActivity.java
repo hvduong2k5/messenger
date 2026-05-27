@@ -10,17 +10,20 @@ import androidx.lifecycle.ViewModelProvider;
 import com.bumptech.glide.Glide;
 import com.midterm.team12345.MainActivity;
 import com.midterm.team12345.R;
+import com.midterm.team12345.data.local.TokenManager;
 import com.midterm.team12345.domain.model.Conversation;
 import com.midterm.team12345.data.repository.ConversationRepositoryImpl;
 import com.midterm.team12345.data.repository.FriendRepositoryImpl;
 import com.midterm.team12345.databinding.ActivityConversationSettingsBinding;
 import com.midterm.team12345.databinding.ItemSettingsRowBinding;
 import com.midterm.team12345.ui.base.BaseActivity;
+import com.midterm.team12345.utils.NavigationUtils;
 import com.midterm.team12345.utils.Resource;
 
 public class ConversationSettingsActivity extends BaseActivity<ActivityConversationSettingsBinding, ConversationSettingsViewModel> {
 
     private Conversation conversation;
+    private Long partnerId = null;
 
     @Override
     protected ActivityConversationSettingsBinding inflateBinding(LayoutInflater inflater) {
@@ -29,7 +32,6 @@ public class ConversationSettingsActivity extends BaseActivity<ActivityConversat
 
     @Override
     protected ConversationSettingsViewModel createViewModel() {
-        // Thay thế ChatRepositoryImpl bằng ConversationRepositoryImpl và FriendRepositoryImpl chuyên biệt
         ConversationSettingsViewModelFactory factory = new ConversationSettingsViewModelFactory(
                 ConversationRepositoryImpl.getInstance(getApplication()),
                 FriendRepositoryImpl.getInstance(getApplication())
@@ -39,7 +41,6 @@ public class ConversationSettingsActivity extends BaseActivity<ActivityConversat
 
     @Override
     protected void setupViews() {
-        // Lấy dữ liệu hội thoại từ Intent
         conversation = (Conversation) getIntent().getSerializableExtra("conversation");
         if (conversation == null) {
             finish();
@@ -50,7 +51,31 @@ public class ConversationSettingsActivity extends BaseActivity<ActivityConversat
         setupHeader();
         setupSettingRows();
         setupListeners();
-        checkAdminStatus();
+        
+        if (!conversation.getGroup()) {
+            findPartnerId();
+        } else {
+            checkAdminStatus();
+        }
+    }
+
+    private void findPartnerId() {
+        Long myId = TokenManager.getInstance(this).getUserId();
+        java.util.concurrent.Executors.newSingleThreadExecutor().execute(() -> {
+            java.util.List<com.midterm.team12345.data.local.entity.ConversationParticipantEntity> participants = 
+                com.midterm.team12345.data.local.database.DatabaseProvider.getInstance(getApplicationContext())
+                    .getConversationParticipantDao()
+                    .getParticipantsForConversationSync(conversation.getConversationId());
+            
+            if (participants != null) {
+                for (com.midterm.team12345.data.local.entity.ConversationParticipantEntity p : participants) {
+                    if (!p.getUserId().equals(myId)) {
+                        partnerId = p.getUserId();
+                        break;
+                    }
+                }
+            }
+        });
     }
 
     private void setupToolbar() {
@@ -82,34 +107,29 @@ public class ConversationSettingsActivity extends BaseActivity<ActivityConversat
     private void setupSettingRows() {
         boolean isGroup = conversation.getGroup();
 
-        // Cấu hình các dòng Setting chung
         bindRow(binding.itemColor, "Color", null, R.drawable.ic_check_circle);
         bindRow(binding.itemEmoji, "Emoji", "👍", R.drawable.ic_check_circle);
         bindRow(binding.itemNicknames, "Nicknames", null, R.drawable.ic_back_arrow);
 
-        // Ẩn các dòng chưa cấu hình hoặc không dùng tới
         binding.itemSearch.getRoot().setVisibility(View.GONE);
         binding.itemNotifications.getRoot().setVisibility(View.GONE);
         binding.itemIgnore.getRoot().setVisibility(View.GONE);
 
-        // Hiển thị các tính năng dựa trên loại hội thoại (Group vs 1-1)
         binding.itemBlock.getRoot().setVisibility(isGroup ? View.GONE : View.VISIBLE);
-        binding.itemViewMembers.getRoot().setVisibility(isGroup ? View.VISIBLE : View.GONE);
-        binding.itemAddMember.getRoot().setVisibility(View.GONE);
-
+        
+        // Requirement 2.2: Row for Profile in 1-1
         if (isGroup) {
-            binding.btnAddMember.setVisibility(View.GONE);
-        } else {
-            binding.btnAddMember.setVisibility(View.VISIBLE);
-        }
-
-        if (isGroup) {
+            binding.itemViewMembers.getRoot().setVisibility(View.VISIBLE);
+            binding.itemAddMember.getRoot().setVisibility(View.GONE); // Admin only
             bindRow(binding.itemViewMembers, "View Members", null, R.drawable.ic_back_arrow);
-            bindRow(binding.itemAddMember, "Add Member", null, R.drawable.ic_back_arrow);
+            binding.tvAddAction.setText("Add");
+        } else {
+            binding.itemViewMembers.getRoot().setVisibility(View.GONE);
+            binding.itemAddMember.getRoot().setVisibility(View.VISIBLE);
+            bindRow(binding.itemAddMember, "View Profile", null, R.drawable.ic_back_arrow);
+            binding.tvAddAction.setText("Profile");
         }
-        binding.tvAddAction.setText(isGroup ? "Add" : "Profile");
 
-        // Các hành động cảnh báo (Màu đỏ)
         bindRow(binding.itemLeave, isGroup ? "Leave Group" : "Delete Chat", null, 0);
         binding.itemLeave.tvTitle.setTextColor(getResources().getColor(android.R.color.holo_red_dark));
 
@@ -124,18 +144,29 @@ public class ConversationSettingsActivity extends BaseActivity<ActivityConversat
                     viewModel.leaveGroup(conversation.getConversationId());
                 });
             } else {
-                // Xử lý xóa chat hoặc block
                 showConfirmDialog("Delete this conversation?", () -> {
-                    // Logic xóa chat
+                    // Logic to delete conversation
                 });
             }
         });
 
-        binding.itemAddMember.getRoot().setOnClickListener(v -> openAddMembersScreen());
+        binding.itemAddMember.getRoot().setOnClickListener(v -> {
+            if (conversation.getGroup()) {
+                openAddMembersScreen();
+            } else {
+                if (partnerId != null) {
+                    NavigationUtils.navigateToProfile(this, partnerId);
+                }
+            }
+        });
 
         binding.btnAddMember.setOnClickListener(v -> {
             if (conversation.getGroup()) {
                 openAddMembersScreen();
+            } else {
+                if (partnerId != null) {
+                    NavigationUtils.navigateToProfile(this, partnerId);
+                }
             }
         });
 
@@ -145,8 +176,7 @@ public class ConversationSettingsActivity extends BaseActivity<ActivityConversat
 
         binding.itemBlock.getRoot().setOnClickListener(v -> {
             showConfirmDialog("Block this user?", () -> {
-                // Logic block người dùng (thường qua FriendRepository)
-                // viewModel.unfriend(partnerId); 
+                // Logic block user
             });
         });
     }
@@ -174,9 +204,6 @@ public class ConversationSettingsActivity extends BaseActivity<ActivityConversat
         });
     }
 
-    /**
-     * Helper để bind dữ liệu vào layout include item_settings_row
-     */
     private void bindRow(ItemSettingsRowBinding row, String title, String value, int iconRes) {
         row.tvTitle.setText(title);
         row.tvValue.setVisibility(value != null ? View.VISIBLE : View.GONE);
@@ -187,12 +214,9 @@ public class ConversationSettingsActivity extends BaseActivity<ActivityConversat
 
     @Override
     protected void observeViewModel() {
-        super.observeViewModel(); // Lắng nghe Loading và Error mặc định
-
-        // Lắng nghe kết quả thực hiện hành động
+        super.observeViewModel();
         viewModel.actionState.observe(this, resource -> {
             if (resource.status == Resource.Status.SUCCESS) {
-                // Nếu là xóa hoặc rời nhóm thì chuyển hướng về màn hình chính
                 navigateToMain();
             }
         });
@@ -228,11 +252,9 @@ public class ConversationSettingsActivity extends BaseActivity<ActivityConversat
             return;
         }
 
-        com.midterm.team12345.data.local.TokenManager tokenManager = new com.midterm.team12345.data.local.TokenManager(this);
-        Long myId = tokenManager.getUserId();
+        Long myId = TokenManager.getInstance(this).getUserId();
         Long conversationId = conversation.getConversationId();
 
-        // 1. Check local database first
         java.util.concurrent.Executors.newSingleThreadExecutor().execute(() -> {
             java.util.List<com.midterm.team12345.data.local.entity.ConversationParticipantEntity> participants = 
                 com.midterm.team12345.data.local.database.DatabaseProvider.getInstance(getApplicationContext())
@@ -251,44 +273,12 @@ public class ConversationSettingsActivity extends BaseActivity<ActivityConversat
                     if (finalAmIAdmin) {
                         binding.itemAddMember.getRoot().setVisibility(View.VISIBLE);
                         binding.btnAddMember.setVisibility(View.VISIBLE);
+                        bindRow(binding.itemAddMember, "Add Member", null, R.drawable.ic_back_arrow);
                     } else {
                         binding.itemAddMember.getRoot().setVisibility(View.GONE);
                         binding.btnAddMember.setVisibility(View.GONE);
                     }
                 });
-            }
-        });
-
-        // 2. Refresh from server to get accurate status and update local DB cache
-        viewModel.getParticipants(conversationId).observe(this, resource -> {
-            if (resource.status == Resource.Status.SUCCESS && resource.data != null) {
-                java.util.List<com.midterm.team12345.data.remote.dto.response.ParticipantResponseDTO> remoteParticipants = resource.data.getContent();
-                if (remoteParticipants != null) {
-                    boolean amIAdmin = false;
-                    java.util.List<com.midterm.team12345.data.local.entity.ConversationParticipantEntity> localEntities = new java.util.ArrayList<>();
-                    for (com.midterm.team12345.data.remote.dto.response.ParticipantResponseDTO p : remoteParticipants) {
-                        if (p.getUserId().equals(myId)) {
-                            amIAdmin = "ADMIN".equalsIgnoreCase(p.getRole()) || "OWNER".equalsIgnoreCase(p.getRole());
-                        }
-                        localEntities.add(new com.midterm.team12345.data.local.entity.ConversationParticipantEntity(
-                                conversationId, p.getUserId(), p.getRole(), p.getUsername(), null
-                        ));
-                    }
-                    
-                    if (amIAdmin) {
-                        binding.itemAddMember.getRoot().setVisibility(View.VISIBLE);
-                        binding.btnAddMember.setVisibility(View.VISIBLE);
-                    } else {
-                        binding.itemAddMember.getRoot().setVisibility(View.GONE);
-                        binding.btnAddMember.setVisibility(View.GONE);
-                    }
-
-                    java.util.concurrent.Executors.newSingleThreadExecutor().execute(() -> {
-                        com.midterm.team12345.data.local.database.DatabaseProvider.getInstance(getApplicationContext())
-                            .getConversationParticipantDao()
-                            .insertParticipants(localEntities);
-                    });
-                }
             }
         });
     }

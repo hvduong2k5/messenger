@@ -3,10 +3,8 @@ package com.midterm.team12345.ui.settings;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
-import com.midterm.team12345.data.local.TokenManager;
 import com.midterm.team12345.data.local.entity.UserEntity;
-import com.midterm.team12345.data.remote.dto.request.UpdateProfileRequestDTO;
-import com.midterm.team12345.domain.repository.AuthRepository;
+import com.midterm.team12345.domain.repository.FriendRepository;
 import com.midterm.team12345.domain.repository.UserRepository;
 import com.midterm.team12345.ui.base.BaseViewModel;
 import com.midterm.team12345.utils.Resource;
@@ -14,42 +12,33 @@ import com.midterm.team12345.utils.SingleLiveEvent;
 
 public class UserProfileViewModel extends BaseViewModel {
     private final UserRepository userRepository;
-    private final AuthRepository authRepository;
-    private final TokenManager tokenManager;
+    private final FriendRepository friendRepository;
+    private Long targetUserId;
 
-    // State: Thông tin người dùng hiện tại
-    private final LiveData<UserEntity> _user;
-    public final LiveData<UserEntity> user;
+    public final SingleLiveEvent<String> statusMessageEvent = new SingleLiveEvent<>();
 
-    // Event: Điều hướng sau khi logout
-    public final SingleLiveEvent<Void> logoutEvent = new SingleLiveEvent<>();
-
-    public UserProfileViewModel(UserRepository userRepository, AuthRepository authRepository, TokenManager tokenManager) {
+    public UserProfileViewModel(UserRepository userRepository, FriendRepository friendRepository) {
         this.userRepository = userRepository;
-        this.authRepository = authRepository;
-        this.tokenManager = tokenManager;
+        this.friendRepository = friendRepository;
+    }
 
-        // Lấy dữ liệu tức thì từ Room DB (SSOT)
-        Long userId = tokenManager.getUserId();
-        this._user = userRepository.getLocalUser(userId);
-        this.user = _user;
+    public void setTargetUserId(Long userId) {
+        this.targetUserId = userId;
     }
 
     /**
-     * Làm mới dữ liệu từ API và lưu vào Room
+     * Observe user data from Room DB (SSOT)
      */
-    public void refreshProfile() {
-        userRepository.getMyProfile();
+    public LiveData<UserEntity> getUser() {
+        return userRepository.getLocalUser(targetUserId);
     }
 
     /**
-     * Cập nhật trạng thái/Bio
+     * Refresh user data from API
      */
-    public void updateBio(String bio) {
+    public void fetchUserProfile() {
         showLoading();
-        UpdateProfileRequestDTO request = new UpdateProfileRequestDTO();
-        request.setStatus(bio);
-        userRepository.updateProfile(request).observeForever(resource -> {
+        userRepository.getUserProfile(targetUserId).observeForever(resource -> {
             if (resource.status != Resource.Status.LOADING) {
                 hideLoading();
                 if (resource.status == Resource.Status.ERROR) {
@@ -59,16 +48,77 @@ public class UserProfileViewModel extends BaseViewModel {
         });
     }
 
-    /**
-     * Xử lý đăng xuất chuyên sâu
-     */
-    public void logout() {
+    public void sendFriendRequest() {
         showLoading();
-        authRepository.logout().observeForever(resource -> {
+        friendRepository.sendFriendRequest(targetUserId).observeForever(resource -> {
             if (resource.status != Resource.Status.LOADING) {
                 hideLoading();
-                // clearLocalData đã được gọi trong AuthRepositoryImpl
-                logoutEvent.call();
+                if (resource.status == Resource.Status.SUCCESS) {
+                    statusMessageEvent.setValue("Đã gửi lời mời kết bạn");
+                    fetchUserProfile(); // Refresh data to update status in DB and UI
+                } else {
+                    setError(resource.message);
+                }
+            }
+        });
+    }
+
+    public void acceptFriendRequest() {
+        showLoading();
+        friendRepository.acceptFriendRequest(targetUserId).observeForever(resource -> {
+            if (resource.status != Resource.Status.LOADING) {
+                hideLoading();
+                if (resource.status == Resource.Status.SUCCESS) {
+                    statusMessageEvent.setValue("Đã chấp nhận lời mời kết bạn");
+                    fetchUserProfile();
+                } else {
+                    setError(resource.message);
+                }
+            }
+        });
+    }
+
+    public void rejectFriendRequest() {
+        showLoading();
+        friendRepository.rejectFriendRequest(targetUserId).observeForever(resource -> {
+            if (resource.status != Resource.Status.LOADING) {
+                hideLoading();
+                if (resource.status == Resource.Status.SUCCESS) {
+                    statusMessageEvent.setValue("Đã từ chối lời mời kết bạn");
+                    fetchUserProfile();
+                } else {
+                    setError(resource.message);
+                }
+            }
+        });
+    }
+
+    public void unfriend() {
+        showLoading();
+        friendRepository.unfriend(targetUserId).observeForever(resource -> {
+            if (resource.status != Resource.Status.LOADING) {
+                hideLoading();
+                if (resource.status == Resource.Status.SUCCESS) {
+                    statusMessageEvent.setValue("Đã hủy kết bạn");
+                    fetchUserProfile();
+                } else {
+                    setError(resource.message);
+                }
+            }
+        });
+    }
+
+    public void cancelFriendRequest() {
+        showLoading();
+        friendRepository.cancelFriendRequest(targetUserId).observeForever(resource -> {
+            if (resource.status != Resource.Status.LOADING) {
+                hideLoading();
+                if (resource.status == Resource.Status.SUCCESS) {
+                    statusMessageEvent.setValue("Đã hủy yêu cầu kết bạn");
+                    fetchUserProfile();
+                } else {
+                    setError(resource.message);
+                }
             }
         });
     }
