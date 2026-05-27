@@ -7,9 +7,11 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 import androidx.lifecycle.ViewModelProvider;
 import com.midterm.team12345.databinding.FragmentForgotOtpBinding;
 import com.midterm.team12345.ui.base.BaseFragment;
+import com.midterm.team12345.utils.Resource;
 
 public class ForgotOtpFragment extends BaseFragment<FragmentForgotOtpBinding, ForgotPasswordViewModel> {
 
@@ -59,11 +61,7 @@ public class ForgotOtpFragment extends BaseFragment<FragmentForgotOtpBinding, Fo
         });
 
         binding.btnNext.setEnabled(viewModel.isOtpValid());
-        binding.btnNext.setOnClickListener(v -> {
-            if (getActivity() instanceof ForgotPasswordActivity) {
-                ((ForgotPasswordActivity) getActivity()).replaceFragment(new ForgotPasswordFragment(), true);
-            }
-        });
+        binding.btnNext.setOnClickListener(v -> viewModel.resetPassword());
 
         binding.btnResend.setOnClickListener(v -> viewModel.requestForgotPassword());
 
@@ -74,6 +72,19 @@ public class ForgotOtpFragment extends BaseFragment<FragmentForgotOtpBinding, Fo
             android.view.inputmethod.InputMethodManager imm = (android.view.inputmethod.InputMethodManager) 
                     requireContext().getSystemService(android.content.Context.INPUT_METHOD_SERVICE);
             imm.showSoftInput(binding.etOtp, android.view.inputmethod.InputMethodManager.SHOW_IMPLICIT);
+        });
+    }
+
+    @Override
+    protected void observeViewModel() {
+        super.observeViewModel();
+        viewModel.resetPasswordResult.observe(getViewLifecycleOwner(), resource -> {
+            if (resource.status == Resource.Status.SUCCESS) {
+                Toast.makeText(requireContext(), "Đổi mật khẩu thành công", Toast.LENGTH_SHORT).show();
+                requireActivity().finish();
+            } else if (resource.status == Resource.Status.ERROR) {
+                showError(resource.message);
+            }
         });
     }
 }
