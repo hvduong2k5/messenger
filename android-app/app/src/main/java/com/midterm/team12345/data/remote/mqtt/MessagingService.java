@@ -89,7 +89,22 @@ public class MessagingService extends Service {
                                 }
                                 
                                 if (!exists) {
-                                    messageDao.insertMessage(entity);
+                                    com.midterm.team12345.data.local.entity.MessageEntity pending = messageDao.getPendingMessage(
+                                            entity.getConversationId(), 
+                                            entity.getSenderId(), 
+                                            entity.getContent()
+                                    );
+                                    if (pending != null) {
+                                        messageDao.updateSyncSuccess(
+                                                pending.getClientMessageId(),
+                                                entity.getMessageId(),
+                                                entity.getServerCreatedAt() != null ? entity.getServerCreatedAt() : entity.getLocalCreatedAt(),
+                                                com.midterm.team12345.data.local.entity.SyncState.SENT,
+                                                com.midterm.team12345.data.local.entity.DeliveryStatus.SENT
+                                        );
+                                    } else {
+                                        messageDao.insertMessage(entity);
+                                    }
                                 }
                             }
                         } catch (Exception e) {

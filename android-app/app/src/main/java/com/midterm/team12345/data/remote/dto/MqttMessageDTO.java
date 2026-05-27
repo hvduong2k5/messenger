@@ -130,7 +130,11 @@ public class MqttMessageDTO {
             dto.setContent(content);
             dto.setType(type != null ? type : "text");
             dto.setStatus(status != null ? status : "SENT");
-            dto.setCreatedAtStr(createdAt);
+            if (createdAt != null) {
+                dto.setCreatedAtStr(createdAt);
+            } else if (getTimestamp() != null) {
+                dto.setCreatedAt(getTimestamp());
+            }
             dto.setIsDeleted(isDeleted);
             dto.setIsEdited(isEdited);
             return dto;

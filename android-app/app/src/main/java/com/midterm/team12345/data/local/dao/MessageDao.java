@@ -36,6 +36,9 @@ public interface MessageDao {
     @Query("SELECT * FROM messages WHERE message_id = :messageId LIMIT 1")
     MessageEntity getMessageByServerId(Long messageId);
 
+    @Query("SELECT * FROM messages WHERE conversation_id = :conversationId AND sender_id = :senderId AND sync_state = 'PENDING' AND content = :content ORDER BY local_created_at ASC LIMIT 1")
+    MessageEntity getPendingMessage(Long conversationId, Long senderId, String content);
+
     @Query("SELECT * FROM messages WHERE sync_state = :syncState")
     List<MessageEntity> getMessagesBySyncState(SyncState syncState);
 
