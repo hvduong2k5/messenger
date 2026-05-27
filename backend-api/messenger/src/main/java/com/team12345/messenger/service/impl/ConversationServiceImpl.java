@@ -245,19 +245,32 @@ public class ConversationServiceImpl implements ConversationService {
     @Override
     @Transactional
     public void removeParticipant(Long conversationId, Long currentUserId, Long userId) {
+        if (currentUserId.equals(userId)) {
+            throw new IllegalArgumentException("Bạn không thể tự xóa chính mình khỏi cuộc hội thoại qua tính năng này. Vui lòng sử dụng tính năng Rời Nhóm (/leave)");
+        }
+        
         ParticipantId targetId = new ParticipantId(conversationId, userId);
         if (!participantRepository.existsById(targetId)) {
             throw new RuntimeException("Participant not found");
         }
 
-        if (!currentUserId.equals(userId)) {
-            Participant currentParticipant = participantRepository.findById(new ParticipantId(conversationId, currentUserId))
-                    .orElseThrow(() -> new RuntimeException("User is not a participant"));
-            if (currentParticipant.getConversation().getIsGroup() && currentParticipant.getRole() != com.team12345.messenger.entity.ParticipantRole.admin) {
-                throw new RuntimeException("Only admins can remove other participants");
-            }
+        Participant currentParticipant = participantRepository.findById(new ParticipantId(conversationId, currentUserId))
+                .orElseThrow(() -> new RuntimeException("User is not a participant"));
+                
+        if (currentParticipant.getConversation().getIsGroup() && currentParticipant.getRole() != com.team12345.messenger.entity.ParticipantRole.admin) {
+            throw new org.springframework.security.access.AccessDeniedException("Only admins can remove other participants");
         }
+        
         participantRepository.deleteById(targetId);
+
+        try {
+            mqttGateway.sendToMqtt(objectMapper.writeValueAsString(Map.of(
+                    "type", "PARTICIPANT_REMOVED",
+                    "userId", userId
+            )), "conversations/" + conversationId + "/events");
+        } catch (Exception e) {
+            log.error("[MQTT] Failed to notify participant removal", e);
+        }
     }
 
     @Override
@@ -299,36 +312,69 @@ public class ConversationServiceImpl implements ConversationService {
         if (currentParticipant.getRole() == com.team12345.messenger.entity.ParticipantRole.admin) {
             long adminCount = participantRepository.countById_ConversationIdAndRole(conversationId, com.team12345.messenger.entity.ParticipantRole.admin);
             if (adminCount == 1) {
-                throw new IllegalArgumentException("You are the only admin. Please transfer admin rights before leaving.");
+                List<Participant> remainingParticipants = participantRepository.findById_ConversationId(conversationId).stream()
+                        .filter(p -> !p.getUser().getId().equals(currentUserId))
+                        .toList();
+                if (!remainingParticipants.isEmpty()) {
+                    Participant newAdmin = remainingParticipants.get(0);
+                    newAdmin.setRole(com.team12345.messenger.entity.ParticipantRole.admin);
+                    participantRepository.save(newAdmin);
+                    
+                    try {
+                        mqttGateway.sendToMqtt(objectMapper.writeValueAsString(Map.of(
+                                "type", "ROLE_CHANGED",
+                                "userId", newAdmin.getUser().getId()
+                        )), "conversations/" + conversationId + "/events");
+                    } catch (Exception e) {
+                        log.error("[MQTT] Failed to notify role change", e);
+                    }
+                } else {
+                    // No other members, conversation could be deleted or kept empty
+                }
             }
         }
 
         participantRepository.delete(currentParticipant);
 
-        // Notify other participants via MQTT
-        List<Participant> remainingParticipants = participantRepository.findById_ConversationId(conversationId);
-        
-        ParticipantResponseDTO leftParticipantDTO = ParticipantResponseDTO.builder()
-                .userId(currentUserId)
-                .username(currentParticipant.getUser().getUsername())
-                .avatarUrl(currentParticipant.getUser().getAvatarUrl())
-                .role(currentParticipant.getRole().name().toUpperCase())
-                .joinedAt(currentParticipant.getJoinedAt())
-                .build();
+        try {
+            mqttGateway.sendToMqtt(objectMapper.writeValueAsString(Map.of(
+                    "type", "PARTICIPANT_LEFT",
+                    "userId", currentUserId
+            )), "conversations/" + conversationId + "/events");
+        } catch (Exception e) {
+            log.error("[MQTT] Failed to notify participant left", e);
+        }
+    }
 
-        for (Participant p : remainingParticipants) {
-            if (!p.getUser().getId().equals(currentUserId)) {
-                String topic = "user/" + p.getUser().getId() + "/messages";
-                try {
-                    mqttGateway.sendToMqtt(objectMapper.writeValueAsString(Map.of(
-                            "action", "LEAVE_CONVERSATION", 
-                            "data", leftParticipantDTO,
-                            "conversationId", conversationId
-                    )), topic);
-                } catch (Exception e) {
-                    log.error("[MQTT] Failed to notify {} on {}: {}", p.getUser().getId(), topic, e.getMessage());
-                }
-            }
+    @Override
+    @Transactional
+    public void updateParticipantRole(Long conversationId, Long currentUserId, Long targetParticipantId, String newRole) {
+        if (currentUserId.equals(targetParticipantId)) {
+            throw new IllegalArgumentException("Admin không được tự cập nhật vai trò của chính mình");
+        }
+        
+        Participant currentParticipant = participantRepository.findById(new ParticipantId(conversationId, currentUserId))
+                .orElseThrow(() -> new RuntimeException("User is not a participant"));
+        
+        if (currentParticipant.getRole() != com.team12345.messenger.entity.ParticipantRole.admin) {
+            throw new org.springframework.security.access.AccessDeniedException("Only admins can update roles");
+        }
+
+        Participant targetParticipant = participantRepository.findById(new ParticipantId(conversationId, targetParticipantId))
+                .orElseThrow(() -> new RuntimeException("Target user is not a participant"));
+
+        try {
+            targetParticipant.setRole(com.team12345.messenger.entity.ParticipantRole.valueOf(newRole.toLowerCase()));
+            participantRepository.save(targetParticipant);
+
+            mqttGateway.sendToMqtt(objectMapper.writeValueAsString(Map.of(
+                    "type", "ROLE_CHANGED",
+                    "userId", targetParticipantId
+            )), "conversations/" + conversationId + "/events");
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Invalid role");
+        } catch (Exception e) {
+            log.error("[MQTT] Failed to notify role change", e);
         }
     }
 }
