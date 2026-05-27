@@ -90,7 +90,7 @@ public class CreateGroupViewModel extends BaseViewModel {
         }
         _selectedUsers.setValue(currentSelected);
     }
-     * Thực hiện tạo nhóm mới
+     /* Thực hiện tạo nhóm mới
      */
     public void createGroup(String groupName) {
         if (groupName == null || groupName.trim().isEmpty()) {

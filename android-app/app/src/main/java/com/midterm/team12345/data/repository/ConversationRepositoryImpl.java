@@ -127,9 +127,10 @@ public class ConversationRepositoryImpl implements ConversationRepository {
             @Override
             public void onFailure(@NonNull Call<Void> call, @NonNull Throwable t) {
                 data.setValue(Resource.error(t.getMessage(), null));
-            }
+            }});
         return data;
     }
+
 
     @Override
     public LiveData<Resource<Void>> addParticipants(Long conversationId, List<Long> userIds) {
