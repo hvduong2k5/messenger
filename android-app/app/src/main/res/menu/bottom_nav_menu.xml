@@ -6,7 +6,7 @@
         android:title="Chats" />
     <item
         android:id="@+id/nav_people"
-        android:icon="@drawable/ic_person"
+        android:icon="@drawable/ic_friend"
         android:title="People" />
     <item
         android:id="@+id/nav_settings"
