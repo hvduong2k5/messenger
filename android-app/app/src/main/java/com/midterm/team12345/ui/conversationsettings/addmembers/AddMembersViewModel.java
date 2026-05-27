@@ -19,7 +19,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 import retrofit2.Call;
@@ -33,21 +34,39 @@ public class AddMembersViewModel extends BaseViewModel {
     private final MutableLiveData<String> searchQuery = new MutableLiveData<>("");
     private List<Long> existingParticipantIds = new ArrayList<>();
     
-    public final LiveData<List<UserEntity>> friends;
+    private final MutableLiveData<List<UserEntity>> _friends = new MutableLiveData<>();
+    public final LiveData<List<UserEntity>> friends = _friends;
     public final SingleLiveEvent<Void> addSuccessEvent = new SingleLiveEvent<>();
+
+    private List<UserEntity> allFriendsList = new ArrayList<>();
+    private final ExecutorService executor = Executors.newSingleThreadExecutor();
 
     public AddMembersViewModel(@NonNull Application application) {
         super();
         this.friendRepository = FriendRepositoryImpl.getInstance(application);
         this.conversationApiService = RetrofitClient.getConversationApiService(application);
 
-        this.friends = Transformations.switchMap(searchQuery, query -> 
-            Transformations.map(friendRepository.searchFriendsLocally(query), list -> 
-                list.stream()
+        LiveData<List<UserEntity>> allFriendsLiveData = friendRepository.searchFriendsLocally("");
+        allFriendsLiveData.observeForever(users -> {
+            if (users != null) {
+                allFriendsList = users;
+                filterFriends(searchQuery.getValue());
+            }
+        });
+
+        searchQuery.observeForever(this::filterFriends);
+    }
+
+    private void filterFriends(String query) {
+        executor.execute(() -> {
+            String q = query != null ? query.toLowerCase() : "";
+            List<UserEntity> filtered = allFriendsList.stream()
                     .filter(user -> !existingParticipantIds.contains(user.getId()))
-                    .collect(Collectors.toList())
-            )
-        );
+                    .filter(user -> q.isEmpty() || user.getUsername().toLowerCase().contains(q) || 
+                                    (user.getFullName() != null && user.getFullName().toLowerCase().contains(q)))
+                    .collect(Collectors.toList());
+            _friends.postValue(filtered);
+        });
     }
 
     public void setExistingParticipants(List<Long> ids) {
@@ -63,33 +82,26 @@ public class AddMembersViewModel extends BaseViewModel {
         if (selectedIds == null || selectedIds.isEmpty()) return;
         
         showLoading();
-        AtomicInteger successCount = new AtomicInteger(0);
-        AtomicInteger totalCount = new AtomicInteger(selectedIds.size());
-
-        for (Long userId : selectedIds) {
-            Map<String, Long> body = new HashMap<>();
-            body.put("userId", userId);
-            
-            conversationApiService.addParticipant(conversationId, body).enqueue(new Callback<Void>() {
-                @Override
-                public void onResponse(Call<Void> call, Response<Void> response) {
-                    if (response.isSuccessful()) {
-                        if (successCount.incrementAndGet() == totalCount.get()) {
-                            hideLoading();
-                            addSuccessEvent.call();
-                        }
-                    } else {
-                        hideLoading();
-                        setError("Lỗi khi thêm thành viên: " + userId);
-                    }
+        
+        Map<String, List<Long>> body = new HashMap<>();
+        body.put("userIds", new ArrayList<>(selectedIds));
+        
+        conversationApiService.addParticipants(conversationId, body).enqueue(new Callback<Map<String, String>>() {
+            @Override
+            public void onResponse(Call<Map<String, String>> call, Response<Map<String, String>> response) {
+                hideLoading();
+                if (response.isSuccessful()) {
+                    addSuccessEvent.call();
+                } else {
+                    setError("Lỗi khi thêm thành viên");
                 }
+            }
 
-                @Override
-                public void onFailure(Call<Void> call, Throwable t) {
-                    hideLoading();
-                    setError("Lỗi kết nối mạng");
-                }
-            });
-        }
+            @Override
+            public void onFailure(Call<Map<String, String>> call, Throwable t) {
+                hideLoading();
+                setError("Lỗi kết nối mạng");
+            }
+        });
     }
 }

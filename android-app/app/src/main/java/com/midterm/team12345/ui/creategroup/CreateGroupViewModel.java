@@ -11,16 +11,20 @@ import com.midterm.team12345.domain.repository.FriendRepository;
 import com.midterm.team12345.ui.base.BaseViewModel;
 import com.midterm.team12345.utils.Resource;
 
+import com.midterm.team12345.data.local.entity.UserEntity;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
 
 public class CreateGroupViewModel extends BaseViewModel {
 
     private final FriendRepository friendRepository;
     private final ConversationRepository conversationRepository;
 
-    private final MutableLiveData<List<UserResponseDTO>> _selectedUsers = new MutableLiveData<>(new ArrayList<>());
-    public LiveData<List<UserResponseDTO>> getSelectedUsers() {
+    private final MutableLiveData<List<UserEntity>> _selectedUsers = new MutableLiveData<>(new ArrayList<>());
+    public LiveData<List<UserEntity>> getSelectedUsers() {
         return _selectedUsers;
     }
 
@@ -29,23 +33,50 @@ public class CreateGroupViewModel extends BaseViewModel {
         return _createState;
     }
 
+    private final MutableLiveData<String> searchQuery = new MutableLiveData<>("");
+    private final ExecutorService executor = Executors.newSingleThreadExecutor();
+    private List<UserEntity> allFriendsList = new ArrayList<>();
+    
+    private final MutableLiveData<List<UserEntity>> _friends = new MutableLiveData<>();
+    public LiveData<List<UserEntity>> getFriends() {
+        return _friends;
+    }
+
     public CreateGroupViewModel(FriendRepository friendRepository, ConversationRepository conversationRepository) {
         this.friendRepository = friendRepository;
         this.conversationRepository = conversationRepository;
+        
+        LiveData<List<UserEntity>> allFriendsLiveData = friendRepository.searchFriendsLocally("");
+        allFriendsLiveData.observeForever(users -> {
+            if (users != null) {
+                allFriendsList = users;
+                filterFriends(searchQuery.getValue());
+            }
+        });
+        
+        searchQuery.observeForever(this::filterFriends);
     }
 
-    /**
-     * Lấy danh sách bạn bè để mời vào nhóm
-     */
-    public LiveData<Resource<List<UserResponseDTO>>> getFriends() {
-        return friendRepository.getFriendsList();
+    public void onSearchQueryChanged(String query) {
+        searchQuery.setValue(query);
+    }
+
+    private void filterFriends(String query) {
+        executor.execute(() -> {
+            String q = query != null ? query.toLowerCase() : "";
+            List<UserEntity> filtered = allFriendsList.stream()
+                    .filter(user -> q.isEmpty() || user.getUsername().toLowerCase().contains(q) || 
+                                    (user.getFullName() != null && user.getFullName().toLowerCase().contains(q)))
+                    .collect(Collectors.toList());
+            _friends.postValue(filtered);
+        });
     }
 
     /**
      * Chọn hoặc bỏ chọn một thành viên
      */
-    public void toggleUserSelection(UserResponseDTO user) {
-        List<UserResponseDTO> currentSelected = new ArrayList<>(_selectedUsers.getValue() != null ? _selectedUsers.getValue() : new ArrayList<>());
+    public void toggleUserSelection(UserEntity user) {
+        List<UserEntity> currentSelected = new ArrayList<>(_selectedUsers.getValue() != null ? _selectedUsers.getValue() : new ArrayList<>());
         boolean exists = false;
         for (int i = 0; i < currentSelected.size(); i++) {
             if (currentSelected.get(i).getId().equals(user.getId())) {
@@ -59,8 +90,6 @@ public class CreateGroupViewModel extends BaseViewModel {
         }
         _selectedUsers.setValue(currentSelected);
     }
-
-    /**
      * Thực hiện tạo nhóm mới
      */
     public void createGroup(String groupName) {
@@ -69,7 +98,7 @@ public class CreateGroupViewModel extends BaseViewModel {
             return;
         }
 
-        List<UserResponseDTO> selected = _selectedUsers.getValue();
+        List<UserEntity> selected = _selectedUsers.getValue();
         if (selected == null || selected.size() < 2) {
             setError("Vui lòng chọn ít nhất 2 thành viên");
             return;
@@ -77,7 +106,7 @@ public class CreateGroupViewModel extends BaseViewModel {
 
         showLoading();
         List<Long> ids = new ArrayList<>();
-        for (UserResponseDTO u : selected) {
+        for (UserEntity u : selected) {
             ids.add(u.getId());
         }
 

@@ -8,7 +8,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.midterm.team12345.R;
-import com.midterm.team12345.data.remote.dto.response.UserResponseDTO;
+import com.midterm.team12345.data.local.entity.UserEntity;
 import com.midterm.team12345.databinding.ItemSelectedMemberBinding;
 
 import java.util.ArrayList;
@@ -16,18 +16,18 @@ import java.util.List;
 
 public class SelectedMemberAdapter extends RecyclerView.Adapter<SelectedMemberAdapter.ViewHolder> {
 
-    private List<UserResponseDTO> selectedUsers = new ArrayList<>();
+    private List<UserEntity> selectedUsers = new ArrayList<>();
     private final OnRemoveClickListener listener;
 
     public interface OnRemoveClickListener {
-        void onRemoveClick(UserResponseDTO user);
+        void onRemoveClick(UserEntity user);
     }
 
     public SelectedMemberAdapter(OnRemoveClickListener listener) {
         this.listener = listener;
     }
 
-    public void setData(List<UserResponseDTO> users) {
+    public void setData(List<UserEntity> users) {
         this.selectedUsers = users;
         notifyDataSetChanged();
     }
@@ -42,7 +42,7 @@ public class SelectedMemberAdapter extends RecyclerView.Adapter<SelectedMemberAd
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        UserResponseDTO user = selectedUsers.get(position);
+        UserEntity user = selectedUsers.get(position);
         
         // Dùng username thay cho fullName. Lấy phần đầu của username làm tên hiển thị rút gọn
         String displayName = user.getUsername();

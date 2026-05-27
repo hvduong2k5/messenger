@@ -53,11 +53,9 @@ public class CreateGroupActivity extends AppCompatActivity {
     }
 
     private void setupObservers() {
-        viewModel.getFriends().observe(this, resource -> {
-            if (resource.status == Resource.Status.SUCCESS && resource.data != null) {
-                memberAdapter.setMembers(resource.data);
-            } else if (resource.status == Resource.Status.ERROR) {
-                Toast.makeText(this, resource.message, Toast.LENGTH_SHORT).show();
+        viewModel.getFriends().observe(this, users -> {
+            if (users != null) {
+                memberAdapter.setMembers(users);
             }
         });
 
@@ -120,7 +118,7 @@ public class CreateGroupActivity extends AppCompatActivity {
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                // Filter logic would go here
+                viewModel.onSearchQueryChanged(s.toString().trim());
             }
 
             @Override

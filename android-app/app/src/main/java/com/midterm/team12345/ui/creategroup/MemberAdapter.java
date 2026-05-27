@@ -6,7 +6,7 @@ import android.view.ViewGroup;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.midterm.team12345.data.remote.dto.response.UserResponseDTO;
+import com.midterm.team12345.data.local.entity.UserEntity;
 import com.midterm.team12345.databinding.ItemMemberSelectBinding;
 
 import java.util.ArrayList;
@@ -14,26 +14,26 @@ import java.util.List;
 
 public class MemberAdapter extends RecyclerView.Adapter<MemberAdapter.MemberViewHolder> {
 
-    private List<UserResponseDTO> members = new ArrayList<>();
+    private List<UserEntity> members = new ArrayList<>();
     private final List<Long> selectedIds = new ArrayList<>();
     private final OnMemberClickListener listener;
 
     public interface OnMemberClickListener {
-        void onMemberClick(UserResponseDTO user);
+        void onMemberClick(UserEntity user);
     }
 
     public MemberAdapter(OnMemberClickListener listener) {
         this.listener = listener;
     }
 
-    public void setMembers(List<UserResponseDTO> members) {
+    public void setMembers(List<UserEntity> members) {
         this.members = members;
         notifyDataSetChanged();
     }
 
-    public void setSelectedIds(List<UserResponseDTO> selectedUsers) {
+    public void setSelectedIds(List<UserEntity> selectedUsers) {
         selectedIds.clear();
-        for (UserResponseDTO user : selectedUsers) {
+        for (UserEntity user : selectedUsers) {
             selectedIds.add(user.getId());
         }
         notifyDataSetChanged();
@@ -49,8 +49,8 @@ public class MemberAdapter extends RecyclerView.Adapter<MemberAdapter.MemberView
 
     @Override
     public void onBindViewHolder(@NonNull MemberViewHolder holder, int position) {
-        UserResponseDTO user = members.get(position);
-        // Sử dụng username vì UserResponseDTO không có fullName
+        UserEntity user = members.get(position);
+        
         holder.binding.tvFullName.setText(user.getUsername());
         holder.binding.cbSelect.setChecked(selectedIds.contains(user.getId()));
         holder.itemView.setOnClickListener(v -> listener.onMemberClick(user));
