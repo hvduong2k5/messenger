@@ -84,12 +84,21 @@ public class ConversationSettingsActivity extends BaseActivity<ActivityConversat
         bindRow(binding.itemEmoji, "Emoji", "👍", R.drawable.ic_check_circle);
         bindRow(binding.itemNicknames, "Nicknames", null, R.drawable.ic_back_arrow);
 
+        // Ẩn các dòng chưa cấu hình hoặc không dùng tới
+        binding.itemSearch.getRoot().setVisibility(View.GONE);
+        binding.itemNotifications.getRoot().setVisibility(View.GONE);
+        binding.itemIgnore.getRoot().setVisibility(View.GONE);
+
         // Hiển thị các tính năng dựa trên loại hội thoại (Group vs 1-1)
         binding.itemBlock.getRoot().setVisibility(isGroup ? View.GONE : View.VISIBLE);
         binding.itemViewMembers.getRoot().setVisibility(isGroup ? View.VISIBLE : View.GONE);
-        binding.itemGroupInfo.getRoot().setVisibility(isGroup ? View.VISIBLE : View.GONE);
+        binding.itemAddMember.getRoot().setVisibility(isGroup ? View.VISIBLE : View.GONE);
+        binding.itemDeleteMember.getRoot().setVisibility(isGroup ? View.VISIBLE : View.GONE);
+
         if (isGroup) {
-            bindRow(binding.itemGroupInfo, "Group Info", null, R.drawable.ic_back_arrow);
+            bindRow(binding.itemViewMembers, "View Members", null, R.drawable.ic_back_arrow);
+            bindRow(binding.itemAddMember, "Add Member", null, R.drawable.ic_back_arrow);
+            bindRow(binding.itemDeleteMember, "Delete Member", null, R.drawable.ic_back_arrow);
         }
         binding.tvAddAction.setText(isGroup ? "Add" : "Profile");
 
@@ -115,16 +124,49 @@ public class ConversationSettingsActivity extends BaseActivity<ActivityConversat
             }
         });
 
-        binding.itemGroupInfo.getRoot().setOnClickListener(v -> {
-            Intent intent = new Intent(this, com.midterm.team12345.ui.groupinfo.GroupInfoActivity.class);
-            intent.putExtra("extra_conversation_id", conversation.getConversationId()); 
-            startActivity(intent);
+        binding.itemAddMember.getRoot().setOnClickListener(v -> openAddMembersScreen());
+
+        binding.btnAddMember.setOnClickListener(v -> {
+            if (conversation.getGroup()) {
+                openAddMembersScreen();
+            }
+        });
+
+        binding.itemViewMembers.getRoot().setOnClickListener(v -> {
+            com.midterm.team12345.ui.groupinfo.GroupMembersActivity.start(this, conversation.getConversationId());
+        });
+
+        binding.itemDeleteMember.getRoot().setOnClickListener(v -> {
+            com.midterm.team12345.ui.groupinfo.DeleteMemberActivity.start(this, conversation.getConversationId());
         });
 
         binding.itemBlock.getRoot().setOnClickListener(v -> {
             showConfirmDialog("Block this user?", () -> {
                 // Logic block người dùng (thường qua FriendRepository)
                 // viewModel.unfriend(partnerId); 
+            });
+        });
+    }
+
+    private void openAddMembersScreen() {
+        java.util.concurrent.Executors.newSingleThreadExecutor().execute(() -> {
+            java.util.List<com.midterm.team12345.data.local.entity.ConversationParticipantEntity> participants = 
+                com.midterm.team12345.data.local.database.DatabaseProvider.getInstance(getApplicationContext())
+                    .getConversationParticipantDao()
+                    .getParticipantsForConversationSync(conversation.getConversationId());
+            
+            java.util.ArrayList<Long> existingIds = new java.util.ArrayList<>();
+            if (participants != null) {
+                for (com.midterm.team12345.data.local.entity.ConversationParticipantEntity p : participants) {
+                    existingIds.add(p.getUserId());
+                }
+            }
+            
+            runOnUiThread(() -> {
+                Intent intent = new Intent(this, com.midterm.team12345.ui.conversationsettings.addmembers.AddMembersActivity.class);
+                intent.putExtra(com.midterm.team12345.ui.conversationsettings.addmembers.AddMembersActivity.EXTRA_CONVERSATION_ID, conversation.getConversationId());
+                intent.putExtra(com.midterm.team12345.ui.conversationsettings.addmembers.AddMembersActivity.EXTRA_EXISTING_PARTICIPANTS, existingIds);
+                startActivity(intent);
             });
         });
     }

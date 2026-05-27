@@ -60,9 +60,6 @@
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
 
-        <activity
-            android:name=".ui.groupinfo.GroupInfoActivity"
-            android:exported="false" />
 
         <activity
             android:name=".ui.groupinfo.GroupMembersActivity"
