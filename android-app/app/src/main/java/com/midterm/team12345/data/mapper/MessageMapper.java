@@ -133,7 +133,11 @@ public class MessageMapper {
         response.setSenderAvatarUrl(entity.getSenderAvatarUrl());
         response.setContent(entity.getContent());
         response.setType(entity.getType());
-        response.setStatus(entity.getDeliveryStatus() != null ? entity.getDeliveryStatus().name() : "SENT");
+        if (entity.getDeliveryStatus() == DeliveryStatus.PENDING) {
+            response.setStatus("SENDING");
+        } else {
+            response.setStatus(entity.getDeliveryStatus() != null ? entity.getDeliveryStatus().name() : "SENT");
+        }
         response.setCreatedAt(entity.getServerCreatedAt() != null ? entity.getServerCreatedAt() : entity.getLocalCreatedAt());
         response.setDeleted(entity.getDeletedAt() != null);
         response.setEdited(entity.getEditedAt() != null);

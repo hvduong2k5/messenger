@@ -46,14 +46,8 @@ public class MqttMessageDTO {
     @SerializedName("type")
     private String type;
 
-    @SerializedName("payload")
-    private String payload;
-
     @SerializedName("sender")
     private String sender;
-
-    @SerializedName("timestamp")
-    private Long timestamp;
 
     public MqttMessageDTO() {}
 
@@ -66,13 +60,12 @@ public class MqttMessageDTO {
     public void setType(String type) { this.type = type; }
 
     public String getPayload() {
-        if (payload != null) return payload;
         if (content != null) return content;
         if (data != null && data.getContent() != null) return data.getContent();
         return null;
     }
 
-    public void setPayload(String payload) { this.payload = payload; }
+    public void setPayload(String payload) { this.content = payload; }
 
     public String getSender() {
         if (sender != null) return sender;
@@ -97,7 +90,6 @@ public class MqttMessageDTO {
     public void setSenderId(Long senderId) { this.senderId = senderId; }
 
     public Long getTimestamp() {
-        if (timestamp != null) return timestamp;
         if (createdAt != null) {
             try {
                 return Long.parseLong(createdAt);
@@ -109,7 +101,13 @@ public class MqttMessageDTO {
         return null;
     }
 
-    public void setTimestamp(Long timestamp) { this.timestamp = timestamp; }
+    public void setTimestamp(Long timestamp) {
+        if (timestamp != null) {
+            this.createdAt = timestamp.toString();
+        } else {
+            this.createdAt = null;
+        }
+    }
 
     public Long getConversationId() {
         if (conversationId != null) return conversationId;
