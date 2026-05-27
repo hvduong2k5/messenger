@@ -10,6 +10,8 @@ import com.midterm.team12345.data.local.entity.UserEntity;
 import com.midterm.team12345.data.remote.RetrofitClient;
 import com.midterm.team12345.data.remote.api.ConversationApiService;
 import com.midterm.team12345.domain.repository.FriendRepository;
+import com.midterm.team12345.data.local.entity.ConversationParticipantEntity;
+import com.midterm.team12345.data.local.database.DatabaseProvider;
 import com.midterm.team12345.data.repository.FriendRepositoryImpl;
 import com.midterm.team12345.ui.base.BaseViewModel;
 import com.midterm.team12345.utils.SingleLiveEvent;
@@ -91,7 +93,23 @@ public class AddMembersViewModel extends BaseViewModel {
             public void onResponse(Call<Map<String, String>> call, Response<Map<String, String>> response) {
                 hideLoading();
                 if (response.isSuccessful()) {
-                    addSuccessEvent.call();
+                    // Update Local Room DB with new members
+                    executor.execute(() -> {
+                        List<ConversationParticipantEntity> newParticipants = new ArrayList<>();
+                        for (Long userId : selectedIds) {
+                            ConversationParticipantEntity participant = new ConversationParticipantEntity();
+                            participant.setConversationId(conversationId);
+                            participant.setUserId(userId);
+                            participant.setRole("MEMBER");
+                            newParticipants.add(participant);
+                        }
+                        try {
+                            DatabaseProvider.getInstance(getApplication()).getConversationParticipantDao().insertParticipants(newParticipants);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                        addSuccessEvent.postValue(null);
+                    });
                 } else {
                     setError("Lỗi khi thêm thành viên");
                 }
