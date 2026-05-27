@@ -32,6 +32,7 @@ import retrofit2.Response;
 public class AddMembersViewModel extends BaseViewModel {
     private final FriendRepository friendRepository;
     private final ConversationApiService conversationApiService;
+    private final Application application;
     
     private final MutableLiveData<String> searchQuery = new MutableLiveData<>("");
     private List<Long> existingParticipantIds = new ArrayList<>();
@@ -45,6 +46,7 @@ public class AddMembersViewModel extends BaseViewModel {
 
     public AddMembersViewModel(@NonNull Application application) {
         super();
+        this.application = application;
         this.friendRepository = FriendRepositoryImpl.getInstance(application);
         this.conversationApiService = RetrofitClient.getConversationApiService(application);
 
@@ -64,8 +66,7 @@ public class AddMembersViewModel extends BaseViewModel {
             String q = query != null ? query.toLowerCase() : "";
             List<UserEntity> filtered = allFriendsList.stream()
                     .filter(user -> !existingParticipantIds.contains(user.getId()))
-                    .filter(user -> q.isEmpty() || user.getUsername().toLowerCase().contains(q) || 
-                                    (user.getFullName() != null && user.getFullName().toLowerCase().contains(q)))
+                    .filter(user -> q.isEmpty() || user.getUsername().toLowerCase().contains(q))
                     .collect(Collectors.toList());
             _friends.postValue(filtered);
         });
@@ -104,7 +105,7 @@ public class AddMembersViewModel extends BaseViewModel {
                             newParticipants.add(participant);
                         }
                         try {
-                            DatabaseProvider.getInstance(getApplication()).getConversationParticipantDao().insertParticipants(newParticipants);
+                            DatabaseProvider.getInstance(application).getConversationParticipantDao().insertParticipants(newParticipants);
                         } catch (Exception e) {
                             e.printStackTrace();
                         }

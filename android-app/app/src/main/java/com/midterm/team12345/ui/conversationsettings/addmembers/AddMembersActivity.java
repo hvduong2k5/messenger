@@ -14,6 +14,7 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.midterm.team12345.databinding.ActivityAddMembersBinding;
+import com.midterm.team12345.R;
 
 import java.util.ArrayList;
 import java.util.List;

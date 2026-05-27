@@ -65,8 +65,7 @@ public class CreateGroupViewModel extends BaseViewModel {
         executor.execute(() -> {
             String q = query != null ? query.toLowerCase() : "";
             List<UserEntity> filtered = allFriendsList.stream()
-                    .filter(user -> q.isEmpty() || user.getUsername().toLowerCase().contains(q) || 
-                                    (user.getFullName() != null && user.getFullName().toLowerCase().contains(q)))
+                    .filter(user -> q.isEmpty() || user.getUsername().toLowerCase().contains(q))
                     .collect(Collectors.toList());
             _friends.postValue(filtered);
         });
