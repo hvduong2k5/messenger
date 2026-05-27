@@ -38,18 +38,22 @@ public class MessageRepositoryImpl implements MessageRepository {
     private final com.midterm.team12345.data.local.dao.SyncQueueDao syncQueueDao;
     private final com.midterm.team12345.data.local.dao.AttachmentDao attachmentDao;
 
+    private final com.midterm.team12345.data.local.TokenManager tokenManager;
+
     private MessageRepositoryImpl(MessageApiService messageApiService, 
                                  MessageStatusApiService messageStatusApiService,
                                  ConversationApiService conversationApiService,
                                  com.midterm.team12345.data.local.dao.MessageDao messageDao,
                                  com.midterm.team12345.data.local.dao.SyncQueueDao syncQueueDao,
-                                 com.midterm.team12345.data.local.dao.AttachmentDao attachmentDao) {
+                                 com.midterm.team12345.data.local.dao.AttachmentDao attachmentDao,
+                                 Context context) {
         this.messageApiService = messageApiService;
         this.messageStatusApiService = messageStatusApiService;
         this.conversationApiService = conversationApiService;
         this.messageDao = messageDao;
         this.syncQueueDao = syncQueueDao;
         this.attachmentDao = attachmentDao;
+        this.tokenManager = new com.midterm.team12345.data.local.TokenManager(context.getApplicationContext());
     }
 
     public static synchronized MessageRepositoryImpl getInstance(Context context) {
@@ -60,7 +64,8 @@ public class MessageRepositoryImpl implements MessageRepository {
                 RetrofitClient.getConversationApiService(context),
                 com.midterm.team12345.data.local.database.MessengerDatabase.getInstance(context).messageDao(),
                 com.midterm.team12345.data.local.database.MessengerDatabase.getInstance(context).syncQueueDao(),
-                com.midterm.team12345.data.local.database.MessengerDatabase.getInstance(context).attachmentDao()
+                com.midterm.team12345.data.local.database.MessengerDatabase.getInstance(context).attachmentDao(),
+                context
             );
         }
         return instance;
@@ -68,79 +73,67 @@ public class MessageRepositoryImpl implements MessageRepository {
 
     @Override
     public LiveData<Resource<List<MessageResponseDTO>>> getMessages(Long conversationId, int page, int size) {
-        MutableLiveData<Resource<List<MessageResponseDTO>>> data = new MutableLiveData<>();
-        data.setValue(Resource.loading(null));
+        androidx.lifecycle.MediatorLiveData<Resource<List<MessageResponseDTO>>> mediator = new androidx.lifecycle.MediatorLiveData<>();
+        mediator.setValue(Resource.loading(null));
 
-        // 1. Load from DB immediately
-        new java.lang.Thread(() -> {
-            try {
-                List<com.midterm.team12345.data.local.entity.MessageEntity> localEntities = messageDao.getMessagesByConversationIdSync(conversationId);
-                if (localEntities != null && !localEntities.isEmpty()) {
+        // 1. Get LiveData source from Room DB
+        LiveData<List<com.midterm.team12345.data.local.entity.MessageEntity>> dbSource = messageDao.getMessagesByConversationId(conversationId);
+
+        // 2. Add dbSource to MediatorLiveData
+        mediator.addSource(dbSource, localEntities -> {
+            new java.lang.Thread(() -> {
+                try {
                     List<MessageResponseDTO> responseList = loadMessagesWithAttachments(localEntities);
-                    data.postValue(Resource.success(responseList));
+                    mediator.postValue(Resource.success(responseList));
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
-            } catch (Exception e) {
-                e.printStackTrace();
+            }).start();
+        });
+
+        // 3. Fetch from network in background to sync local DB
+        conversationApiService.getMessages(conversationId, page, size).enqueue(new Callback<PageResponse<MessageResponseDTO>>() {
+            @Override
+            public void onResponse(Call<PageResponse<MessageResponseDTO>> call, Response<PageResponse<MessageResponseDTO>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    new java.lang.Thread(() -> {
+                        try {
+                            List<MessageResponseDTO> remoteDtos = response.body().getContent();
+                            if (remoteDtos != null) {
+                                List<com.midterm.team12345.data.local.entity.MessageEntity> entities = new java.util.ArrayList<>();
+                                for (MessageResponseDTO dto : remoteDtos) {
+                                    com.midterm.team12345.data.local.entity.MessageEntity localMsg = messageDao.getMessageByServerId(dto.getMessageId());
+                                    if (localMsg == null) {
+                                        localMsg = messageDao.getPendingMessage(dto.getConversationId(), dto.getSenderId(), dto.getContent());
+                                    }
+                                    if (localMsg != null) {
+                                        com.midterm.team12345.data.local.entity.MessageEntity mapped = 
+                                                com.midterm.team12345.data.mapper.MessageMapper.toEntity(dto, localMsg.getClientMessageId());
+                                        mapped.setLocalId(localMsg.getLocalId());
+                                        entities.add(mapped);
+                                        saveAttachments(dto.getAttachments(), localMsg.getClientMessageId());
+                                    } else {
+                                        com.midterm.team12345.data.local.entity.MessageEntity mapped = com.midterm.team12345.data.mapper.MessageMapper.toEntity(dto);
+                                        entities.add(mapped);
+                                        saveAttachments(dto.getAttachments(), mapped.getClientMessageId());
+                                    }
+                                }
+                                messageDao.insertMessages(entities);
+                            }
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }).start();
+                }
             }
 
-            // 2. Fetch from network in background
-            conversationApiService.getMessages(conversationId, page, size).enqueue(new Callback<PageResponse<MessageResponseDTO>>() {
-                @Override
-                public void onResponse(Call<PageResponse<MessageResponseDTO>> call, Response<PageResponse<MessageResponseDTO>> response) {
-                    if (response.isSuccessful() && response.body() != null) {
-                        new java.lang.Thread(() -> {
-                            try {
-                                List<MessageResponseDTO> remoteDtos = response.body().getContent();
-                                if (remoteDtos != null) {
-                                    List<com.midterm.team12345.data.local.entity.MessageEntity> entities = new java.util.ArrayList<>();
-                                    for (MessageResponseDTO dto : remoteDtos) {
-                                        com.midterm.team12345.data.local.entity.MessageEntity localMsg = messageDao.getMessageByServerId(dto.getMessageId());
-                                        if (localMsg == null) {
-                                            localMsg = messageDao.getPendingMessage(dto.getConversationId(), dto.getSenderId(), dto.getContent());
-                                        }
-                                        if (localMsg != null) {
-                                            com.midterm.team12345.data.local.entity.MessageEntity mapped = 
-                                                    com.midterm.team12345.data.mapper.MessageMapper.toEntity(dto, localMsg.getClientMessageId());
-                                            mapped.setLocalId(localMsg.getLocalId());
-                                            entities.add(mapped);
-                                            saveAttachments(dto.getAttachments(), localMsg.getClientMessageId());
-                                        } else {
-                                            com.midterm.team12345.data.local.entity.MessageEntity mapped = com.midterm.team12345.data.mapper.MessageMapper.toEntity(dto);
-                                            entities.add(mapped);
-                                            saveAttachments(dto.getAttachments(), mapped.getClientMessageId());
-                                        }
-                                    }
-                                    messageDao.insertMessages(entities);
-                                }
+            @Override
+            public void onFailure(Call<PageResponse<MessageResponseDTO>> call, Throwable t) {
+                // Ignore network sync failures in background
+            }
+        });
 
-                                // Load updated list from DB to UI
-                                List<com.midterm.team12345.data.local.entity.MessageEntity> updatedLocal = messageDao.getMessagesByConversationIdSync(conversationId);
-                                List<MessageResponseDTO> updatedResponses = loadMessagesWithAttachments(updatedLocal);
-                                data.postValue(Resource.success(updatedResponses));
-                            } catch (Exception e) {
-                                e.printStackTrace();
-                                data.postValue(Resource.error("Lỗi Room DB: " + e.getMessage(), null));
-                            }
-                        }).start();
-                    } else {
-                        String errorMsg = "Lỗi lấy danh sách tin nhắn (HTTP " + response.code() + ")";
-                        try {
-                            if (response.errorBody() != null) {
-                                errorMsg += ": " + response.errorBody().string();
-                            }
-                        } catch (Exception ignored) {}
-                        data.setValue(Resource.error(errorMsg, null));
-                    }
-                }
-
-                @Override
-                public void onFailure(Call<PageResponse<MessageResponseDTO>> call, Throwable t) {
-                    data.setValue(Resource.error("Lỗi kết nối: " + t.getMessage(), null));
-                }
-            });
-        }).start();
-
-        return data;
+        return mediator;
     }
 
     @Override
@@ -249,62 +242,99 @@ public class MessageRepositoryImpl implements MessageRepository {
     @Override
     public LiveData<Resource<MessageResponseDTO>> sendMessageWithAttachments(Long conversationId, String content, String clientMessageId, List<File> files) {
         MutableLiveData<Resource<MessageResponseDTO>> data = new MutableLiveData<>();
-        data.setValue(Resource.loading(null));
+        final String finalClientMsgId = (clientMessageId != null && !clientMessageId.isEmpty()) 
+                ? clientMessageId 
+                : java.util.UUID.randomUUID().toString();
 
-        RequestBody conversationIdBody = RequestBody.create(MediaType.parse("text/plain"), String.valueOf(conversationId));
-        RequestBody contentBody = RequestBody.create(MediaType.parse("text/plain"), content != null ? content : "");
-        RequestBody clientMessageIdBody = RequestBody.create(MediaType.parse("text/plain"), clientMessageId);
+        new java.lang.Thread(() -> {
+            try {
+                // 1. Save to DB with PENDING state immediately
+                com.midterm.team12345.data.local.entity.MessageEntity entity = new com.midterm.team12345.data.local.entity.MessageEntity();
+                entity.setClientMessageId(finalClientMsgId);
+                entity.setConversationId(conversationId);
+                entity.setSenderId(tokenManager.getUserId());
+                entity.setContent(content != null ? content : "");
+                entity.setType(files != null && !files.isEmpty() ? "MEDIA" : "TEXT");
+                entity.setSyncState(com.midterm.team12345.data.local.entity.SyncState.PENDING);
+                entity.setDeliveryStatus(com.midterm.team12345.data.local.entity.DeliveryStatus.PENDING);
+                entity.setLocalCreatedAt(System.currentTimeMillis());
+                
+                Long localId = messageDao.insertMessage(entity);
+                entity.setLocalId(localId);
 
-        List<MultipartBody.Part> multipartFiles = new ArrayList<>();
-        if (files != null) {
-            for (File file : files) {
-                RequestBody requestFile = RequestBody.create(MediaType.parse("application/octet-stream"), file);
-                MultipartBody.Part body = MultipartBody.Part.createFormData("files", file.getName(), requestFile);
-                multipartFiles.add(body);
+                MessageResponseDTO pendingResponse = com.midterm.team12345.data.mapper.MessageMapper.toResponse(entity);
+                data.postValue(Resource.loading(pendingResponse));
+            } catch (Exception e) {
+                e.printStackTrace();
             }
-        }
 
-        messageApiService.sendMessageMultipart(conversationIdBody, contentBody, clientMessageIdBody, multipartFiles).enqueue(new Callback<MessageResponseDTO>() {
-            @Override
-            public void onResponse(Call<MessageResponseDTO> call, Response<MessageResponseDTO> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    new java.lang.Thread(() -> {
-                        try {
-                            MessageResponseDTO responseDto = response.body();
-                            com.midterm.team12345.data.local.entity.MessageEntity existing = 
-                                    messageDao.getMessageByServerId(responseDto.getMessageId());
-                            if (existing != null) {
-                                existing.setClientMessageId(clientMessageId);
-                                messageDao.updateMessage(existing);
-                            } else {
-                                com.midterm.team12345.data.local.entity.MessageEntity entity = 
-                                        com.midterm.team12345.data.mapper.MessageMapper.toEntity(responseDto, clientMessageId);
-                                messageDao.insertMessage(entity);
-                            }
-                            
-                            // Save attachments to Room
-                            saveAttachments(responseDto.getAttachments(), clientMessageId);
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                    }).start();
-                    data.setValue(Resource.success(response.body()));
-                } else {
-                    String errorMsg = "Gửi tin nhắn đính kèm thất bại";
-                    try {
-                        if (response.errorBody() != null) {
-                            errorMsg += ": " + response.errorBody().string();
-                        }
-                    } catch (Exception ignored) {}
-                    data.setValue(Resource.error(errorMsg, null));
+            // 2. Call API Service to upload/send message
+            RequestBody conversationIdBody = RequestBody.create(MediaType.parse("text/plain"), String.valueOf(conversationId));
+            RequestBody contentBody = RequestBody.create(MediaType.parse("text/plain"), content != null ? content : "");
+            RequestBody clientMessageIdBody = RequestBody.create(MediaType.parse("text/plain"), finalClientMsgId);
+
+            List<MultipartBody.Part> multipartFiles = new ArrayList<>();
+            if (files != null) {
+                for (File file : files) {
+                    RequestBody requestFile = RequestBody.create(MediaType.parse("application/octet-stream"), file);
+                    MultipartBody.Part body = MultipartBody.Part.createFormData("files", file.getName(), requestFile);
+                    multipartFiles.add(body);
                 }
             }
 
-            @Override
-            public void onFailure(Call<MessageResponseDTO> call, Throwable t) {
-                data.setValue(Resource.error(t.getMessage(), null));
-            }
-        });
+            messageApiService.sendMessageMultipart(conversationIdBody, contentBody, clientMessageIdBody, multipartFiles).enqueue(new Callback<MessageResponseDTO>() {
+                @Override
+                public void onResponse(Call<MessageResponseDTO> call, Response<MessageResponseDTO> response) {
+                    if (response.isSuccessful() && response.body() != null) {
+                        new java.lang.Thread(() -> {
+                            try {
+                                MessageResponseDTO responseDto = response.body();
+                                com.midterm.team12345.data.local.entity.MessageEntity existing = 
+                                        messageDao.getMessageByServerId(responseDto.getMessageId());
+                                if (existing != null) {
+                                    existing.setClientMessageId(finalClientMsgId);
+                                    messageDao.updateMessage(existing);
+                                } else {
+                                    com.midterm.team12345.data.local.entity.MessageEntity pending = messageDao.getMessageByClientMessageId(finalClientMsgId);
+                                    if (pending != null) {
+                                        messageDao.updateSyncSuccess(
+                                                finalClientMsgId,
+                                                responseDto.getMessageId(),
+                                                responseDto.getCreatedAt() != null ? responseDto.getCreatedAt() : System.currentTimeMillis(),
+                                                com.midterm.team12345.data.local.entity.SyncState.SENT,
+                                                com.midterm.team12345.data.local.entity.DeliveryStatus.SENT
+                                        );
+                                    } else {
+                                        com.midterm.team12345.data.local.entity.MessageEntity entity = 
+                                                com.midterm.team12345.data.mapper.MessageMapper.toEntity(responseDto, finalClientMsgId);
+                                        messageDao.insertMessage(entity);
+                                    }
+                                }
+                                
+                                // Save attachments to Room
+                                saveAttachments(responseDto.getAttachments(), finalClientMsgId);
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                        }).start();
+                        data.setValue(Resource.success(response.body()));
+                    } else {
+                        new java.lang.Thread(() -> {
+                            messageDao.updateSyncFailure(finalClientMsgId, com.midterm.team12345.data.local.entity.SyncState.FAILED, System.currentTimeMillis());
+                        }).start();
+                        data.setValue(Resource.error("Gửi tin nhắn đính kèm thất bại", null));
+                    }
+                }
+
+                @Override
+                public void onFailure(Call<MessageResponseDTO> call, Throwable t) {
+                    new java.lang.Thread(() -> {
+                        messageDao.updateSyncFailure(finalClientMsgId, com.midterm.team12345.data.local.entity.SyncState.FAILED, System.currentTimeMillis());
+                    }).start();
+                    data.setValue(Resource.error(t.getMessage(), null));
+                }
+            });
+        }).start();
 
         return data;
     }

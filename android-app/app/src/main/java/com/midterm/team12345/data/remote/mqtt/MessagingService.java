@@ -71,7 +71,9 @@ public class MessagingService extends Service {
         mqttManager.init(this, brokerUrl, clientId, username, token, userId, new MqttManager.MqttCallback() {
             @Override
             public void onMessageReceived(MqttMessageDTO message) {
-                if (MqttEventType.NEW_MESSAGE.name().equals(message.getType())) {
+                if (message == null) return;
+                String type = message.getType();
+                if ("NEW_MESSAGE".equals(type) || "text".equalsIgnoreCase(type) || "media".equalsIgnoreCase(type)) {
                     new java.lang.Thread(() -> {
                         try {
                             // 1. Map MQTT packet to MessageEntity using MessageMapper
@@ -113,6 +115,36 @@ public class MessagingService extends Service {
                     }).start();
 
                     showPushNotification(message);
+                } else if ("REVOKE_MESSAGE".equals(type) || "EDIT_MESSAGE".equals(type)) {
+                    new java.lang.Thread(() -> {
+                        try {
+                            com.midterm.team12345.data.remote.dto.response.MessageResponseDTO responseDto = message.toMessageResponseDTO();
+                            Long serverMsgId = (responseDto != null) ? responseDto.getMessageId() : null;
+                            if (serverMsgId != null) {
+                                com.midterm.team12345.data.local.dao.MessageDao messageDao = 
+                                        com.midterm.team12345.data.local.database.MessengerDatabase.getInstance(getApplicationContext())
+                                                .messageDao();
+                                com.midterm.team12345.data.local.entity.MessageEntity existing = messageDao.getMessageByServerId(serverMsgId);
+                                if (existing != null) {
+                                    if ("REVOKE_MESSAGE".equals(type)) {
+                                        existing.setDeletedAt(System.currentTimeMillis());
+                                    } else {
+                                        existing.setContent(message.getPayload());
+                                        existing.setEditedAt(System.currentTimeMillis());
+                                    }
+                                    messageDao.updateMessage(existing);
+                                } else {
+                                    com.midterm.team12345.data.local.entity.MessageEntity entity = 
+                                            com.midterm.team12345.data.mapper.MessageMapper.toEntity(message);
+                                    if (entity != null) {
+                                        messageDao.insertMessage(entity);
+                                    }
+                                }
+                            }
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }).start();
                 }
 
                 // Emit real-time message to let other components handle it if necessary
