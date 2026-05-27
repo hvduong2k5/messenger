@@ -5,8 +5,11 @@ import java.util.List;
 import java.util.Objects;
 
 public class MessageResponseDTO {
-    @SerializedName("messageId")
+    @SerializedName(value = "messageId", alternate = {"message_id", "id"})
     private Long messageId;
+
+    @SerializedName(value = "clientMessageId", alternate = {"client_message_id"})
+    private String clientMessageId;
 
     @SerializedName("conversationId")
     private Long conversationId;
@@ -109,6 +112,9 @@ public class MessageResponseDTO {
 
     public List<AttachmentResponseDTO> getAttachments() { return attachments; }
     public void setAttachments(List<AttachmentResponseDTO> attachments) { this.attachments = attachments; }
+
+    public String getClientMessageId() { return clientMessageId; }
+    public void setClientMessageId(String clientMessageId) { this.clientMessageId = clientMessageId; }
 
     @Override
     public boolean equals(Object o) {

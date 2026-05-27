@@ -37,7 +37,12 @@ public class MessageMapper {
         
         entity.setDeletedAt(dto.getIsDeleted() != null && dto.getIsDeleted() ? System.currentTimeMillis() : null);
         entity.setEditedAt(dto.getIsEdited() != null && dto.getIsEdited() ? System.currentTimeMillis() : null);
-        entity.setClientMessageId(java.util.UUID.randomUUID().toString());
+        
+        if (dto.getClientMessageId() != null && !dto.getClientMessageId().isEmpty()) {
+            entity.setClientMessageId(dto.getClientMessageId());
+        } else {
+            entity.setClientMessageId(java.util.UUID.randomUUID().toString());
+        }
         return entity;
     }
 
@@ -72,7 +77,13 @@ public class MessageMapper {
         entity.setDeliveryStatus(DeliveryStatus.SENT);
         entity.setLocalCreatedAt(mqttDto.getTimestamp() != null ? mqttDto.getTimestamp() : System.currentTimeMillis());
         entity.setServerCreatedAt(mqttDto.getTimestamp());
-        entity.setClientMessageId(java.util.UUID.randomUUID().toString());
+        
+        if (mqttDto.getClientMessageId() != null && !mqttDto.getClientMessageId().isEmpty()) {
+            entity.setClientMessageId(mqttDto.getClientMessageId());
+        } else {
+            entity.setClientMessageId(java.util.UUID.randomUUID().toString());
+        }
+        
         entity.setConversationId(mqttDto.getConversationId() != null ? mqttDto.getConversationId() : senderId);
         return entity;
     }
