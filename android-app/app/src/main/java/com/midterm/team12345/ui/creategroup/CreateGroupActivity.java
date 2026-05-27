@@ -73,7 +73,13 @@ public class CreateGroupActivity extends AppCompatActivity {
                 binding.tvToolbarTitle.setText("Selected: " + users.size());
             }
             
-            binding.btnCreate.setEnabled(users.size() >= 2);
+            binding.btnCreate.setEnabled(true);
+        });
+
+        viewModel.errorMessage.observe(this, error -> {
+            if (error != null && !error.isEmpty()) {
+                Toast.makeText(this, error, Toast.LENGTH_SHORT).show();
+            }
         });
 
         viewModel.getCreateState().observe(this, resource -> {
