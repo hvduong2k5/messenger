@@ -19,8 +19,8 @@ swiperefresh = "1.2.0"
 mqtt-client = "1.2.5"
 room = "2.6.1"
 annotation = "1.9.1"
-
-
+coreTesting = "2.2.0"
+mockito = "4.11.0"
 [libraries]
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 ext-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
@@ -45,8 +45,8 @@ mqtt-paho = { group = "org.eclipse.paho", name = "org.eclipse.paho.client.mqttv3
 room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "room" }
 room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" }
 room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "room" }
-
-
+core-testing = { group = "androidx.arch.core", name = "core-testing", version.ref = "coreTesting" }
+mockito-core = { group = "org.mockito", name = "mockito-core", version.ref = "mockito" }
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }

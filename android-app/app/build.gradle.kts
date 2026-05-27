@@ -88,6 +88,8 @@ dependencies {
     implementation("javax.validation:validation-api:2.0.1.Final")
 
     testImplementation(libs.junit)
+    testImplementation(libs.core.testing)
+    testImplementation(libs.mockito.core)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
 }
