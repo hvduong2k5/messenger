@@ -18,6 +18,7 @@ public interface ConversationRepository {
     LiveData<Resource<Void>> removeParticipant(Long conversationId, Long userId);
     LiveData<Resource<Void>> updateConversation(Long id, ConversationUpdateDTO request);
     LiveData<Resource<Void>> leaveConversation(Long conversationId);
+    LiveData<Resource<Void>> updateParticipantRole(Long conversationId, Long participantId, String newRole);
     LiveData<Resource<PageResponse<MessageResponseDTO>>> getMessages(Long conversationId, int page, int size);
     
     // Thêm hàm lấy danh sách thành viên
