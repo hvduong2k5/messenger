@@ -12,34 +12,34 @@ public class MqttMessageDTO {
     private MessageResponseDTO data;
 
     // Direct MessageResponseDTO fields (if published directly)
-    @SerializedName("messageId")
+    @SerializedName(value = "messageId", alternate = {"message_id", "id"})
     private Long messageId;
 
-    @SerializedName("conversationId")
+    @SerializedName(value = "conversationId", alternate = {"conversation_id"})
     private Long conversationId;
 
-    @SerializedName("senderId")
+    @SerializedName(value = "senderId", alternate = {"sender_id"})
     private Long senderId;
 
-    @SerializedName("senderUsername")
+    @SerializedName(value = "senderUsername", alternate = {"sender_username"})
     private String senderUsername;
 
-    @SerializedName("senderAvatarUrl")
+    @SerializedName(value = "senderAvatarUrl", alternate = {"sender_avatar_url"})
     private String senderAvatarUrl;
 
-    @SerializedName("content")
+    @SerializedName(value = "content", alternate = {"payload"})
     private String content;
 
     @SerializedName("status")
     private String status;
 
-    @SerializedName("createdAt")
+    @SerializedName(value = "createdAt", alternate = {"created_at", "timestamp"})
     private String createdAt;
 
-    @SerializedName("isDeleted")
+    @SerializedName(value = "isDeleted", alternate = {"is_deleted"})
     private Boolean isDeleted;
 
-    @SerializedName("isEdited")
+    @SerializedName(value = "isEdited", alternate = {"is_edited"})
     private Boolean isEdited;
 
     // Original MqttMessageDTO fields (for backward compatibility)
@@ -83,6 +83,19 @@ public class MqttMessageDTO {
 
     public void setSender(String sender) { this.sender = sender; }
 
+    public Long getSenderId() {
+        if (senderId != null) return senderId;
+        if (data != null) return data.getSenderId();
+        if (sender != null) {
+            try {
+                return Long.parseLong(sender);
+            } catch (NumberFormatException ignored) {}
+        }
+        return null;
+    }
+
+    public void setSenderId(Long senderId) { this.senderId = senderId; }
+
     public Long getTimestamp() {
         if (timestamp != null) return timestamp;
         if (createdAt != null) {
@@ -102,8 +115,8 @@ public class MqttMessageDTO {
         if (conversationId != null) return conversationId;
         if (data != null) return data.getConversationId();
         try {
-            if (sender != null) return Long.parseLong(sender);
-            if (senderId != null) return senderId;
+            String resolvedSender = getSender();
+            if (resolvedSender != null) return Long.parseLong(resolvedSender);
         } catch (NumberFormatException ignored) {}
         return null;
     }
@@ -123,11 +136,11 @@ public class MqttMessageDTO {
         if (messageId != null) {
             MessageResponseDTO dto = new MessageResponseDTO();
             dto.setMessageId(messageId);
-            dto.setConversationId(conversationId);
-            dto.setSenderId(senderId);
+            dto.setConversationId(getConversationId());
+            dto.setSenderId(getSenderId());
             dto.setSenderUsername(senderUsername);
             dto.setSenderAvatarUrl(senderAvatarUrl);
-            dto.setContent(content);
+            dto.setContent(getPayload());
             dto.setType(type != null ? type : "text");
             dto.setStatus(status != null ? status : "SENT");
             if (createdAt != null) {
