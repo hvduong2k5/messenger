@@ -65,10 +65,7 @@
             android:name=".ui.groupinfo.GroupMembersActivity"
             android:exported="false" />
 
-        <activity
-            android:name=".ui.groupinfo.DeleteMemberActivity"
-            android:exported="false"
-            android:title="Remove Members" />
+
 
         <activity
             android:name=".ui.chatdetail.ChatDetailActivity"
