@@ -169,7 +169,7 @@ public class ChatDetailViewModel extends ViewModel {
     public void loadMessages(Long conversationId) {
         this.activeConversationId = conversationId;
         _messageState.setValue(Resource.loading(null));
-        messageRepository.getMessages(conversationId, 0, 50).observeForever(resource -> {
+        messageRepository.getMessages(conversationId, 0, 20).observeForever(resource -> {
             _messageState.setValue(resource);
         });
     }

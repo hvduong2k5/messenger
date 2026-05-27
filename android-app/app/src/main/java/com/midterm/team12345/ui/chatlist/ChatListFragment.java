@@ -44,8 +44,15 @@ public class ChatListFragment extends BaseFragment<FragmentChatListBinding, Chat
         setupListeners();
         
         // Tải dữ liệu ban đầu
-        viewModel.fetchConversations();
         viewModel.fetchMyProfile();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (viewModel != null) {
+            viewModel.fetchConversations();
+        }
     }
 
     private void setupRecyclerView() {
