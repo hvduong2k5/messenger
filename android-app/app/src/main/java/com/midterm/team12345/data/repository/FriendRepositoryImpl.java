@@ -177,6 +177,7 @@ public class FriendRepositoryImpl implements FriendRepository {
                     entity.setBio(dto.getStatus());
                     entity.setIsOnline(dto.getIsOnline() != null && dto.getIsOnline());
                     entity.setIsFriend(true);
+                    entity.setFriendshipStatus(com.midterm.team12345.data.remote.dto.response.FriendshipStatus.FRIEND);
                     entities.add(entity);
                 }
                 database.userDao().insertUsers(entities);

@@ -53,20 +53,22 @@ public class UserProfileActivity extends AppCompatActivity {
 
     private void setupUI() {
         binding.toolbar.setNavigationOnClickListener(v -> finish());
-        
-        binding.itemSharedMedia.tvTitle.setText("Shared Media");
-        binding.itemSharedMedia.ivTrailing.setImageResource(R.drawable.ic_chevron_right);
-        
-        binding.itemCommonGroups.tvTitle.setText("Groups in Common");
-        binding.itemCommonGroups.ivTrailing.setImageResource(R.drawable.ic_chevron_right);
-        
-        binding.itemBlock.tvTitle.setText("Block");
-        binding.itemBlock.tvTitle.setTextColor(getResources().getColor(android.R.color.holo_red_dark));
-        binding.itemBlock.ivTrailing.setVisibility(View.GONE);
 
-        binding.btnMessage.setOnClickListener(v -> {
+        binding.btnAudio.setOnClickListener(v -> {
+            Toast.makeText(this, "Cuộc gọi âm thanh đang phát triển...", Toast.LENGTH_SHORT).show();
+        });
+
+        binding.btnVideo.setOnClickListener(v -> {
+            Toast.makeText(this, "Cuộc gọi video đang phát triển...", Toast.LENGTH_SHORT).show();
+        });
+
+        binding.btnChat.setOnClickListener(v -> {
             Intent intent = new Intent(this, ChatDetailActivity.class);
             intent.putExtra("PARTNER_ID", targetUserId);
+            UserEntity user = viewModel.getUser().getValue();
+            if (user != null) {
+                intent.putExtra("PARTNER_NAME", user.getUsername());
+            }
             // Intent.FLAG_ACTIVITY_SINGLE_TOP to optimize navigation
             intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
             startActivity(intent);
@@ -116,32 +118,52 @@ public class UserProfileActivity extends AppCompatActivity {
         FriendshipStatus status = user.getFriendshipStatus();
         if (status == null) status = FriendshipStatus.STRANGER;
 
+        int colorBlue = getResources().getColor(R.color.messenger_blue);
+        int colorGrey = getResources().getColor(R.color.btn_background_gray);
+        int colorTextWhite = getResources().getColor(R.color.white);
+        int colorTextBlack = getResources().getColor(R.color.black);
+
         binding.btnFriendAction.setVisibility(View.VISIBLE);
         binding.btnFriendAction.setEnabled(true);
+        binding.layoutActionButtons.setVisibility(View.VISIBLE);
 
         switch (status) {
             case STRANGER:
                 binding.btnFriendAction.setText("Add Friend");
-                binding.btnFriendAction.setBackgroundTintList(null); // Primary color
+                binding.btnFriendAction.setBackgroundTintList(android.content.res.ColorStateList.valueOf(colorBlue));
+                binding.btnFriendAction.setTextColor(colorTextWhite);
                 binding.btnFriendAction.setOnClickListener(v -> viewModel.sendFriendRequest());
+
+                binding.btnAdd.setVisibility(View.VISIBLE);
+                binding.btnAdd.setOnClickListener(v -> viewModel.sendFriendRequest());
                 break;
             case FRIEND:
                 binding.btnFriendAction.setText("Unfriend");
-                binding.btnFriendAction.setBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFFF0F0F0));
+                binding.btnFriendAction.setBackgroundTintList(android.content.res.ColorStateList.valueOf(colorGrey));
+                binding.btnFriendAction.setTextColor(colorTextBlack);
                 binding.btnFriendAction.setOnClickListener(v -> viewModel.unfriend());
+
+                binding.btnAdd.setVisibility(View.GONE);
                 break;
             case SENDER_PENDING:
                 binding.btnFriendAction.setText("Cancel Request");
-                binding.btnFriendAction.setBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFFF0F0F0));
+                binding.btnFriendAction.setBackgroundTintList(android.content.res.ColorStateList.valueOf(colorGrey));
+                binding.btnFriendAction.setTextColor(colorTextBlack);
                 binding.btnFriendAction.setOnClickListener(v -> viewModel.cancelFriendRequest());
+
+                binding.btnAdd.setVisibility(View.GONE);
                 break;
             case RECEIVER_PENDING:
                 binding.btnFriendAction.setText("Accept Request");
+                binding.btnFriendAction.setBackgroundTintList(android.content.res.ColorStateList.valueOf(colorBlue));
+                binding.btnFriendAction.setTextColor(colorTextWhite);
                 binding.btnFriendAction.setOnClickListener(v -> viewModel.acceptFriendRequest());
+
+                binding.btnAdd.setVisibility(View.GONE);
                 break;
             case SELF:
                 binding.btnFriendAction.setVisibility(View.GONE);
-                binding.btnMessage.setVisibility(View.GONE);
+                binding.layoutActionButtons.setVisibility(View.GONE);
                 break;
         }
     }
