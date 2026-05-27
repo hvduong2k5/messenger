@@ -130,6 +130,8 @@ public class ChatDetailActivity extends AppCompatActivity {
             Glide.with(this)
                     .load(avatarUrl)
                     .placeholder(R.drawable.ic_avatar_placeholder)
+                    .fallback(R.drawable.ic_avatar_placeholder)
+                    .error(R.drawable.ic_avatar_placeholder)
                     .into(binding.ivPartnerAvatar);
         } else {
             String partnerName = getIntent().getStringExtra("PARTNER_NAME");
@@ -311,6 +313,8 @@ public class ChatDetailActivity extends AppCompatActivity {
                 Glide.with(this)
                         .load(avatarUrl)
                         .placeholder(R.drawable.ic_avatar_placeholder)
+                        .fallback(R.drawable.ic_avatar_placeholder)
+                        .error(R.drawable.ic_avatar_placeholder)
                         .into(binding.ivPartnerAvatar);
             } else if (resource.status == Resource.Status.ERROR) {
                 binding.loadingProgressBar.setVisibility(View.GONE);

@@ -82,6 +82,7 @@ public class ChatListAdapter extends ListAdapter<Conversation, ChatListAdapter.V
             Glide.with(binding.ivConversationAvatar.getContext())
                     .load(avatarUrl)
                     .placeholder(R.drawable.ic_avatar_placeholder)
+                    .fallback(R.drawable.ic_avatar_placeholder)
                     .error(R.drawable.ic_avatar_placeholder)
                     .into(binding.ivConversationAvatar);
 

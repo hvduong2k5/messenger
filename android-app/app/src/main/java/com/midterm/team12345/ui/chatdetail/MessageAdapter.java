@@ -139,6 +139,7 @@ public class MessageAdapter extends ListAdapter<MessageResponseDTO, RecyclerView
                 Glide.with(binding.ivStatusRead.getContext())
                         .load(getFullUrl(recipientAvatar))
                         .placeholder(R.drawable.ic_avatar_placeholder)
+                        .fallback(R.drawable.ic_avatar_placeholder)
                         .error(R.drawable.ic_avatar_placeholder)
                         .into(binding.ivStatusRead);
             } else {
@@ -195,6 +196,7 @@ public class MessageAdapter extends ListAdapter<MessageResponseDTO, RecyclerView
             Glide.with(binding.ivAvatar.getContext())
                     .load(getFullUrl(message.getSenderAvatarUrl()))
                     .placeholder(R.drawable.ic_avatar_placeholder)
+                    .fallback(R.drawable.ic_avatar_placeholder)
                     .error(R.drawable.ic_avatar_placeholder)
                     .into(binding.ivAvatar);
         }

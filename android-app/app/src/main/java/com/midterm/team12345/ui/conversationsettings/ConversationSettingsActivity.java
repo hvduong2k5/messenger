@@ -73,6 +73,8 @@ public class ConversationSettingsActivity extends BaseActivity<ActivityConversat
         Glide.with(this)
                 .load(avatarUrl)
                 .placeholder(R.drawable.ic_avatar_placeholder)
+                .fallback(R.drawable.ic_avatar_placeholder)
+                .error(R.drawable.ic_avatar_placeholder)
                 .into(binding.ivAvatar);
     }
 

@@ -71,6 +71,8 @@ public class DiscoverAdapter extends ListAdapter<UserSearchResponseDTO, Discover
                     .load(user.getAvatarUrl())
                     .circleCrop()
                     .placeholder(R.drawable.ic_avatar_placeholder)
+                    .fallback(R.drawable.ic_avatar_placeholder)
+                    .error(R.drawable.ic_avatar_placeholder)
                     .into(binding.ivAvatar);
 
             updateActionButton(user);

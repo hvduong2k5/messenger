@@ -65,6 +65,7 @@ public class SettingsFragment extends Fragment {
                 Glide.with(this)
                         .load(avatarUrl)
                         .placeholder(R.drawable.ic_avatar_placeholder)
+                        .fallback(R.drawable.ic_avatar_placeholder)
                         .error(R.drawable.ic_avatar_placeholder)
                         .into(binding.ivUserAvatar);
             } else if (resource.status == Resource.Status.ERROR) {
