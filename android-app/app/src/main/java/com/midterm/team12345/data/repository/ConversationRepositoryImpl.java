@@ -172,10 +172,38 @@ public class ConversationRepositoryImpl implements ConversationRepository {
 
     @Override
     public LiveData<Resource<Void>> leaveConversation(Long conversationId) {
-        // Typically leave is removing oneself. Need current user ID.
-        // For now, assuming it's handled or we need a specific API.
-        // Usually, removing oneself from participants works if the backend allows it.
-        return null; 
+        MutableLiveData<Resource<Void>> data = new MutableLiveData<>();
+        data.setValue(Resource.loading(null));
+        apiService.leaveConversation(conversationId).enqueue(new Callback<Map<String, String>>() {
+            @Override
+            public void onResponse(@NonNull Call<Map<String, String>> call, @NonNull Response<Map<String, String>> response) {
+                if (response.isSuccessful()) data.setValue(Resource.success(null));
+                else data.setValue(Resource.error("Failed to leave conversation", null));
+            }
+            @Override
+            public void onFailure(@NonNull Call<Map<String, String>> call, @NonNull Throwable t) {
+                data.setValue(Resource.error(t.getMessage(), null));
+            }
+        });
+        return data;
+    }
+
+    @Override
+    public LiveData<Resource<Void>> updateParticipantRole(Long conversationId, Long participantId, String newRole) {
+        MutableLiveData<Resource<Void>> data = new MutableLiveData<>();
+        data.setValue(Resource.loading(null));
+        apiService.updateParticipantRole(conversationId, participantId, Collections.singletonMap("role", newRole)).enqueue(new Callback<Map<String, String>>() {
+            @Override
+            public void onResponse(@NonNull Call<Map<String, String>> call, @NonNull Response<Map<String, String>> response) {
+                if (response.isSuccessful()) data.setValue(Resource.success(null));
+                else data.setValue(Resource.error("Failed to update role", null));
+            }
+            @Override
+            public void onFailure(@NonNull Call<Map<String, String>> call, @NonNull Throwable t) {
+                data.setValue(Resource.error(t.getMessage(), null));
+            }
+        });
+        return data;
     }
 
     @Override
