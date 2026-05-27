@@ -9,6 +9,8 @@ import androidx.lifecycle.Transformations;
 import com.midterm.team12345.data.local.entity.UserEntity;
 import com.midterm.team12345.data.remote.RetrofitClient;
 import com.midterm.team12345.data.remote.api.ConversationApiService;
+import com.midterm.team12345.data.remote.dto.response.ParticipantResponseDTO;
+import com.midterm.team12345.data.remote.dto.response.PageResponse;
 import com.midterm.team12345.domain.repository.FriendRepository;
 import com.midterm.team12345.data.local.entity.ConversationParticipantEntity;
 import com.midterm.team12345.data.local.database.DatabaseProvider;
@@ -80,6 +82,43 @@ public class AddMembersViewModel extends BaseViewModel {
         searchQuery.setValue(searchQuery.getValue());
     }
 
+    public void init(Long conversationId) {
+        if (conversationId == null) return;
+        conversationApiService.getParticipants(conversationId, "", 0, 100).enqueue(new Callback<PageResponse<ParticipantResponseDTO>>() {
+            @Override
+            public void onResponse(Call<PageResponse<ParticipantResponseDTO>> call, Response<PageResponse<ParticipantResponseDTO>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    List<Long> ids = response.body().getContent().stream()
+                            .map(ParticipantResponseDTO::getUserId)
+                            .collect(Collectors.toList());
+                    setExistingParticipants(ids);
+
+                    // Also save these participants to Room to keep local DB in sync!
+                    executor.execute(() -> {
+                        try {
+                            List<ConversationParticipantEntity> entities = new ArrayList<>();
+                            for (Long userId : ids) {
+                                ConversationParticipantEntity p = new ConversationParticipantEntity();
+                                p.setConversationId(conversationId);
+                                p.setUserId(userId);
+                                p.setRole("MEMBER");
+                                entities.add(p);
+                            }
+                            DatabaseProvider.getInstance(application).getConversationParticipantDao().insertParticipants(entities);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    });
+                }
+            }
+
+            @Override
+            public void onFailure(Call<PageResponse<ParticipantResponseDTO>> call, Throwable t) {
+                // Keep the passed list in case of network failure
+            }
+        });
+    }
+
     public void onSearchQueryChanged(String query) {
         searchQuery.setValue(query);
     }
@@ -89,41 +128,59 @@ public class AddMembersViewModel extends BaseViewModel {
         
         showLoading();
         
-        Map<String, List<Long>> body = new HashMap<>();
-        body.put("userIds", new ArrayList<>(selectedIds));
+        java.util.concurrent.atomic.AtomicInteger successCount = new java.util.concurrent.atomic.AtomicInteger(0);
+        java.util.concurrent.atomic.AtomicInteger failureCount = new java.util.concurrent.atomic.AtomicInteger(0);
+        int total = selectedIds.size();
         
-        conversationApiService.addParticipants(conversationId, body).enqueue(new Callback<Map<String, String>>() {
-            @Override
-            public void onResponse(Call<Map<String, String>> call, Response<Map<String, String>> response) {
-                hideLoading();
-                if (response.isSuccessful()) {
-                    // Update Local Room DB with new members
-                    executor.execute(() -> {
-                        List<ConversationParticipantEntity> newParticipants = new ArrayList<>();
-                        for (Long userId : selectedIds) {
-                            ConversationParticipantEntity participant = new ConversationParticipantEntity();
-                            participant.setConversationId(conversationId);
-                            participant.setUserId(userId);
-                            participant.setRole("MEMBER");
-                            newParticipants.add(participant);
-                        }
-                        try {
-                            DatabaseProvider.getInstance(application).getConversationParticipantDao().insertParticipants(newParticipants);
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                        addSuccessEvent.postValue(null);
-                    });
-                } else {
-                    setError("Lỗi khi thêm thành viên");
+        for (Long userId : selectedIds) {
+            Map<String, Long> body = new HashMap<>();
+            body.put("userId", userId);
+            
+            conversationApiService.addParticipant(conversationId, body).enqueue(new Callback<Void>() {
+                @Override
+                public void onResponse(Call<Void> call, Response<Void> response) {
+                    if (response.isSuccessful()) {
+                        successCount.incrementAndGet();
+                    } else {
+                        failureCount.incrementAndGet();
+                    }
+                    checkCompletion(successCount.get(), failureCount.get(), total, conversationId, selectedIds);
                 }
-            }
 
-            @Override
-            public void onFailure(Call<Map<String, String>> call, Throwable t) {
-                hideLoading();
-                setError("Lỗi kết nối mạng");
+                @Override
+                public void onFailure(Call<Void> call, Throwable t) {
+                    failureCount.incrementAndGet();
+                    checkCompletion(successCount.get(), failureCount.get(), total, conversationId, selectedIds);
+                }
+            });
+        }
+    }
+
+    private void checkCompletion(int successCount, int failureCount, int total, Long conversationId, Set<Long> selectedIds) {
+        if (successCount + failureCount == total) {
+            hideLoading();
+            if (successCount > 0) {
+                // Update Local Room DB with new members
+                executor.execute(() -> {
+                    List<ConversationParticipantEntity> newParticipants = new ArrayList<>();
+                    for (Long userId : selectedIds) {
+                        ConversationParticipantEntity participant = new ConversationParticipantEntity();
+                        participant.setConversationId(conversationId);
+                        participant.setUserId(userId);
+                        participant.setRole("MEMBER");
+                        newParticipants.add(participant);
+                    }
+                    try {
+                        DatabaseProvider.getInstance(application).getConversationParticipantDao().insertParticipants(newParticipants);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                    addSuccessEvent.postValue(null);
+                });
             }
-        });
+            if (failureCount > 0) {
+                setError("Lỗi khi thêm " + failureCount + " thành viên vào nhóm");
+            }
+        }
     }
 }

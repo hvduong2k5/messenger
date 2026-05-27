@@ -39,8 +39,6 @@ public interface ConversationApiService {
     @POST("conversations/{id}/participants")
     Call<Void> addParticipant(@Path("id") Long id, @Body Map<String, Long> body);
 
-    @POST("conversations/{id}/participants")
-    Call<Map<String, String>> addParticipants(@Path("id") Long conversationId, @Body Map<String, List<Long>> body);
 
     @DELETE("conversations/{id}/participants/{userId}")
     Call<Void> removeParticipant(@Path("id") Long id, @Path("userId") Long userId);

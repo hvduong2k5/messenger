@@ -175,21 +175,46 @@ public class ConversationRepositoryImpl implements ConversationRepository {
     public LiveData<Resource<Void>> addParticipants(Long conversationId, List<Long> userIds) {
         MutableLiveData<Resource<Void>> data = new MutableLiveData<>();
         data.setValue(Resource.loading(null));
-        Map<String, List<Long>> body = Collections.singletonMap("userIds", userIds);
-        apiService.addParticipants(conversationId, body).enqueue(new Callback<Map<String, String>>() {
-            @Override
-            public void onResponse(@NonNull Call<Map<String, String>> call, @NonNull Response<Map<String, String>> response) {
-                if (response.isSuccessful()) data.setValue(Resource.success(null));
-                else data.setValue(Resource.error("Failed to add participants", null));
-            }
+        if (userIds == null || userIds.isEmpty()) {
+            data.setValue(Resource.success(null));
+            return data;
+        }
 
-            @Override
-            public void onFailure(@NonNull Call<Map<String, String>> call, @NonNull Throwable t) {
-                data.setValue(Resource.error(t.getMessage(), null));
-            }
-        });
+        java.util.concurrent.atomic.AtomicInteger successCount = new java.util.concurrent.atomic.AtomicInteger(0);
+        java.util.concurrent.atomic.AtomicInteger failureCount = new java.util.concurrent.atomic.AtomicInteger(0);
+        int total = userIds.size();
+
+        for (Long userId : userIds) {
+            Map<String, Long> body = Collections.singletonMap("userId", userId);
+            apiService.addParticipant(conversationId, body).enqueue(new Callback<Void>() {
+                @Override
+                public void onResponse(@NonNull Call<Void> call, @NonNull Response<Void> response) {
+                    if (response.isSuccessful()) {
+                        successCount.incrementAndGet();
+                    } else {
+                        failureCount.incrementAndGet();
+                    }
+                    if (successCount.get() + failureCount.get() == total) {
+                        if (failureCount.get() == 0) {
+                            data.setValue(Resource.success(null));
+                        } else {
+                            data.setValue(Resource.error("Failed to add " + failureCount.get() + " participants", null));
+                        }
+                    }
+                }
+
+                @Override
+                public void onFailure(@NonNull Call<Void> call, @NonNull Throwable t) {
+                    failureCount.incrementAndGet();
+                    if (successCount.get() + failureCount.get() == total) {
+                        data.setValue(Resource.error("Failed to add some participants: " + t.getMessage(), null));
+                    }
+                }
+            });
+        }
         return data;
     }
+
 
     @Override
     public LiveData<Resource<Void>> removeParticipant(Long conversationId, Long userId) {

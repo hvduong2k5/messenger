@@ -49,6 +49,7 @@ public class AddMembersActivity extends AppCompatActivity implements AddMembersA
         AddMembersViewModelFactory factory = new AddMembersViewModelFactory(getApplication());
         viewModel = new ViewModelProvider(this, factory).get(AddMembersViewModel.class);
         viewModel.setExistingParticipants(existingIds != null ? existingIds : new ArrayList<>());
+        viewModel.init(conversationId);
 
         setupUI();
         setupObservers();
