@@ -86,7 +86,8 @@ public class ChatDetailViewModel extends ViewModel {
                 .anyMatch(m -> (newMessage.getMessageId() != null && newMessage.getMessageId().equals(m.getMessageId())) ||
                              (newMessage.getContent().equals(m.getContent()) && 
                               newMessage.getSenderId().equals(m.getSenderId()) &&
-                              m.getCreatedAt() != null && Math.abs(newMessage.getCreatedAt() - m.getCreatedAt()) < 2000));
+                              newMessage.getCreatedAt() != null && m.getCreatedAt() != null && 
+                              Math.abs(newMessage.getCreatedAt() - m.getCreatedAt()) < 15000));
 
         if (!exists) {
             currentMessages.add(0, newMessage);
@@ -121,7 +122,7 @@ public class ChatDetailViewModel extends ViewModel {
 
         boolean exists = currentMessages.stream()
                 .anyMatch(m -> payload.equals(m.getContent()) && 
-                             m.getCreatedAt() != null && Math.abs(System.currentTimeMillis() - m.getCreatedAt()) < 2000);
+                             m.getCreatedAt() != null && Math.abs(System.currentTimeMillis() - m.getCreatedAt()) < 15000);
 
         if (!exists) {
             MessageResponseDTO newMessage = new MessageResponseDTO();

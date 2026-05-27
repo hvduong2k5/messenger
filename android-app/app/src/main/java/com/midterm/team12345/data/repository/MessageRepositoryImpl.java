@@ -95,6 +95,9 @@ public class MessageRepositoryImpl implements MessageRepository {
                                     List<com.midterm.team12345.data.local.entity.MessageEntity> entities = new java.util.ArrayList<>();
                                     for (MessageResponseDTO dto : remoteDtos) {
                                         com.midterm.team12345.data.local.entity.MessageEntity localMsg = messageDao.getMessageByServerId(dto.getMessageId());
+                                        if (localMsg == null) {
+                                            localMsg = messageDao.getPendingMessage(dto.getConversationId(), dto.getSenderId(), dto.getContent());
+                                        }
                                         if (localMsg != null) {
                                             com.midterm.team12345.data.local.entity.MessageEntity mapped = 
                                                     com.midterm.team12345.data.mapper.MessageMapper.toEntity(dto, localMsg.getClientMessageId());
@@ -268,10 +271,16 @@ public class MessageRepositoryImpl implements MessageRepository {
                     new java.lang.Thread(() -> {
                         try {
                             MessageResponseDTO responseDto = response.body();
-                            // Save message to Room
-                            com.midterm.team12345.data.local.entity.MessageEntity entity = 
-                                    com.midterm.team12345.data.mapper.MessageMapper.toEntity(responseDto, clientMessageId);
-                            messageDao.insertMessage(entity);
+                            com.midterm.team12345.data.local.entity.MessageEntity existing = 
+                                    messageDao.getMessageByServerId(responseDto.getMessageId());
+                            if (existing != null) {
+                                existing.setClientMessageId(clientMessageId);
+                                messageDao.updateMessage(existing);
+                            } else {
+                                com.midterm.team12345.data.local.entity.MessageEntity entity = 
+                                        com.midterm.team12345.data.mapper.MessageMapper.toEntity(responseDto, clientMessageId);
+                                messageDao.insertMessage(entity);
+                            }
                             
                             // Save attachments to Room
                             saveAttachments(responseDto.getAttachments(), clientMessageId);
