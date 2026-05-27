@@ -105,4 +105,13 @@ public interface ConversationService {
      * @param currentUserId  the ID of the current user
      */
     void leaveConversation(Long conversationId, Long currentUserId);
+    /**
+     * Updates the role of a participant in a conversation.
+     *
+     * @param conversationId      the ID of the conversation
+     * @param currentUserId       the ID of the current user
+     * @param targetParticipantId the ID of the participant whose role will be updated
+     * @param newRole             the new role (MEMBER, ADMIN)
+     */
+    void updateParticipantRole(Long conversationId, Long currentUserId, Long targetParticipantId, String newRole);
 }
