@@ -184,4 +184,63 @@ class ConversationServiceImplTest {
             conversationService.getParticipants(conversationId, currentUserId, "kw", pageable);
         });
     }
+    @Test
+    void testRemoveParticipant_TargetIsSelf_ThrowsException() {
+        Long conversationId = 10L;
+        Long currentUserId = 1L;
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+            conversationService.removeParticipant(conversationId, currentUserId, currentUserId);
+        });
+        assertTrue(exception.getMessage().contains("không thể tự xóa chính mình"));
+    }
+
+    @Test
+    void testRemoveParticipant_NotAdmin_ThrowsException() {
+        Long conversationId = 10L;
+        Long currentUserId = 1L;
+        Long targetUserId = 2L;
+
+        com.team12345.messenger.entity.Conversation conversation = new com.team12345.messenger.entity.Conversation();
+        conversation.setIsGroup(true);
+        currentParticipant.setConversation(conversation);
+        currentParticipant.setRole(ParticipantRole.member);
+
+        when(participantRepository.existsById(new ParticipantId(conversationId, targetUserId))).thenReturn(true);
+        when(participantRepository.findById(new ParticipantId(conversationId, currentUserId)))
+                .thenReturn(java.util.Optional.of(currentParticipant));
+
+        AccessDeniedException exception = assertThrows(AccessDeniedException.class, () -> {
+            conversationService.removeParticipant(conversationId, currentUserId, targetUserId);
+        });
+        assertTrue(exception.getMessage().contains("Only admins can remove other participants"));
+    }
+
+    @Test
+    void testUpdateParticipantRole_TargetIsSelf_ThrowsException() {
+        Long conversationId = 10L;
+        Long currentUserId = 1L;
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+            conversationService.updateParticipantRole(conversationId, currentUserId, currentUserId, "ADMIN");
+        });
+        assertTrue(exception.getMessage().contains("không được tự cập nhật vai trò của chính mình"));
+    }
+
+    @Test
+    void testUpdateParticipantRole_NotAdmin_ThrowsException() {
+        Long conversationId = 10L;
+        Long currentUserId = 1L;
+        Long targetUserId = 2L;
+
+        currentParticipant.setRole(ParticipantRole.member);
+
+        when(participantRepository.findById(new ParticipantId(conversationId, currentUserId)))
+                .thenReturn(java.util.Optional.of(currentParticipant));
+
+        AccessDeniedException exception = assertThrows(AccessDeniedException.class, () -> {
+            conversationService.updateParticipantRole(conversationId, currentUserId, targetUserId, "ADMIN");
+        });
+        assertTrue(exception.getMessage().contains("Only admins can update roles"));
+    }
 }
