@@ -65,7 +65,7 @@ public class MessagingService extends Service {
     }
 
     private void connectMqtt(String username, String token, Long userId) {
-        String brokerUrl = "tcp://192.168.1.166:1883"; 
+        String brokerUrl = "tcp://broker.emqx.io:1883";
         String clientId = "android_" + username + "_" + System.currentTimeMillis();
 
         mqttManager.init(this, brokerUrl, clientId, username, token, userId, new MqttManager.MqttCallback() {
