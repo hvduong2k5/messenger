@@ -4,6 +4,7 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
 import com.midterm.team12345.data.local.entity.UserEntity;
+import com.midterm.team12345.data.remote.dto.response.FriendshipStatus;
 import com.midterm.team12345.domain.repository.FriendRepository;
 import com.midterm.team12345.domain.repository.UserRepository;
 import com.midterm.team12345.ui.base.BaseViewModel;
@@ -48,6 +49,17 @@ public class UserProfileViewModel extends BaseViewModel {
         });
     }
 
+    /**
+     * Fetch dedicated friendship status from API
+     */
+    public void fetchFriendshipStatus() {
+        friendRepository.checkFriendshipStatus(targetUserId).observeForever(resource -> {
+            if (resource.status == Resource.Status.ERROR) {
+                setError(resource.message);
+            }
+        });
+    }
+
     public void sendFriendRequest() {
         showLoading();
         friendRepository.sendFriendRequest(targetUserId).observeForever(resource -> {
@@ -55,7 +67,9 @@ public class UserProfileViewModel extends BaseViewModel {
                 hideLoading();
                 if (resource.status == Resource.Status.SUCCESS) {
                     statusMessageEvent.setValue("Đã gửi lời mời kết bạn");
+                    friendRepository.updateLocalFriendshipStatus(targetUserId, FriendshipStatus.SENDER_PENDING);
                     fetchUserProfile(); // Refresh data to update status in DB and UI
+                    fetchFriendshipStatus();
                 } else {
                     setError(resource.message);
                 }
@@ -70,7 +84,9 @@ public class UserProfileViewModel extends BaseViewModel {
                 hideLoading();
                 if (resource.status == Resource.Status.SUCCESS) {
                     statusMessageEvent.setValue("Đã chấp nhận lời mời kết bạn");
+                    friendRepository.updateLocalFriendshipStatus(targetUserId, FriendshipStatus.FRIEND);
                     fetchUserProfile();
+                    fetchFriendshipStatus();
                 } else {
                     setError(resource.message);
                 }
@@ -85,7 +101,9 @@ public class UserProfileViewModel extends BaseViewModel {
                 hideLoading();
                 if (resource.status == Resource.Status.SUCCESS) {
                     statusMessageEvent.setValue("Đã từ chối lời mời kết bạn");
+                    friendRepository.updateLocalFriendshipStatus(targetUserId, FriendshipStatus.STRANGER);
                     fetchUserProfile();
+                    fetchFriendshipStatus();
                 } else {
                     setError(resource.message);
                 }
@@ -100,7 +118,9 @@ public class UserProfileViewModel extends BaseViewModel {
                 hideLoading();
                 if (resource.status == Resource.Status.SUCCESS) {
                     statusMessageEvent.setValue("Đã hủy kết bạn");
+                    friendRepository.updateLocalFriendshipStatus(targetUserId, FriendshipStatus.STRANGER);
                     fetchUserProfile();
+                    fetchFriendshipStatus();
                 } else {
                     setError(resource.message);
                 }
@@ -115,7 +135,9 @@ public class UserProfileViewModel extends BaseViewModel {
                 hideLoading();
                 if (resource.status == Resource.Status.SUCCESS) {
                     statusMessageEvent.setValue("Đã hủy yêu cầu kết bạn");
+                    friendRepository.updateLocalFriendshipStatus(targetUserId, FriendshipStatus.STRANGER);
                     fetchUserProfile();
+                    fetchFriendshipStatus();
                 } else {
                     setError(resource.message);
                 }

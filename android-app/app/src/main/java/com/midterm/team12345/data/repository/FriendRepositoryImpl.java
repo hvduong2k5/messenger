@@ -9,6 +9,7 @@ import com.midterm.team12345.data.local.entity.UserEntity;
 import com.midterm.team12345.data.remote.RetrofitClient;
 import com.midterm.team12345.data.remote.api.FriendApiService;
 import com.midterm.team12345.data.remote.dto.response.FriendRequestResponseDTO;
+import com.midterm.team12345.data.remote.dto.response.FriendshipStatus;
 import com.midterm.team12345.data.remote.dto.response.FriendshipStatusResponseDTO;
 import com.midterm.team12345.data.remote.dto.response.UserResponseDTO;
 import com.midterm.team12345.domain.repository.FriendRepository;
@@ -245,7 +246,22 @@ public class FriendRepositoryImpl implements FriendRepository {
             @Override
             public void onResponse(Call<FriendshipStatusResponseDTO> call, Response<FriendshipStatusResponseDTO> response) {
                 if (response.isSuccessful() && response.body() != null) {
-                    data.setValue(Resource.success(response.body()));
+                    FriendshipStatusResponseDTO body = response.body();
+                    new Thread(() -> {
+                        try {
+                            UserEntity entity = database.userDao().getUserByIdSync(userId);
+                            if (entity == null) {
+                                entity = new UserEntity();
+                                entity.setId(userId);
+                            }
+                            entity.setFriendshipStatus(body.getFriendshipStatus());
+                            entity.setIsFriend(body.getFriendshipStatus() == com.midterm.team12345.data.remote.dto.response.FriendshipStatus.FRIEND);
+                            database.userDao().insertUser(entity);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }).start();
+                    data.setValue(Resource.success(body));
                 } else {
                     String errorMsg = "Không thể kiểm tra trạng thái bạn bè (HTTP " + response.code() + ")";
                     try {
@@ -268,5 +284,23 @@ public class FriendRepositoryImpl implements FriendRepository {
     @Override
     public LiveData<List<UserEntity>> searchFriendsLocally(String query) {
         return database.userDao().searchFriendsLocally(query);
+    }
+
+    @Override
+    public void updateLocalFriendshipStatus(Long userId, FriendshipStatus status) {
+        new Thread(() -> {
+            try {
+                UserEntity entity = database.userDao().getUserByIdSync(userId);
+                if (entity == null) {
+                    entity = new UserEntity();
+                    entity.setId(userId);
+                }
+                entity.setFriendshipStatus(status);
+                entity.setIsFriend(status == FriendshipStatus.FRIEND);
+                database.userDao().insertUser(entity);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }).start();
     }
 }
