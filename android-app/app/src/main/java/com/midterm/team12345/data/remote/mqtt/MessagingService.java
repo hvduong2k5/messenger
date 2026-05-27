@@ -78,10 +78,20 @@ public class MessagingService extends Service {
                             com.midterm.team12345.data.local.entity.MessageEntity entity = 
                                     com.midterm.team12345.data.mapper.MessageMapper.toEntity(message);
                             
-                            // 2. Insert directly into Room DB
-                            com.midterm.team12345.data.local.database.MessengerDatabase.getInstance(getApplicationContext())
-                                    .messageDao()
-                                    .insertMessage(entity);
+                            if (entity != null) {
+                                com.midterm.team12345.data.local.dao.MessageDao messageDao = 
+                                        com.midterm.team12345.data.local.database.MessengerDatabase.getInstance(getApplicationContext())
+                                                .messageDao();
+                                
+                                boolean exists = false;
+                                if (entity.getMessageId() != null) {
+                                    exists = (messageDao.getMessageByServerId(entity.getMessageId()) != null);
+                                }
+                                
+                                if (!exists) {
+                                    messageDao.insertMessage(entity);
+                                }
+                            }
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
