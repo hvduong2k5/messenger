@@ -50,6 +50,7 @@ public class ConversationSettingsActivity extends BaseActivity<ActivityConversat
         setupHeader();
         setupSettingRows();
         setupListeners();
+        checkAdminStatus();
     }
 
     private void setupToolbar() {
@@ -94,7 +95,13 @@ public class ConversationSettingsActivity extends BaseActivity<ActivityConversat
         // Hiển thị các tính năng dựa trên loại hội thoại (Group vs 1-1)
         binding.itemBlock.getRoot().setVisibility(isGroup ? View.GONE : View.VISIBLE);
         binding.itemViewMembers.getRoot().setVisibility(isGroup ? View.VISIBLE : View.GONE);
-        binding.itemAddMember.getRoot().setVisibility(isGroup ? View.VISIBLE : View.GONE);
+        binding.itemAddMember.getRoot().setVisibility(View.GONE);
+
+        if (isGroup) {
+            binding.btnAddMember.setVisibility(View.GONE);
+        } else {
+            binding.btnAddMember.setVisibility(View.VISIBLE);
+        }
 
         if (isGroup) {
             bindRow(binding.itemViewMembers, "View Members", null, R.drawable.ic_back_arrow);
@@ -214,5 +221,75 @@ public class ConversationSettingsActivity extends BaseActivity<ActivityConversat
     @Override
     protected void hideLoading() {
         binding.progressBar.setVisibility(View.GONE);
+    }
+
+    private void checkAdminStatus() {
+        if (!conversation.getGroup()) {
+            return;
+        }
+
+        com.midterm.team12345.data.local.TokenManager tokenManager = new com.midterm.team12345.data.local.TokenManager(this);
+        Long myId = tokenManager.getUserId();
+        Long conversationId = conversation.getConversationId();
+
+        // 1. Check local database first
+        java.util.concurrent.Executors.newSingleThreadExecutor().execute(() -> {
+            java.util.List<com.midterm.team12345.data.local.entity.ConversationParticipantEntity> participants = 
+                com.midterm.team12345.data.local.database.DatabaseProvider.getInstance(getApplicationContext())
+                    .getConversationParticipantDao()
+                    .getParticipantsForConversationSync(conversationId);
+            if (participants != null) {
+                boolean amIAdmin = false;
+                for (com.midterm.team12345.data.local.entity.ConversationParticipantEntity p : participants) {
+                    if (p.getUserId().equals(myId)) {
+                        amIAdmin = "ADMIN".equalsIgnoreCase(p.getRole()) || "OWNER".equalsIgnoreCase(p.getRole());
+                        break;
+                    }
+                }
+                final boolean finalAmIAdmin = amIAdmin;
+                runOnUiThread(() -> {
+                    if (finalAmIAdmin) {
+                        binding.itemAddMember.getRoot().setVisibility(View.VISIBLE);
+                        binding.btnAddMember.setVisibility(View.VISIBLE);
+                    } else {
+                        binding.itemAddMember.getRoot().setVisibility(View.GONE);
+                        binding.btnAddMember.setVisibility(View.GONE);
+                    }
+                });
+            }
+        });
+
+        // 2. Refresh from server to get accurate status and update local DB cache
+        viewModel.getParticipants(conversationId).observe(this, resource -> {
+            if (resource.status == Resource.Status.SUCCESS && resource.data != null) {
+                java.util.List<com.midterm.team12345.data.remote.dto.response.ParticipantResponseDTO> remoteParticipants = resource.data.getContent();
+                if (remoteParticipants != null) {
+                    boolean amIAdmin = false;
+                    java.util.List<com.midterm.team12345.data.local.entity.ConversationParticipantEntity> localEntities = new java.util.ArrayList<>();
+                    for (com.midterm.team12345.data.remote.dto.response.ParticipantResponseDTO p : remoteParticipants) {
+                        if (p.getUserId().equals(myId)) {
+                            amIAdmin = "ADMIN".equalsIgnoreCase(p.getRole()) || "OWNER".equalsIgnoreCase(p.getRole());
+                        }
+                        localEntities.add(new com.midterm.team12345.data.local.entity.ConversationParticipantEntity(
+                                conversationId, p.getUserId(), p.getRole(), p.getUsername(), null
+                        ));
+                    }
+                    
+                    if (amIAdmin) {
+                        binding.itemAddMember.getRoot().setVisibility(View.VISIBLE);
+                        binding.btnAddMember.setVisibility(View.VISIBLE);
+                    } else {
+                        binding.itemAddMember.getRoot().setVisibility(View.GONE);
+                        binding.btnAddMember.setVisibility(View.GONE);
+                    }
+
+                    java.util.concurrent.Executors.newSingleThreadExecutor().execute(() -> {
+                        com.midterm.team12345.data.local.database.DatabaseProvider.getInstance(getApplicationContext())
+                            .getConversationParticipantDao()
+                            .insertParticipants(localEntities);
+                    });
+                }
+            }
+        });
     }
 }

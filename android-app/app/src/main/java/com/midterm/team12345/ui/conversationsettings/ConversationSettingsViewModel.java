@@ -22,6 +22,11 @@ public class ConversationSettingsViewModel extends BaseViewModel {
         this.friendRepository = friendRepository;
     }
 
+    public LiveData<Resource<com.midterm.team12345.data.remote.dto.response.PageResponse<com.midterm.team12345.data.remote.dto.response.ParticipantResponseDTO>>> getParticipants(Long conversationId) {
+        return conversationRepository.getParticipants(conversationId, null, 0, 100);
+    }
+
+
     /**
      * Cập nhật thông tin hội thoại (Tên, Ảnh)
      */
