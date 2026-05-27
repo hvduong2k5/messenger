@@ -119,7 +119,7 @@ public class MyProfileFragment extends BaseFragment<FragmentMyProfileBinding, My
                 binding.tvFullName.setText(user.getUsername());
                 binding.tvUsername.setText("@" + user.getUsername().toLowerCase().replace(" ", "_"));
                 binding.tvBio.setText(user.getBio() != null ? user.getBio() : "Available");
-                binding.onlineIndicator.setVisibility(user.getIsOnline() ? View.VISIBLE : View.GONE);
+                binding.onlineIndicator.setVisibility((user.getIsOnline() != null && user.getIsOnline()) ? View.VISIBLE : View.GONE);
 
                 Glide.with(this)
                         .load(user.getAvatarUrl())
