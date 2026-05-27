@@ -19,7 +19,7 @@ public class GroupMemberAdapter extends ListAdapter<ParticipantResponseDTO, Grou
     private final OnMemberClickListener listener;
 
     public interface OnMemberClickListener {
-        void onMemberClick(ParticipantResponseDTO member);
+        void onMemberClick(ParticipantResponseDTO member, View anchor);
     }
 
     public GroupMemberAdapter(OnMemberClickListener listener) {
@@ -77,7 +77,7 @@ public class GroupMemberAdapter extends ListAdapter<ParticipantResponseDTO, Grou
                     .circleCrop()
                     .into(binding.ivAvatar);
 
-            binding.getRoot().setOnClickListener(v -> listener.onMemberClick(member));
+            binding.getRoot().setOnClickListener(v -> listener.onMemberClick(member, binding.getRoot()));
         }
     }
 }

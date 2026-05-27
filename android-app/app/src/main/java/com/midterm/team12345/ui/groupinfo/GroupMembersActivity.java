@@ -56,38 +56,67 @@ public class GroupMembersActivity extends BaseActivity<ActivityGroupMembersBindi
 
         binding.toolbar.setNavigationOnClickListener(v -> finish());
 
-        adapter = new GroupMemberAdapter(member -> {
-            // Handle member click - open profile
+        com.midterm.team12345.data.local.TokenManager tokenManager = new com.midterm.team12345.data.local.TokenManager(this);
+        Long myId = tokenManager.getUserId();
+
+        adapter = new GroupMemberAdapter((member, anchor) -> {
+            boolean amIAdmin = false;
+            for (ParticipantResponseDTO m : allMembers) {
+                if (m.getUserId().equals(myId) && ("ADMIN".equalsIgnoreCase(m.getRole()) || "OWNER".equalsIgnoreCase(m.getRole()))) {
+                    amIAdmin = true;
+                    break;
+                }
+            }
+
+            if (!amIAdmin) return;
+            if (member.getUserId().equals(myId)) return;
+
+            android.widget.PopupMenu popup = new android.widget.PopupMenu(this, anchor);
+            popup.getMenu().add(0, 1, 0, "Chỉ định làm Admin");
+            popup.getMenu().add(0, 2, 0, "Gỡ tư cách Admin");
+            popup.setOnMenuItemClickListener(item -> {
+                String newRole = item.getItemId() == 1 ? "ADMIN" : "MEMBER";
+                viewModel.updateParticipantRole(conversationId, member.getUserId(), newRole);
+                return true;
+            });
+            popup.show();
         });
         binding.rvMembers.setLayoutManager(new LinearLayoutManager(this));
         binding.rvMembers.setAdapter(adapter);
 
+        binding.rvMembers.addOnScrollListener(new androidx.recyclerview.widget.RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrolled(@androidx.annotation.NonNull androidx.recyclerview.widget.RecyclerView recyclerView, int dx, int dy) {
+                LinearLayoutManager layoutManager = (LinearLayoutManager) recyclerView.getLayoutManager();
+                if (layoutManager != null && layoutManager.findLastCompletelyVisibleItemPosition() == adapter.getItemCount() - 1) {
+                    viewModel.fetchGroupMembers(conversationId, false);
+                }
+            }
+        });
+
         binding.etSearch.addTextChangedListener(new TextWatcher() {
+            private Runnable searchRunnable;
+            private android.os.Handler handler = new android.os.Handler(android.os.Looper.getMainLooper());
+            
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                filterMembers(s.toString());
+                if (searchRunnable != null) handler.removeCallbacks(searchRunnable);
+                searchRunnable = () -> viewModel.searchMembers(s.toString());
+                handler.postDelayed(searchRunnable, 300);
             }
 
             @Override
             public void afterTextChanged(Editable s) {}
         });
 
-        viewModel.fetchGroupMembers(conversationId);
+        viewModel.init(conversationId);
+        viewModel.fetchGroupMembers(conversationId, true);
     }
 
-    private void filterMembers(String query) {
-        if (query.isEmpty()) {
-            adapter.submitList(allMembers);
-        } else {
-            List<ParticipantResponseDTO> filtered = allMembers.stream()
-                    .filter(m -> m.getUsername().toLowerCase().contains(query.toLowerCase()))
-                    .collect(Collectors.toList());
-            adapter.submitList(filtered);
-        }
-    }
+
 
     @Override
     protected void observeViewModel() {
@@ -96,6 +125,14 @@ public class GroupMembersActivity extends BaseActivity<ActivityGroupMembersBindi
             if (resource.status == Resource.Status.SUCCESS && resource.data != null) {
                 allMembers = resource.data;
                 adapter.submitList(allMembers);
+            }
+        });
+
+        viewModel.updateRoleState.observe(this, resource -> {
+            if (resource.status == Resource.Status.SUCCESS) {
+                android.widget.Toast.makeText(this, "Cập nhật quyền thành công", android.widget.Toast.LENGTH_SHORT).show();
+            } else if (resource.status == Resource.Status.ERROR) {
+                android.widget.Toast.makeText(this, "Lỗi: " + resource.message, android.widget.Toast.LENGTH_SHORT).show();
             }
         });
     }
