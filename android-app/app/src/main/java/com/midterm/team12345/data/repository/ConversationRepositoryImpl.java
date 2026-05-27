@@ -30,17 +30,21 @@ public class ConversationRepositoryImpl implements ConversationRepository {
     private static ConversationRepositoryImpl instance;
     private final ConversationApiService apiService;
     private final com.midterm.team12345.data.local.dao.ConversationDao conversationDao;
+    private final com.midterm.team12345.data.local.database.MessengerDatabase database;
 
-    private ConversationRepositoryImpl(ConversationApiService apiService, com.midterm.team12345.data.local.dao.ConversationDao conversationDao) {
+    private ConversationRepositoryImpl(
+            ConversationApiService apiService,
+            com.midterm.team12345.data.local.database.MessengerDatabase database) {
         this.apiService = apiService;
-        this.conversationDao = conversationDao;
+        this.database = database;
+        this.conversationDao = database.conversationDao();
     }
 
     public static synchronized ConversationRepositoryImpl getInstance(Application application) {
         if (instance == null) {
             instance = new ConversationRepositoryImpl(
                 RetrofitClient.getConversationApiService(application),
-                com.midterm.team12345.data.local.database.MessengerDatabase.getInstance(application).conversationDao()
+                com.midterm.team12345.data.local.database.MessengerDatabase.getInstance(application)
             );
         }
         return instance;
@@ -261,8 +265,22 @@ public class ConversationRepositoryImpl implements ConversationRepository {
         apiService.leaveConversation(conversationId).enqueue(new Callback<Map<String, String>>() {
             @Override
             public void onResponse(@NonNull Call<Map<String, String>> call, @NonNull Response<Map<String, String>> response) {
-                if (response.isSuccessful()) data.setValue(Resource.success(null));
-                else data.setValue(Resource.error("Failed to leave conversation", null));
+                if (response.isSuccessful()) {
+                    new java.lang.Thread(() -> {
+                        try {
+                            database.runInTransaction(() -> {
+                                database.conversationDao().deleteConversationById(conversationId);
+                                database.conversationParticipantDao().deleteParticipantsByConversationId(conversationId);
+                                database.messageDao().deleteMessagesByConversationId(conversationId);
+                            });
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }).start();
+                    data.setValue(Resource.success(null));
+                } else {
+                    data.setValue(Resource.error("Failed to leave conversation", null));
+                }
             }
             @Override
             public void onFailure(@NonNull Call<Map<String, String>> call, @NonNull Throwable t) {
