@@ -59,6 +59,21 @@ public class AddMembersActivity extends AppCompatActivity implements AddMembersA
 
     private void setupUI() {
         binding.toolbar.setNavigationOnClickListener(v -> finish());
+        binding.toolbar.inflateMenu(R.menu.menu_add_members);
+        android.view.MenuItem doneItem = binding.toolbar.getMenu().findItem(R.id.action_done);
+        if (doneItem != null) {
+            doneItem.setEnabled(false); // Default disabled
+        }
+        
+        binding.toolbar.setOnMenuItemClickListener(item -> {
+            if (item.getItemId() == R.id.action_done) {
+                if (selectedUserIds != null && !selectedUserIds.isEmpty()) {
+                    viewModel.addParticipants(conversationId, selectedUserIds);
+                }
+                return true;
+            }
+            return false;
+        });
 
         adapter = new AddMembersAdapter(this);
         binding.rvMembers.setLayoutManager(new LinearLayoutManager(this));
@@ -77,11 +92,6 @@ public class AddMembersActivity extends AppCompatActivity implements AddMembersA
             public void afterTextChanged(Editable s) {}
         });
 
-        binding.btnAddMembers.setOnClickListener(v -> {
-            if (selectedUserIds != null && !selectedUserIds.isEmpty()) {
-                viewModel.addParticipants(conversationId, selectedUserIds);
-            }
-        });
     }
 
     private void setupObservers() {
@@ -102,21 +112,21 @@ public class AddMembersActivity extends AppCompatActivity implements AddMembersA
         });
 
         viewModel.isLoading.observe(this, isLoading -> {
-            // Nút Done mờ đi khi đang xử lý
-            binding.btnAddMembers.setEnabled(!isLoading);
-            binding.btnAddMembers.setAlpha(isLoading ? 0.5f : 1.0f);
+            android.view.MenuItem doneItem = binding.toolbar.getMenu().findItem(R.id.action_done);
+            if (doneItem != null) {
+                doneItem.setEnabled(!isLoading);
+            }
         });
     }
 
     @Override
     public void onSelectionChanged(int count, Set<Long> selectedIds) {
         this.selectedUserIds = selectedIds;
-        // Logic: Nếu size == 0: Disable nút ✓, ngược lại Enable
         boolean hasSelection = count > 0;
-        binding.btnAddMembers.setEnabled(hasSelection);
-        binding.btnAddMembers.setAlpha(hasSelection ? 1.0f : 0.5f);
-        binding.btnAddMembers.setClickable(hasSelection);
-        binding.btnAddMembers.setText("Add " + count + " Members");
+        android.view.MenuItem doneItem = binding.toolbar.getMenu().findItem(R.id.action_done);
+        if (doneItem != null) {
+            doneItem.setEnabled(hasSelection);
+        }
     }
 
     private void showKeyboard(View view) {
