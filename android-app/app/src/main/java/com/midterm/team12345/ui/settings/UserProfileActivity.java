@@ -40,6 +40,7 @@ public class UserProfileActivity extends AppCompatActivity {
         observeViewModel();
 
         viewModel.fetchUserProfile();
+        viewModel.fetchFriendshipStatus();
     }
 
     private void setupViewModel() {

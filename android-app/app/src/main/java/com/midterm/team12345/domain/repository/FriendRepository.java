@@ -3,6 +3,7 @@ package com.midterm.team12345.domain.repository;
 import androidx.lifecycle.LiveData;
 import com.midterm.team12345.data.local.entity.UserEntity;
 import com.midterm.team12345.data.remote.dto.response.FriendRequestResponseDTO;
+import com.midterm.team12345.data.remote.dto.response.FriendshipStatus;
 import com.midterm.team12345.data.remote.dto.response.FriendshipStatusResponseDTO;
 import com.midterm.team12345.data.remote.dto.response.UserResponseDTO;
 import com.midterm.team12345.utils.Resource;
@@ -19,6 +20,7 @@ public interface FriendRepository {
     LiveData<Resource<List<FriendRequestResponseDTO>>> getPendingRequests();
     LiveData<Resource<Void>> cancelFriendRequest(Long receiverId);
     LiveData<Resource<FriendshipStatusResponseDTO>> checkFriendshipStatus(Long userId);
+    void updateLocalFriendshipStatus(Long userId, FriendshipStatus status);
     
     // Local Search
     LiveData<List<UserEntity>> searchFriendsLocally(String query);
