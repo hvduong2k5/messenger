@@ -216,10 +216,6 @@
                 android:id="@+id/itemViewMembers"
                 layout="@layout/item_settings_row" />
 
-            <include
-                android:id="@+id/itemDeleteMember"
-                layout="@layout/item_settings_row" />
-
             <!-- Privacy Section -->
             <TextView
                 android:layout_width="match_parent"

@@ -93,12 +93,10 @@ public class ConversationSettingsActivity extends BaseActivity<ActivityConversat
         binding.itemBlock.getRoot().setVisibility(isGroup ? View.GONE : View.VISIBLE);
         binding.itemViewMembers.getRoot().setVisibility(isGroup ? View.VISIBLE : View.GONE);
         binding.itemAddMember.getRoot().setVisibility(isGroup ? View.VISIBLE : View.GONE);
-        binding.itemDeleteMember.getRoot().setVisibility(isGroup ? View.VISIBLE : View.GONE);
 
         if (isGroup) {
             bindRow(binding.itemViewMembers, "View Members", null, R.drawable.ic_back_arrow);
             bindRow(binding.itemAddMember, "Add Member", null, R.drawable.ic_back_arrow);
-            bindRow(binding.itemDeleteMember, "Delete Member", null, R.drawable.ic_back_arrow);
         }
         binding.tvAddAction.setText(isGroup ? "Add" : "Profile");
 
@@ -134,10 +132,6 @@ public class ConversationSettingsActivity extends BaseActivity<ActivityConversat
 
         binding.itemViewMembers.getRoot().setOnClickListener(v -> {
             com.midterm.team12345.ui.groupinfo.GroupMembersActivity.start(this, conversation.getConversationId());
-        });
-
-        binding.itemDeleteMember.getRoot().setOnClickListener(v -> {
-            com.midterm.team12345.ui.groupinfo.DeleteMemberActivity.start(this, conversation.getConversationId());
         });
 
         binding.itemBlock.getRoot().setOnClickListener(v -> {
