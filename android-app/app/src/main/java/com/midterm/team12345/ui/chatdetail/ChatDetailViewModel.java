@@ -2,8 +2,10 @@ package com.midterm.team12345.ui.chatdetail;
 
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
+import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModel;
 
+import com.midterm.team12345.data.remote.dto.MqttMessageDTO;
 import com.midterm.team12345.data.remote.dto.request.ConversationRequestDTO;
 import com.midterm.team12345.data.remote.dto.request.MessageRequestDTO;
 import com.midterm.team12345.data.remote.dto.response.ConversationResponseDTO;
@@ -25,6 +27,7 @@ public class ChatDetailViewModel extends ViewModel {
     private final ConversationRepository conversationRepository;
     private final UserRepository userRepository;
     private Long activeConversationId;
+    private Observer<MqttMessageDTO> realTimeMessageObserver;
 
     private final MutableLiveData<Resource<List<MessageResponseDTO>>> _messageState = new MutableLiveData<>();
     public final LiveData<Resource<List<MessageResponseDTO>>> messageState = _messageState;
@@ -48,7 +51,7 @@ public class ChatDetailViewModel extends ViewModel {
     }
 
     private void observeRealTimeMessages() {
-        conversationRepository.getRealTimeMessages().observeForever(mqttMessage -> {
+        realTimeMessageObserver = mqttMessage -> {
             if (mqttMessage != null) {
                 String type = mqttMessage.getType();
                 if ("NEW_MESSAGE".equals(type) || "text".equalsIgnoreCase(type) || "media".equalsIgnoreCase(type)) {
@@ -68,7 +71,8 @@ public class ChatDetailViewModel extends ViewModel {
                     }
                 }
             }
-        });
+        };
+        conversationRepository.getRealTimeMessages().observeForever(realTimeMessageObserver);
     }
 
     private void addMessageResponseLocally(MessageResponseDTO newMessage) {
@@ -240,6 +244,14 @@ public class ChatDetailViewModel extends ViewModel {
             }
         } else if (resource.status == Resource.Status.ERROR) {
             loadMessages(conversationId);
+        }
+    }
+
+    @Override
+    protected void onCleared() {
+        super.onCleared();
+        if (realTimeMessageObserver != null) {
+            conversationRepository.getRealTimeMessages().removeObserver(realTimeMessageObserver);
         }
     }
 }
