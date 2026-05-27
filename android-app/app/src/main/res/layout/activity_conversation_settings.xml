@@ -209,6 +209,10 @@
                 layout="@layout/item_settings_row" />
 
             <include
+                android:id="@+id/itemGroupInfo"
+                layout="@layout/item_settings_row" />
+
+            <include
                 android:id="@+id/itemViewMembers"
                 layout="@layout/item_settings_row" />
 

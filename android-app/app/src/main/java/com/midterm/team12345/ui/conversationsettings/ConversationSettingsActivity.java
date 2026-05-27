@@ -87,6 +87,10 @@ public class ConversationSettingsActivity extends BaseActivity<ActivityConversat
         // Hiển thị các tính năng dựa trên loại hội thoại (Group vs 1-1)
         binding.itemBlock.getRoot().setVisibility(isGroup ? View.GONE : View.VISIBLE);
         binding.itemViewMembers.getRoot().setVisibility(isGroup ? View.VISIBLE : View.GONE);
+        binding.itemGroupInfo.getRoot().setVisibility(isGroup ? View.VISIBLE : View.GONE);
+        if (isGroup) {
+            bindRow(binding.itemGroupInfo, "Group Info", null, R.drawable.ic_back_arrow);
+        }
         binding.tvAddAction.setText(isGroup ? "Add" : "Profile");
 
         // Các hành động cảnh báo (Màu đỏ)
@@ -109,6 +113,12 @@ public class ConversationSettingsActivity extends BaseActivity<ActivityConversat
                     // Logic xóa chat
                 });
             }
+        });
+
+        binding.itemGroupInfo.getRoot().setOnClickListener(v -> {
+            Intent intent = new Intent(this, com.midterm.team12345.ui.groupinfo.GroupInfoActivity.class);
+            intent.putExtra("extra_conversation_id", conversation.getConversationId()); 
+            startActivity(intent);
         });
 
         binding.itemBlock.getRoot().setOnClickListener(v -> {
