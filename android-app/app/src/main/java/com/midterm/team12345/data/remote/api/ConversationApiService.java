@@ -13,6 +13,7 @@ import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.DELETE;
 import retrofit2.http.GET;
+import retrofit2.http.PATCH;
 import retrofit2.http.POST;
 import retrofit2.http.PUT;
 import retrofit2.http.Path;
@@ -46,6 +47,18 @@ public interface ConversationApiService {
             @Query("keyword") String keyword,
             @Query("page") int page,
             @Query("size") int size
+    );
+
+    @POST("conversations/{id}/leave")
+    Call<Map<String, String>> leaveConversation(
+            @Path("id") Long conversationId
+    );
+
+    @PATCH("conversations/{id}/participants/{participantId}/role")
+    Call<Map<String, String>> updateParticipantRole(
+            @Path("id") Long conversationId,
+            @Path("participantId") Long participantId,
+            @Body Map<String, String> body
     );
 
     @GET("conversations/{conversationId}/messages")
