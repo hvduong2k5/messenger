@@ -123,4 +123,8 @@ public class GroupInfoViewModel extends BaseViewModel {
             }
         });
     }
+
+    public LiveData<Resource<Void>> removeMember(Long conversationId, Long userId) {
+        return conversationRepository.removeParticipant(conversationId, userId);
+    }
 }
