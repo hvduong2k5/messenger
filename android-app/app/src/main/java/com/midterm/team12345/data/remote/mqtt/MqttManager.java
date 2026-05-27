@@ -68,8 +68,18 @@ public class MqttManager {
                 public void messageArrived(String topic, MqttMessage message) {
                     Log.d(TAG, "Message arrived on topic: " + topic);
                     try {
-                        MqttMessageDTO dto = gson.fromJson(new String(message.getPayload()), MqttMessageDTO.class);
-                        if (callback != null) callback.onMessageReceived(dto);
+                        String payloadStr = new String(message.getPayload()).trim();
+                        if (topic.endsWith("/presence")) {
+                            Log.d(TAG, "Presence message received on topic " + topic + ": " + payloadStr);
+                            // Avoid parsing raw presence strings (like "online", "offline") as MqttMessageDTO
+                            return;
+                        }
+                        if (payloadStr.startsWith("{")) {
+                            MqttMessageDTO dto = gson.fromJson(payloadStr, MqttMessageDTO.class);
+                            if (callback != null) callback.onMessageReceived(dto);
+                        } else {
+                            Log.w(TAG, "Expected JSON message but got: " + payloadStr);
+                        }
                     } catch (Exception e) {
                         Log.e(TAG, "Error parsing MQTT message", e);
                     }
