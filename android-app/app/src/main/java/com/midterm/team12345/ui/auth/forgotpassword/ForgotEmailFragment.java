@@ -53,7 +53,7 @@ public class ForgotEmailFragment extends BaseFragment<FragmentForgotEmailBinding
         viewModel.forgotPasswordResult.observe(getViewLifecycleOwner(), resource -> {
             if (resource.status == Resource.Status.SUCCESS) {
                 if (getActivity() instanceof ForgotPasswordActivity) {
-                    ((ForgotPasswordActivity) getActivity()).replaceFragment(new ForgotOtpFragment(), true);
+                    ((ForgotPasswordActivity) getActivity()).replaceFragment(new ForgotPasswordFragment(), true);
                 }
             } else if (resource.status == Resource.Status.ERROR) {
                 binding.tilEmail.setError(resource.message);

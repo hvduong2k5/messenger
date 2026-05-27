@@ -6,11 +6,9 @@ import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Toast;
 import androidx.lifecycle.ViewModelProvider;
 import com.midterm.team12345.databinding.FragmentForgotPasswordBinding;
 import com.midterm.team12345.ui.base.BaseFragment;
-import com.midterm.team12345.utils.Resource;
 
 public class ForgotPasswordFragment extends BaseFragment<FragmentForgotPasswordBinding, ForgotPasswordViewModel> {
 
@@ -45,21 +43,12 @@ public class ForgotPasswordFragment extends BaseFragment<FragmentForgotPasswordB
         binding.etConfirmPassword.addTextChangedListener(passwordWatcher);
 
         binding.btnVerify.setEnabled(viewModel.isPasswordValid());
-        binding.btnVerify.setOnClickListener(v -> viewModel.resetPassword());
-
-        binding.etPassword.requestFocus();
-    }
-
-    @Override
-    protected void observeViewModel() {
-        super.observeViewModel();
-        viewModel.resetPasswordResult.observe(getViewLifecycleOwner(), resource -> {
-            if (resource.status == Resource.Status.SUCCESS) {
-                Toast.makeText(requireContext(), "Đổi mật khẩu thành công", Toast.LENGTH_SHORT).show();
-                requireActivity().finish();
-            } else if (resource.status == Resource.Status.ERROR) {
-                showError(resource.message);
+        binding.btnVerify.setOnClickListener(v -> {
+            if (getActivity() instanceof ForgotPasswordActivity) {
+                ((ForgotPasswordActivity) getActivity()).replaceFragment(new ForgotOtpFragment(), true);
             }
         });
+
+        binding.etPassword.requestFocus();
     }
 }
