@@ -89,6 +89,9 @@ public class MessagingService extends Service {
                                 if (entity.getMessageId() != null) {
                                     exists = (messageDao.getMessageByServerId(entity.getMessageId()) != null);
                                 }
+                                if (!exists && entity.getClientMessageId() != null) {
+                                    exists = (messageDao.getMessageByClientMessageId(entity.getClientMessageId()) != null);
+                                }
                                 
                                 if (!exists) {
                                     com.midterm.team12345.data.local.entity.MessageEntity pending = messageDao.getPendingMessage(

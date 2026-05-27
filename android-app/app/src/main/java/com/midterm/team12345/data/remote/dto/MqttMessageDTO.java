@@ -42,6 +42,9 @@ public class MqttMessageDTO {
     @SerializedName(value = "isEdited", alternate = {"is_edited"})
     private Boolean isEdited;
 
+    @SerializedName(value = "clientMessageId", alternate = {"client_message_id"})
+    private String clientMessageId;
+
     // Original MqttMessageDTO fields (for backward compatibility)
     @SerializedName("type")
     private String type;
@@ -127,8 +130,19 @@ public class MqttMessageDTO {
     public MessageResponseDTO getData() { return data; }
     public void setData(MessageResponseDTO data) { this.data = data; }
 
+    public String getClientMessageId() {
+        if (clientMessageId != null) return clientMessageId;
+        if (data != null && data.getClientMessageId() != null) return data.getClientMessageId();
+        return null;
+    }
+
+    public void setClientMessageId(String clientMessageId) { this.clientMessageId = clientMessageId; }
+
     public MessageResponseDTO toMessageResponseDTO() {
         if (data != null) {
+            if (data.getClientMessageId() == null && clientMessageId != null) {
+                data.setClientMessageId(clientMessageId);
+            }
             return data;
         }
         if (messageId != null) {
@@ -148,6 +162,7 @@ public class MqttMessageDTO {
             }
             dto.setIsDeleted(isDeleted);
             dto.setIsEdited(isEdited);
+            dto.setClientMessageId(getClientMessageId());
             return dto;
         }
         return null;

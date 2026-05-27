@@ -103,6 +103,9 @@ public class MessageRepositoryImpl implements MessageRepository {
                                 List<com.midterm.team12345.data.local.entity.MessageEntity> entities = new java.util.ArrayList<>();
                                 for (MessageResponseDTO dto : remoteDtos) {
                                     com.midterm.team12345.data.local.entity.MessageEntity localMsg = messageDao.getMessageByServerId(dto.getMessageId());
+                                    if (localMsg == null && dto.getClientMessageId() != null) {
+                                        localMsg = messageDao.getMessageByClientMessageId(dto.getClientMessageId());
+                                    }
                                     if (localMsg == null) {
                                         localMsg = messageDao.getPendingMessage(dto.getConversationId(), dto.getSenderId(), dto.getContent());
                                     }
