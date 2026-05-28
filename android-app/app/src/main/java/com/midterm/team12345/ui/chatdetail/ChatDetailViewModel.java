@@ -30,6 +30,10 @@ public class ChatDetailViewModel extends ViewModel {
     private final com.midterm.team12345.data.local.dao.MessageDao messageDao;
     private Long activeConversationId;
     private Long currentUserId;
+    private int currentPage = 0;
+    private boolean isLastPage = false;
+    private final MutableLiveData<Boolean> _isLoadingMore = new MutableLiveData<>(false);
+    public final LiveData<Boolean> isLoadingMore = _isLoadingMore;
 
     private LiveData<Resource<List<MessageResponseDTO>>> currentMessagesSource;
     private Observer<Resource<List<MessageResponseDTO>>> messagesObserver;
@@ -81,6 +85,8 @@ public class ChatDetailViewModel extends ViewModel {
                 conversationDao.resetUnreadCount(conversationId);
                 messageDao.markAllReceivedMessagesAsRead(conversationId, userId);
                 
+                messageRepository.markConversationAsRead(conversationId);
+                
                 Long lastMessageId = messageDao.getLastReceivedMessageServerId(conversationId, userId);
                 if (lastMessageId != null) {
                     messageRepository.updateMessageStatus(lastMessageId, "READ");
@@ -115,6 +121,9 @@ public class ChatDetailViewModel extends ViewModel {
 
     public void loadMessages(Long conversationId) {
         this.activeConversationId = conversationId;
+        this.currentPage = 0;
+        this.isLastPage = false;
+        _isLoadingMore.setValue(false);
         
         if (currentMessagesSource != null && messagesObserver != null) {
             currentMessagesSource.removeObserver(messagesObserver);
@@ -160,6 +169,33 @@ public class ChatDetailViewModel extends ViewModel {
             _messageState.setValue(resource);
         };
         currentMessagesSource.observeForever(messagesObserver);
+    }
+
+    public void loadMoreMessages() {
+        if (activeConversationId == null || isLastPage || Boolean.TRUE.equals(_isLoadingMore.getValue())) {
+            return;
+        }
+
+        _isLoadingMore.setValue(true);
+        int nextPage = currentPage + 1;
+
+        LiveData<Resource<Boolean>> liveData = messageRepository.fetchNextPageOfMessages(activeConversationId, nextPage, 20);
+        liveData.observeForever(new Observer<Resource<Boolean>>() {
+            @Override
+            public void onChanged(Resource<Boolean> resource) {
+                if (resource == null) return;
+                if (resource.status != Resource.Status.LOADING) {
+                    liveData.removeObserver(this);
+                    _isLoadingMore.setValue(false);
+                    if (resource.status == Resource.Status.SUCCESS) {
+                        currentPage = nextPage;
+                        if (resource.data != null) {
+                            isLastPage = resource.data;
+                        }
+                    }
+                }
+            }
+        });
     }
 
     public void addSelectedFile(File file) {

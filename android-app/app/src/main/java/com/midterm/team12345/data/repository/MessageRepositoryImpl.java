@@ -140,6 +140,65 @@ public class MessageRepositoryImpl implements MessageRepository {
     }
 
     @Override
+    public LiveData<Resource<Boolean>> fetchNextPageOfMessages(Long conversationId, int page, int size) {
+        MutableLiveData<Resource<Boolean>> result = new MutableLiveData<>();
+        result.setValue(Resource.loading(null));
+
+        conversationApiService.getMessages(conversationId, page, size).enqueue(new Callback<PageResponse<MessageResponseDTO>>() {
+            @Override
+            public void onResponse(Call<PageResponse<MessageResponseDTO>> call, Response<PageResponse<MessageResponseDTO>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    new java.lang.Thread(() -> {
+                        try {
+                            List<MessageResponseDTO> remoteDtos = response.body().getContent();
+                            int totalPages = response.body().getTotalPages();
+                            boolean isLastPage = (page >= totalPages - 1) || (remoteDtos == null || remoteDtos.isEmpty());
+
+                            if (remoteDtos != null && !remoteDtos.isEmpty()) {
+                                List<com.midterm.team12345.data.local.entity.MessageEntity> entities = new java.util.ArrayList<>();
+                                for (MessageResponseDTO dto : remoteDtos) {
+                                    com.midterm.team12345.data.local.entity.MessageEntity localMsg = messageDao.getMessageByServerId(dto.getMessageId());
+                                    if (localMsg == null && dto.getClientMessageId() != null) {
+                                        localMsg = messageDao.getMessageByClientMessageId(dto.getClientMessageId());
+                                    }
+                                    if (localMsg == null) {
+                                        localMsg = messageDao.getPendingMessage(dto.getConversationId(), dto.getSenderId(), dto.getContent());
+                                    }
+                                    if (localMsg != null) {
+                                        com.midterm.team12345.data.local.entity.MessageEntity mapped = 
+                                                com.midterm.team12345.data.mapper.MessageMapper.toEntity(dto, localMsg.getClientMessageId());
+                                        mapped.setLocalId(localMsg.getLocalId());
+                                        entities.add(mapped);
+                                        saveAttachments(dto.getAttachments(), localMsg.getClientMessageId());
+                                    } else {
+                                        com.midterm.team12345.data.local.entity.MessageEntity mapped = com.midterm.team12345.data.mapper.MessageMapper.toEntity(dto);
+                                        entities.add(mapped);
+                                        saveAttachments(dto.getAttachments(), mapped.getClientMessageId());
+                                    }
+                                }
+                                messageDao.insertMessages(entities);
+                            }
+                            result.postValue(Resource.success(isLastPage));
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            result.postValue(Resource.error(e.getMessage() != null ? e.getMessage() : "Error saving messages", null));
+                        }
+                    }).start();
+                } else {
+                    result.postValue(Resource.error("Lỗi tải tin nhắn từ máy chủ", null));
+                }
+            }
+
+            @Override
+            public void onFailure(Call<PageResponse<MessageResponseDTO>> call, Throwable t) {
+                result.postValue(Resource.error(t.getMessage() != null ? t.getMessage() : "Lỗi kết nối", null));
+            }
+        });
+
+        return result;
+    }
+
+    @Override
     public LiveData<Resource<MessageResponseDTO>> sendMessage(MessageRequestDTO request) {
         MutableLiveData<Resource<MessageResponseDTO>> data = new MutableLiveData<>();
         

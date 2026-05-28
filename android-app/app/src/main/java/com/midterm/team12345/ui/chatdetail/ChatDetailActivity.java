@@ -38,6 +38,7 @@ public class ChatDetailActivity extends AppCompatActivity {
     private Long currentUserId = -1L;
     private Long conversationId;
     private Conversation conversation;
+    private boolean shouldScrollToBottom = false;
 
     // File Picker Launcher
     private final ActivityResultLauncher<Intent> filePickerLauncher = registerForActivityResult(
@@ -156,6 +157,22 @@ public class ChatDetailActivity extends AppCompatActivity {
             adapter.setRecipientAvatarUrl(conversation.getAvatarUrl());
         }
         binding.rvMessages.setAdapter(adapter);
+        binding.rvMessages.addOnScrollListener(new androidx.recyclerview.widget.RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrolled(@androidx.annotation.NonNull androidx.recyclerview.widget.RecyclerView recyclerView, int dx, int dy) {
+                super.onScrolled(recyclerView, dx, dy);
+                androidx.recyclerview.widget.LinearLayoutManager layoutManager = 
+                        (androidx.recyclerview.widget.LinearLayoutManager) recyclerView.getLayoutManager();
+                if (layoutManager == null) return;
+                
+                int lastVisibleItemPosition = layoutManager.findLastVisibleItemPosition();
+                int totalItemCount = layoutManager.getItemCount();
+                
+                if (totalItemCount > 0 && lastVisibleItemPosition >= totalItemCount - 5) {
+                    viewModel.loadMoreMessages();
+                }
+            }
+        });
 
         selectedFilesAdapter = new SelectedFilesAdapter(file -> viewModel.removeSelectedFile(file));
         binding.rvSelectedFiles.setAdapter(selectedFilesAdapter);
@@ -176,6 +193,7 @@ public class ChatDetailActivity extends AppCompatActivity {
                     Toast.makeText(this, "Lỗi: Không tìm thấy ID cuộc hội thoại!", Toast.LENGTH_SHORT).show();
                     return;
                 }
+                shouldScrollToBottom = true;
                 viewModel.sendMessage(text, conversationId, currentUserId);
                 binding.etMessage.setText("");
             } else if (currentUserId == -1L) {
@@ -275,9 +293,17 @@ public class ChatDetailActivity extends AppCompatActivity {
                 case SUCCESS:
                     binding.loadingProgressBar.setVisibility(View.GONE);
                     if (resource.data != null) {
+                        int previousItemCount = adapter.getItemCount();
                         adapter.submitList(resource.data, () -> {
                             if (adapter.getItemCount() > 0) {
-                                binding.rvMessages.scrollToPosition(0);
+                                androidx.recyclerview.widget.LinearLayoutManager layoutManager = 
+                                        (androidx.recyclerview.widget.LinearLayoutManager) binding.rvMessages.getLayoutManager();
+                                int firstVisible = layoutManager != null ? layoutManager.findFirstVisibleItemPosition() : -1;
+                                
+                                if (previousItemCount == 0 || shouldScrollToBottom || firstVisible <= 1) {
+                                    binding.rvMessages.scrollToPosition(0);
+                                    shouldScrollToBottom = false;
+                                }
                             }
                         });
                     }
