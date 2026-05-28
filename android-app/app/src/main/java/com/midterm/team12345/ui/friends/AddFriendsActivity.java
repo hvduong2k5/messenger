@@ -62,6 +62,12 @@ public class AddFriendsActivity extends BaseActivity<ActivityAddFriendsBinding, 
                 viewModel.cancelFriendRequest(user.getId());
                 Toast.makeText(AddFriendsActivity.this, "Request cancelled", Toast.LENGTH_SHORT).show();
             }
+
+            @Override
+            public void onUnfriendClick(UserSearchResponseDTO user) {
+                viewModel.unfriend(user.getId());
+                Toast.makeText(AddFriendsActivity.this, "Unfriended!", Toast.LENGTH_SHORT).show();
+            }
         });
         
         binding.rvSearchResults.setAdapter(adapter);

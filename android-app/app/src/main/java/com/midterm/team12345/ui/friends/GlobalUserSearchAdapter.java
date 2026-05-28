@@ -16,6 +16,7 @@ import com.midterm.team12345.data.remote.RetrofitClient;
 import com.midterm.team12345.data.remote.dto.response.FriendshipStatus;
 import com.midterm.team12345.data.remote.dto.response.UserSearchResponseDTO;
 import com.midterm.team12345.databinding.ItemGlobalUserSearchBinding;
+import com.midterm.team12345.utils.NavigationUtils;
 
 public class GlobalUserSearchAdapter extends ListAdapter<UserSearchResponseDTO, GlobalUserSearchAdapter.ViewHolder> {
 
@@ -24,6 +25,7 @@ public class GlobalUserSearchAdapter extends ListAdapter<UserSearchResponseDTO, 
     public interface OnUserActionListener {
         void onAddClick(UserSearchResponseDTO user);
         void onCancelClick(UserSearchResponseDTO user);
+        void onUnfriendClick(UserSearchResponseDTO user);
     }
 
     public GlobalUserSearchAdapter(OnUserActionListener listener) {
@@ -64,6 +66,13 @@ public class GlobalUserSearchAdapter extends ListAdapter<UserSearchResponseDTO, 
                 .error(R.drawable.ic_avatar_placeholder)
                 .into(holder.binding.ivAvatar);
 
+        android.view.View.OnClickListener toProfile = v -> {
+            NavigationUtils.navigateToProfile(holder.itemView.getContext(), user.getId());
+        };
+        holder.binding.ivAvatar.setOnClickListener(toProfile);
+        holder.binding.tvName.setOnClickListener(toProfile);
+        holder.binding.tvUsername.setOnClickListener(toProfile);
+
         if (user.getFriendshipStatus() == FriendshipStatus.SENDER_PENDING) {
             holder.binding.btnAction.setText("Cancel");
             holder.binding.btnAction.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#E0E0E0")));
@@ -78,8 +87,15 @@ public class GlobalUserSearchAdapter extends ListAdapter<UserSearchResponseDTO, 
             holder.binding.btnAction.setOnClickListener(v -> {
                 if (listener != null) listener.onAddClick(user);
             });
+        } else if (user.getFriendshipStatus() == FriendshipStatus.FRIEND) {
+            holder.binding.btnAction.setText("Unfriend");
+            holder.binding.btnAction.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#FFD2D2")));
+            holder.binding.btnAction.setTextColor(Color.parseColor("#D32F2F"));
+            holder.binding.btnAction.setOnClickListener(v -> {
+                if (listener != null) listener.onUnfriendClick(user);
+            });
         } else {
-            // Already friends or receiver pending
+            // Already friends or receiver pending or self
             holder.binding.btnAction.setText("Friends");
             holder.binding.btnAction.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#E0E0E0")));
             holder.binding.btnAction.setTextColor(Color.parseColor("#757575"));
