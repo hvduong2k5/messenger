@@ -64,15 +64,20 @@ public class UserProfileActivity extends AppCompatActivity {
         });
 
         binding.btnChat.setOnClickListener(v -> {
-            Intent intent = new Intent(this, ChatDetailActivity.class);
-            intent.putExtra("PARTNER_ID", targetUserId);
-            UserEntity user = viewModel.getUser().getValue();
-            if (user != null) {
-                intent.putExtra("PARTNER_NAME", user.getUsername());
+            Long fromChatPartnerId = getIntent().getLongExtra("FROM_CHAT_PARTNER_ID", -1L);
+            if (fromChatPartnerId != -1L && targetUserId.equals(fromChatPartnerId)) {
+                Intent intent = new Intent(this, ChatDetailActivity.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                startActivity(intent);
+            } else {
+                Intent intent = new Intent(this, ChatDetailActivity.class);
+                intent.putExtra("PARTNER_ID", targetUserId);
+                UserEntity user = viewModel.getUser().getValue();
+                if (user != null) {
+                    intent.putExtra("PARTNER_NAME", user.getUsername());
+                }
+                startActivity(intent);
             }
-            // Intent.FLAG_ACTIVITY_SINGLE_TOP to optimize navigation
-            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-            startActivity(intent);
         });
     }
 

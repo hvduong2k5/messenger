@@ -37,6 +37,11 @@ public interface ConversationDao {
     @Query("SELECT * FROM conversations WHERE id = :id LIMIT 1")
     ConversationEntity getConversationByIdSync(Long id);
 
+    @Query("SELECT cp.conversation_id FROM conversation_participants cp " +
+           "INNER JOIN conversations c ON cp.conversation_id = c.id " +
+           "WHERE c.is_group = 0 AND cp.user_id = :partnerId LIMIT 1")
+    Long findOneToOneConversationWithPartnerSync(Long partnerId);
+
     @Query("UPDATE conversations SET last_message_content = :content, last_message_sender_id = :senderId, last_message_created_at = :createdAt, updated_at = :createdAt WHERE id = :conversationId")
     void updateLastMessage(Long conversationId, String content, Long senderId, Long createdAt);
 

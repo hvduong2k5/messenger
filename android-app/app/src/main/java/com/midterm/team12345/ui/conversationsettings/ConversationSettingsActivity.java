@@ -153,7 +153,7 @@ public class ConversationSettingsActivity extends BaseActivity<ActivityConversat
                 openAddMembersScreen();
             } else {
                 if (partnerId != null) {
-                    NavigationUtils.navigateToProfile(this, partnerId);
+                    NavigationUtils.navigateToProfile(this, partnerId, partnerId);
                 } else {
                     Toast.makeText(this, "Đang tải thông tin cá nhân...", Toast.LENGTH_SHORT).show();
                 }
@@ -165,7 +165,7 @@ public class ConversationSettingsActivity extends BaseActivity<ActivityConversat
                 openAddMembersScreen();
             } else {
                 if (partnerId != null) {
-                    NavigationUtils.navigateToProfile(this, partnerId);
+                    NavigationUtils.navigateToProfile(this, partnerId, partnerId);
                 } else {
                     Toast.makeText(this, "Đang tải thông tin cá nhân...", Toast.LENGTH_SHORT).show();
                 }
