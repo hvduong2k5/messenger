@@ -22,10 +22,13 @@ public interface ConversationDao {
     @Update
     void updateConversation(ConversationEntity conversation);
 
-    @Query("SELECT * FROM conversations ORDER BY updated_at DESC")
+    @Query("SELECT * FROM conversations ORDER BY last_message_created_at DESC")
     LiveData<List<ConversationEntity>> getConversations();
 
-    @Query("SELECT * FROM conversations ORDER BY updated_at DESC")
+    @Query("SELECT * FROM conversations WHERE name LIKE :searchQuery ORDER BY last_message_created_at DESC")
+    LiveData<List<ConversationEntity>> searchConversations(String searchQuery);
+
+    @Query("SELECT * FROM conversations ORDER BY last_message_created_at DESC")
     List<ConversationEntity> getConversationsSync();
 
     @Query("SELECT * FROM conversations WHERE id = :id LIMIT 1")
