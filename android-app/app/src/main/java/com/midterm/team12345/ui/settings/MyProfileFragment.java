@@ -56,20 +56,21 @@ public class MyProfileFragment extends BaseFragment<FragmentMyProfileBinding, My
     }
 
     private void setupMenuUI() {
-        // Cấu hình các mục menu theo thiết kế Messenger
-        setupRow(binding.itemDarkMode, "Dark Mode", null, R.drawable.ic_lock, R.color.black, true);
+        // Hide Dark Mode and other out-of-scope settings/preferences
+        binding.itemDarkMode.getRoot().setVisibility(View.GONE);
+        binding.itemPrivacy.getRoot().setVisibility(View.GONE);
+        binding.itemNotifications.getRoot().setVisibility(View.GONE);
+        binding.itemStorageData.getRoot().setVisibility(View.GONE);
+        binding.itemHelp.getRoot().setVisibility(View.GONE);
+        binding.itemInviteFriend.getRoot().setVisibility(View.GONE);
+        binding.tvHeaderPreferences.setVisibility(View.GONE);
+
         setupRow(binding.itemActiveStatus, "Active Status", "On", R.drawable.bg_online_status, R.color.badge_green, false);
         
         setupRow(binding.itemMyAccount, "My Account", null, R.drawable.ic_person, R.color.messenger_blue, false);
         binding.itemMyAccount.getRoot().setOnClickListener(v -> {
             startActivity(new Intent(getActivity(), EditProfileActivity.class));
         });
-
-        setupRow(binding.itemPrivacy, "Privacy", null, R.drawable.ic_lock, R.color.messenger_blue, false);
-        setupRow(binding.itemNotifications, "Notifications & Sounds", null, R.drawable.ic_notifications_none, R.color.brand_5, false);
-        setupRow(binding.itemStorageData, "Storage and Data", null, R.drawable.ic_attach, R.color.brand_2, false);
-        setupRow(binding.itemHelp, "Help", null, R.drawable.ic_email, R.color.brand_1, false);
-        setupRow(binding.itemInviteFriend, "Invite a Friend", null, R.drawable.ic_send, R.color.messenger_blue, false);
 
         // Nút Logout đỏ
         binding.itemLogout.tvTitle.setText("Log Out");
