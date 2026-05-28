@@ -54,4 +54,9 @@ public class Message extends BaseEntity {
     @Builder.Default
     @OneToMany(mappedBy = "message", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Attachment> attachments = new ArrayList<>();
+
+            @PostPersist
+            private void logPostPersist() {
+                System.out.println("[DEBUG] Message PostPersist id=" + this.id);
+            }
 }
