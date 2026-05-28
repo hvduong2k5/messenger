@@ -87,41 +87,28 @@ public class ChatListViewModel extends BaseViewModel {
     }
 
     private void updateConversationList(MqttMessageDTO mqttMessage) {
-        // Just trigger fetchConversations to sync from network, or let local Room DB handle it if it was saved by MessageRepository.
-        // Actually, we can just update the local DB directly.
-        new java.lang.Thread(() -> {
-            try {
-                Long conversationId = mqttMessage.getConversationId();
-                if (conversationId != null) {
-                    Long senderId = null;
-                    try {
-                        if (mqttMessage.getSender() != null) senderId = Long.parseLong(mqttMessage.getSender());
-                    } catch (Exception ignored) {}
-                    
-                    Long timestamp = mqttMessage.getTimestamp() != null ? mqttMessage.getTimestamp() : System.currentTimeMillis();
-                    
-                    // Lấy application context qua DatabaseProvider (phải dùng Context tĩnh hoặc repository)
-                    // Vì ChatListViewModel không có tham chiếu tới Database, chúng ta có thể gọi API fetch để đồng bộ lại
-                    fetchConversations();
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }).start();
+        new android.os.Handler(android.os.Looper.getMainLooper()).post(this::fetchConversations);
     }
 
     private void updateConversationListOnEditOrRevoke(MqttMessageDTO mqttMessage) {
-        fetchConversations();
+        new android.os.Handler(android.os.Looper.getMainLooper()).post(this::fetchConversations);
     }
 
     public void fetchConversations() {
         showLoading();
-        conversationRepository.getConversations(0, 50).observeForever(resource -> {
-            if (resource.status == Resource.Status.ERROR) {
-                setError(resource.message);
-                hideLoading();
+        androidx.lifecycle.LiveData<Resource<com.midterm.team12345.data.remote.dto.response.PageResponse<ConversationResponseDTO>>> liveData = 
+                conversationRepository.getConversations(0, 50);
+        liveData.observeForever(new Observer<Resource<com.midterm.team12345.data.remote.dto.response.PageResponse<ConversationResponseDTO>>>() {
+            @Override
+            public void onChanged(Resource<com.midterm.team12345.data.remote.dto.response.PageResponse<ConversationResponseDTO>> resource) {
+                if (resource != null && resource.status != Resource.Status.LOADING) {
+                    liveData.removeObserver(this);
+                    if (resource.status == Resource.Status.ERROR) {
+                        setError(resource.message);
+                    }
+                    hideLoading();
+                }
             }
-            // Note: SUCCESS is handled by localObserver since Room DB will emit new list!
         });
     }
 
