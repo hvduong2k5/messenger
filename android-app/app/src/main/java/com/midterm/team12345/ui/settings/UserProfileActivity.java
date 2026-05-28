@@ -136,6 +136,7 @@ public class UserProfileActivity extends AppCompatActivity {
 
         binding.btnFriendAction.setVisibility(View.VISIBLE);
         binding.btnFriendAction.setEnabled(true);
+        binding.layoutFriendRequestActions.setVisibility(View.GONE);
         binding.layoutActionButtons.setVisibility(View.VISIBLE);
 
         switch (status) {
@@ -165,10 +166,10 @@ public class UserProfileActivity extends AppCompatActivity {
                 binding.btnAdd.setVisibility(View.GONE);
                 break;
             case RECEIVER_PENDING:
-                binding.btnFriendAction.setText("Accept Request");
-                binding.btnFriendAction.setBackgroundTintList(android.content.res.ColorStateList.valueOf(colorBlue));
-                binding.btnFriendAction.setTextColor(colorTextWhite);
-                binding.btnFriendAction.setOnClickListener(v -> viewModel.acceptFriendRequest());
+                binding.btnFriendAction.setVisibility(View.GONE);
+                binding.layoutFriendRequestActions.setVisibility(View.VISIBLE);
+                binding.btnAcceptRequest.setOnClickListener(v -> viewModel.acceptFriendRequest());
+                binding.btnRejectRequest.setOnClickListener(v -> viewModel.rejectFriendRequest());
 
                 binding.btnAdd.setVisibility(View.GONE);
                 break;

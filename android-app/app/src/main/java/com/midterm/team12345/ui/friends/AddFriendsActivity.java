@@ -68,6 +68,18 @@ public class AddFriendsActivity extends BaseActivity<ActivityAddFriendsBinding, 
                 viewModel.unfriend(user.getId());
                 Toast.makeText(AddFriendsActivity.this, "Unfriended!", Toast.LENGTH_SHORT).show();
             }
+
+            @Override
+            public void onAcceptClick(UserSearchResponseDTO user) {
+                viewModel.acceptFriendRequest(user.getId());
+                Toast.makeText(AddFriendsActivity.this, "Friend request accepted", Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onRejectClick(UserSearchResponseDTO user) {
+                viewModel.rejectFriendRequest(user.getId());
+                Toast.makeText(AddFriendsActivity.this, "Friend request declined", Toast.LENGTH_SHORT).show();
+            }
         });
         
         binding.rvSearchResults.setAdapter(adapter);
@@ -96,8 +108,19 @@ public class AddFriendsActivity extends BaseActivity<ActivityAddFriendsBinding, 
             }
         });
 
-        // Load initial suggestions
-        viewModel.loadSuggestions();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (binding != null && binding.etSearch != null) {
+            String query = binding.etSearch.getText().toString().trim();
+            if (query.isEmpty()) {
+                viewModel.loadSuggestions();
+            } else {
+                viewModel.searchUsers(query);
+            }
+        }
     }
 
     @Override
