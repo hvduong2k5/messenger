@@ -37,4 +37,9 @@ public class Conversation extends BaseEntity {
     @Builder.Default
     @OneToMany(mappedBy = "conversation", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Participant> participants = new ArrayList<>();
+
+    @PostPersist
+    private void logPostPersist() {
+        System.out.println("[DEBUG] Conversation PostPersist id=" + this.id);
+    }
 }
