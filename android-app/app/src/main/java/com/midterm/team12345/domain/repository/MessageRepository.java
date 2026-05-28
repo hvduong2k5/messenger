@@ -15,6 +15,8 @@ public interface MessageRepository {
      */
     LiveData<Resource<List<MessageResponseDTO>>> getMessages(Long conversationId, int page, int size);
 
+    LiveData<Resource<Boolean>> fetchNextPageOfMessages(Long conversationId, int page, int size);
+
     LiveData<Resource<MessageResponseDTO>> sendMessage(MessageRequestDTO request);
 
     /**
