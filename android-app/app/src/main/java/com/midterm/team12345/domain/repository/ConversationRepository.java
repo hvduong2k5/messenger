@@ -22,8 +22,11 @@ public interface ConversationRepository {
     LiveData<Resource<Void>> updateParticipantRole(Long conversationId, Long participantId, String newRole);
     LiveData<Resource<PageResponse<MessageResponseDTO>>> getMessages(Long conversationId, int page, int size);
     
-    // Thêm hàm lấy danh sách thành viên
     LiveData<Resource<PageResponse<ParticipantResponseDTO>>> getParticipants(Long id, String keyword, int page, int size);
+
+    // Local DB Room
+    LiveData<java.util.List<com.midterm.team12345.data.local.entity.ConversationEntity>> getLocalConversations();
+    LiveData<java.util.List<com.midterm.team12345.data.local.entity.ConversationEntity>> searchLocalConversations(String query);
 
     // Real-time (Mqtt)
     LiveData<MqttMessageDTO> getRealTimeMessages();
