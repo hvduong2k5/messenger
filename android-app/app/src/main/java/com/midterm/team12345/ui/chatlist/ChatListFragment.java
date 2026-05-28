@@ -5,6 +5,10 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.os.Handler;
+import android.os.Looper;
+import android.text.Editable;
+import android.text.TextWatcher;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -69,6 +73,26 @@ public class ChatListFragment extends BaseFragment<FragmentChatListBinding, Chat
 
         binding.btnNewMessage.setOnClickListener(v -> {
             startActivity(new Intent(getContext(), CreateGroupActivity.class));
+        });
+
+        Handler handler = new Handler(Looper.getMainLooper());
+        binding.etSearch.addTextChangedListener(new TextWatcher() {
+            Runnable debounceRunnable = null;
+
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {}
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                if (debounceRunnable != null) {
+                    handler.removeCallbacks(debounceRunnable);
+                }
+                debounceRunnable = () -> viewModel.onSearchQueryChanged(s.toString().trim());
+                handler.postDelayed(debounceRunnable, 300);
+            }
         });
     }
 
