@@ -18,7 +18,7 @@ public class MqttMessageDTO {
     @SerializedName(value = "conversationId", alternate = {"conversation_id"})
     private Long conversationId;
 
-    @SerializedName(value = "senderId", alternate = {"sender_id"})
+    @SerializedName(value = "senderId", alternate = {"sender_id", "userId"})
     private Long senderId;
 
     @SerializedName(value = "senderUsername", alternate = {"sender_username"})
@@ -129,6 +129,12 @@ public class MqttMessageDTO {
 
     public MessageResponseDTO getData() { return data; }
     public void setData(MessageResponseDTO data) { this.data = data; }
+
+    public Long getMessageId() { return messageId; }
+    public void setMessageId(Long messageId) { this.messageId = messageId; }
+
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
 
     public String getClientMessageId() {
         if (clientMessageId != null) return clientMessageId;

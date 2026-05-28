@@ -22,7 +22,7 @@ public class MqttManager {
     private MqttCallback callback;
 
     public interface MqttCallback {
-        void onMessageReceived(MqttMessageDTO message);
+        void onMessageReceived(String topic, MqttMessageDTO message);
         void onConnectionLost(Throwable cause);
         void onConnectComplete(boolean reconnect, String serverURI);
     }
@@ -76,7 +76,7 @@ public class MqttManager {
                         }
                         if (payloadStr.startsWith("{")) {
                             MqttMessageDTO dto = gson.fromJson(payloadStr, MqttMessageDTO.class);
-                            if (callback != null) callback.onMessageReceived(dto);
+                            if (callback != null) callback.onMessageReceived(topic, dto);
                         } else {
                             Log.w(TAG, "Expected JSON message but got: " + payloadStr);
                         }
@@ -130,6 +130,17 @@ public class MqttManager {
             }
         } catch (MqttException e) {
             Log.e(TAG, "Publish failed", e);
+        }
+    }
+
+    public void unsubscribe(String topic) {
+        try {
+            if (mqttClient != null && mqttClient.isConnected()) {
+                mqttClient.unsubscribe(topic);
+                Log.d(TAG, "Unsubscribed from: " + topic);
+            }
+        } catch (MqttException e) {
+            Log.e(TAG, "Unsubscription failed", e);
         }
     }
 
