@@ -154,8 +154,35 @@ public class ConversationRepositoryImpl implements ConversationRepository {
         apiService.createConversation(request).enqueue(new Callback<ConversationResponseDTO>() {
             @Override
             public void onResponse(@NonNull Call<ConversationResponseDTO> call, @NonNull Response<ConversationResponseDTO> response) {
-                if (response.isSuccessful()) data.setValue(Resource.success(response.body()));
-                else data.setValue(Resource.error("Failed to create", null));
+                if (response.isSuccessful() && response.body() != null) {
+                    ConversationResponseDTO dto = response.body();
+                    new java.lang.Thread(() -> {
+                        try {
+                            com.midterm.team12345.data.local.entity.ConversationEntity entity = 
+                                    com.midterm.team12345.data.mapper.ConversationMapper.toEntity(dto);
+                            conversationDao.insertConversation(entity);
+                            
+                            if (request.getParticipantIds() != null) {
+                                for (Long pId : request.getParticipantIds()) {
+                                    com.midterm.team12345.data.local.entity.ConversationParticipantEntity participant = 
+                                            new com.midterm.team12345.data.local.entity.ConversationParticipantEntity(
+                                                    dto.getId(),
+                                                    pId,
+                                                    "MEMBER",
+                                                    null,
+                                                    System.currentTimeMillis()
+                                            );
+                                    database.conversationParticipantDao().insertParticipant(participant);
+                                }
+                            }
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }).start();
+                    data.setValue(Resource.success(dto));
+                } else {
+                    data.setValue(Resource.error("Failed to create", null));
+                }
             }
             @Override
             public void onFailure(@NonNull Call<ConversationResponseDTO> call, @NonNull Throwable t) {

@@ -36,6 +36,7 @@ public class ChatDetailActivity extends AppCompatActivity {
     private MessageAdapter adapter;
     private SelectedFilesAdapter selectedFilesAdapter;
     private Long currentUserId = -1L;
+    private Long partnerId = -1L;
     private Long conversationId;
     private Conversation conversation;
     private boolean shouldScrollToBottom = false;
@@ -108,14 +109,75 @@ public class ChatDetailActivity extends AppCompatActivity {
 
         viewModel.fetchMyProfile();
         setupUI();
-
         if (conversationId != null && conversationId != -1L) {
+            new java.lang.Thread(() -> {
+                com.midterm.team12345.data.local.database.MessengerDatabase db = 
+                        com.midterm.team12345.data.local.database.MessengerDatabase.getInstance(this);
+                com.midterm.team12345.data.local.entity.ConversationEntity cEntity = 
+                        db.conversationDao().getConversationByIdSync(conversationId);
+                if (cEntity != null && !cEntity.getIsGroup()) {
+                    Long myId = com.midterm.team12345.data.local.TokenManager.getInstance(this).getUserId();
+                    java.util.List<com.midterm.team12345.data.local.entity.ConversationParticipantEntity> parts = 
+                            db.conversationParticipantDao().getParticipantsForConversationSync(conversationId);
+                    if (parts != null) {
+                        for (com.midterm.team12345.data.local.entity.ConversationParticipantEntity p : parts) {
+                            if (!p.getUserId().equals(myId)) {
+                                partnerId = p.getUserId();
+                                runOnUiThread(() -> {
+                                    if (adapter != null) {
+                                        adapter.setPartnerId(partnerId);
+                                    }
+                                });
+                                break;
+                            }
+                        }
+                    }
+                }
+            }).start();
             viewModel.loadMessages(conversationId);
         } else {
-            Long partnerId = getIntent().getLongExtra("PARTNER_ID", -1L);
+            Long partnerIdExtra = getIntent().getLongExtra("PARTNER_ID", -1L);
             String partnerName = getIntent().getStringExtra("PARTNER_NAME");
-            if (partnerId != -1L) {
-                viewModel.startConversationWithPartner(partnerId, partnerName);
+            if (partnerIdExtra != -1L) {
+                new java.lang.Thread(() -> {
+                    com.midterm.team12345.data.local.database.MessengerDatabase db = 
+                            com.midterm.team12345.data.local.database.MessengerDatabase.getInstance(this);
+                    Long existingId = db.conversationDao().findOneToOneConversationWithPartnerSync(partnerIdExtra);
+                    runOnUiThread(() -> {
+                        if (existingId != null && existingId != -1L) {
+                            conversationId = existingId;
+                            partnerId = partnerIdExtra;
+                            if (adapter != null) {
+                                adapter.setPartnerId(partnerId);
+                            }
+                            db.conversationDao().getConversationById(conversationId).observe(ChatDetailActivity.this, entity -> {
+                                if (entity != null) {
+                                    conversation = com.midterm.team12345.data.mapper.ConversationMapper.toDomain(entity);
+                                    binding.tvPartnerName.setText(conversation.getConversationName());
+                                    String avatarUrl = conversation.getAvatarUrl();
+                                    if (avatarUrl != null && !avatarUrl.startsWith("http")) {
+                                        avatarUrl = com.midterm.team12345.data.remote.RetrofitClient.getBaseUrl()
+                                                + (avatarUrl.startsWith("/") ? "" : "/") + avatarUrl;
+                                    }
+                                    Glide.with(this)
+                                            .load(avatarUrl)
+                                            .placeholder(R.drawable.ic_avatar_placeholder)
+                                            .fallback(R.drawable.ic_avatar_placeholder)
+                                            .error(R.drawable.ic_avatar_placeholder)
+                                            .into(binding.ivPartnerAvatar);
+                                    
+                                    if (adapter != null) {
+                                        adapter.setRecipientAvatarUrl(conversation.getAvatarUrl());
+                                        adapter.notifyDataSetChanged();
+                                    }
+                                }
+                            });
+                            viewModel.loadMessages(conversationId);
+                        } else {
+                            viewModel.startConversationWithPartner(partnerIdExtra, partnerName);
+                        }
+                    });
+                }).start();
             }
         }
     }

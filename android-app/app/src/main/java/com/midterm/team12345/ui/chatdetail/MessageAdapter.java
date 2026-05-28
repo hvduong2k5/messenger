@@ -24,6 +24,7 @@ public class MessageAdapter extends ListAdapter<MessageResponseDTO, RecyclerView
     private static final int TYPE_RECEIVED = 2;
     private Long currentUserId;
     private String recipientAvatarUrl;
+    private Long partnerId = -1L;
 
     public MessageAdapter(Long currentUserId) {
         super(new DiffUtil.ItemCallback<MessageResponseDTO>() {
@@ -63,6 +64,10 @@ public class MessageAdapter extends ListAdapter<MessageResponseDTO, RecyclerView
         this.recipientAvatarUrl = url;
     }
 
+    public void setPartnerId(Long partnerId) {
+        this.partnerId = partnerId;
+    }
+
     @Override
     public int getItemViewType(int position) {
         if (getItem(position).getSenderId().equals(currentUserId)) {
@@ -92,7 +97,7 @@ public class MessageAdapter extends ListAdapter<MessageResponseDTO, RecyclerView
         if (holder instanceof SentViewHolder) {
             ((SentViewHolder) holder).bind(message, recipientAvatarUrl);
         } else {
-            ((ReceivedViewHolder) holder).bind(message);
+            ((ReceivedViewHolder) holder).bind(message, partnerId);
         }
     }
 
@@ -196,7 +201,7 @@ public class MessageAdapter extends ListAdapter<MessageResponseDTO, RecyclerView
             this.binding = binding;
         }
 
-        public void bind(MessageResponseDTO message) {
+        public void bind(MessageResponseDTO message, Long partnerId) {
             // Set sender name
             if (message.getSenderUsername() != null && !message.getSenderUsername().trim().isEmpty()) {
                 binding.tvSenderName.setText(message.getSenderUsername());
@@ -241,7 +246,7 @@ public class MessageAdapter extends ListAdapter<MessageResponseDTO, RecyclerView
 
             // Navigate to profile on avatar click
             binding.ivAvatar.setOnClickListener(v -> {
-                NavigationUtils.navigateToProfile(v.getContext(), message.getSenderId());
+                NavigationUtils.navigateToProfile(v.getContext(), message.getSenderId(), partnerId);
             });
         }
     }
