@@ -59,4 +59,13 @@ public interface MessageDao {
 
     @Query("DELETE FROM messages")
     void deleteAllMessages();
+
+    @Query("UPDATE messages SET delivery_status = :status WHERE message_id = :messageId")
+    void updateDeliveryStatus(Long messageId, DeliveryStatus status);
+
+    @Query("UPDATE messages SET delivery_status = 'READ' WHERE conversation_id = :conversationId AND sender_id != :currentUserId")
+    void markAllReceivedMessagesAsRead(Long conversationId, Long currentUserId);
+
+    @Query("SELECT message_id FROM messages WHERE conversation_id = :conversationId AND sender_id != :currentUserId AND message_id IS NOT NULL ORDER BY server_created_at DESC LIMIT 1")
+    Long getLastReceivedMessageServerId(Long conversationId, Long currentUserId);
 }
