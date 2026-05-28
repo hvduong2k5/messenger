@@ -29,13 +29,26 @@ public class MessageAdapter extends ListAdapter<MessageResponseDTO, RecyclerView
         super(new DiffUtil.ItemCallback<MessageResponseDTO>() {
             @Override
             public boolean areItemsTheSame(@NonNull MessageResponseDTO oldItem, @NonNull MessageResponseDTO newItem) {
-                return oldItem.getMessageId().equals(newItem.getMessageId());
+                if (oldItem.getMessageId() != null && newItem.getMessageId() != null) {
+                    return oldItem.getMessageId().equals(newItem.getMessageId());
+                }
+                if (oldItem.getClientMessageId() != null && newItem.getClientMessageId() != null) {
+                    return oldItem.getClientMessageId().equals(newItem.getClientMessageId());
+                }
+                return false;
+            }
+ 
+            @Override
+            public boolean areContentsTheSame(@NonNull MessageResponseDTO oldItem, @NonNull MessageResponseDTO newItem) {
+                return oldItem.equals(newItem);
             }
 
             @Override
-            public boolean areContentsTheSame(@NonNull MessageResponseDTO oldItem, @NonNull MessageResponseDTO newItem) {
-                return oldItem.equals(newItem) && 
-                       String.valueOf(oldItem.getStatus()).equals(String.valueOf(newItem.getStatus()));
+            public Object getChangePayload(@NonNull MessageResponseDTO oldItem, @NonNull MessageResponseDTO newItem) {
+                if (!java.util.Objects.equals(oldItem.getStatus(), newItem.getStatus())) {
+                    return "STATUS_CHANGED";
+                }
+                return super.getChangePayload(oldItem, newItem);
             }
         });
         this.currentUserId = currentUserId;
@@ -83,6 +96,22 @@ public class MessageAdapter extends ListAdapter<MessageResponseDTO, RecyclerView
         }
     }
 
+    @Override
+    public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position, @NonNull List<Object> payloads) {
+        if (!payloads.isEmpty()) {
+            MessageResponseDTO message = getItem(position);
+            if (holder instanceof SentViewHolder) {
+                for (Object payload : payloads) {
+                    if ("STATUS_CHANGED".equals(payload)) {
+                        ((SentViewHolder) holder).bindStatus(message, recipientAvatarUrl);
+                    }
+                }
+            }
+        } else {
+            super.onBindViewHolder(holder, position, payloads);
+        }
+    }
+
     public static String getFullUrl(String url) {
         if (url == null || url.isEmpty()) return null;
         if (url.startsWith("http")) return url;
@@ -127,7 +156,11 @@ public class MessageAdapter extends ListAdapter<MessageResponseDTO, RecyclerView
                 }
             }
 
-            // 3. Handle Status Indicator (Sending, Sent, Read)
+            // 3. Handle Status Indicator (Sending, Sent, Read, Delivered)
+            bindStatus(message, recipientAvatar);
+        }
+
+        public void bindStatus(MessageResponseDTO message, String recipientAvatar) {
             String status = message.getStatus();
             binding.viewStatusSending.setVisibility(View.GONE);
             binding.ivStatusSent.setVisibility(View.GONE);
@@ -143,9 +176,14 @@ public class MessageAdapter extends ListAdapter<MessageResponseDTO, RecyclerView
                         .fallback(R.drawable.ic_avatar_placeholder)
                         .error(R.drawable.ic_avatar_placeholder)
                         .into(binding.ivStatusRead);
-            } else {
-                // Default to checkmark for SENT or DELIVERED
+            } else if ("DELIVERED".equalsIgnoreCase(status)) {
                 binding.ivStatusSent.setVisibility(View.VISIBLE);
+                binding.ivStatusSent.setImageResource(R.drawable.ic_tick_double);
+                binding.ivStatusSent.setImageTintList(null);
+            } else { // SENT or other
+                binding.ivStatusSent.setVisibility(View.VISIBLE);
+                binding.ivStatusSent.setImageResource(R.drawable.ic_tick_single);
+                binding.ivStatusSent.setImageTintList(null);
             }
         }
     }
