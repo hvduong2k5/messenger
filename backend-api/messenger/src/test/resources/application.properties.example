@@ -9,3 +9,11 @@ mqtt.username=admin
 mqtt.password=public
 mqtt.client.id=server-messenger
 mqtt.default.topic=chat/server/default
+
+# Cloudinary Config
+cloudinary.cloud_name=your_cloud_name
+cloudinary.api_key=your_api_key
+cloudinary.api_secret=your_api_secret
+
+# Email Config (needed for JavaMailSender auto-configuration)
+spring.mail.host=localhost
