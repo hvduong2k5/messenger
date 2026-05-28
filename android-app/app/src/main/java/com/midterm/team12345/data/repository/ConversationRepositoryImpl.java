@@ -83,9 +83,20 @@ public class ConversationRepositoryImpl implements ConversationRepository {
                         try {
                             List<ConversationResponseDTO> remoteDtos = response.body().getContent();
                             if (remoteDtos != null) {
-                                List<com.midterm.team12345.data.local.entity.ConversationEntity> entities = 
-                                        com.midterm.team12345.data.mapper.ConversationMapper.toEntityList(remoteDtos);
-                                conversationDao.insertConversations(entities);
+                                for (ConversationResponseDTO dto : remoteDtos) {
+                                    com.midterm.team12345.data.local.entity.ConversationEntity local = conversationDao.getConversationByIdSync(dto.getId());
+                                    com.midterm.team12345.data.local.entity.ConversationEntity entity = 
+                                            com.midterm.team12345.data.mapper.ConversationMapper.toEntity(dto);
+                                    if (local != null) {
+                                        // Fix race condition where local has reset unread count to 0, but remote is still lagging
+                                        long localLastMsgTime = local.getLastMessageCreatedAt() != null ? local.getLastMessageCreatedAt() : 0L;
+                                        long remoteLastMsgTime = entity.getLastMessageCreatedAt() != null ? entity.getLastMessageCreatedAt() : 0L;
+                                        if (local.getUnreadCount() != null && local.getUnreadCount() == 0 && remoteLastMsgTime <= localLastMsgTime) {
+                                            entity.setUnreadCount(0);
+                                        }
+                                    }
+                                    conversationDao.insertConversation(entity);
+                                }
                             }
                         } catch (Exception e) {
                             e.printStackTrace();
