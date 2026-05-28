@@ -174,13 +174,9 @@ public class MessageAdapter extends ListAdapter<MessageResponseDTO, RecyclerView
             if ("SENDING".equalsIgnoreCase(status)) {
                 binding.viewStatusSending.setVisibility(View.VISIBLE);
             } else if ("READ".equalsIgnoreCase(status)) {
-                binding.ivStatusRead.setVisibility(View.VISIBLE);
-                Glide.with(binding.ivStatusRead.getContext())
-                        .load(getFullUrl(recipientAvatar))
-                        .placeholder(R.drawable.ic_avatar_placeholder)
-                        .fallback(R.drawable.ic_avatar_placeholder)
-                        .error(R.drawable.ic_avatar_placeholder)
-                        .into(binding.ivStatusRead);
+                binding.ivStatusSent.setVisibility(View.VISIBLE);
+                binding.ivStatusSent.setImageResource(R.drawable.ic_tick_double);
+                binding.ivStatusSent.setImageTintList(null);
             } else if ("DELIVERED".equalsIgnoreCase(status)) {
                 binding.ivStatusSent.setVisibility(View.VISIBLE);
                 binding.ivStatusSent.setImageResource(R.drawable.ic_tick_double);
