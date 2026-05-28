@@ -386,17 +386,17 @@ public class MessageRepositoryImpl implements MessageRepository {
     @Override
     public LiveData<Resource<Void>> markConversationAsRead(Long conversationId) {
         MutableLiveData<Resource<Void>> data = new MutableLiveData<>();
-        data.setValue(Resource.loading(null));
+        data.postValue(Resource.loading(null));
         messageStatusApiService.markConversationAsRead(conversationId).enqueue(new Callback<Void>() {
             @Override
             public void onResponse(Call<Void> call, Response<Void> response) {
-                if (response.isSuccessful()) data.setValue(Resource.success(null));
-                else data.setValue(Resource.error("Đánh dấu đã đọc thất bại", null));
+                if (response.isSuccessful()) data.postValue(Resource.success(null));
+                else data.postValue(Resource.error("Đánh dấu đã đọc thất bại", null));
             }
 
             @Override
             public void onFailure(Call<Void> call, Throwable t) {
-                data.setValue(Resource.error(t.getMessage(), null));
+                data.postValue(Resource.error(t.getMessage(), null));
             }
         });
         return data;
@@ -405,19 +405,19 @@ public class MessageRepositoryImpl implements MessageRepository {
     @Override
     public LiveData<Resource<Void>> updateMessageStatus(Long messageId, String status) {
         MutableLiveData<Resource<Void>> data = new MutableLiveData<>();
-        data.setValue(Resource.loading(null));
+        data.postValue(Resource.loading(null));
         Map<String, String> body = new HashMap<>();
         body.put("status", status);
         messageStatusApiService.updateMessageStatus(messageId, body).enqueue(new Callback<Void>() {
             @Override
             public void onResponse(Call<Void> call, Response<Void> response) {
-                if (response.isSuccessful()) data.setValue(Resource.success(null));
-                else data.setValue(Resource.error("Cập nhật trạng thái tin nhắn thất bại", null));
+                if (response.isSuccessful()) data.postValue(Resource.success(null));
+                else data.postValue(Resource.error("Cập nhật trạng thái tin nhắn thất bại", null));
             }
 
             @Override
             public void onFailure(Call<Void> call, Throwable t) {
-                data.setValue(Resource.error(t.getMessage(), null));
+                data.postValue(Resource.error(t.getMessage(), null));
             }
         });
         return data;
