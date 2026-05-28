@@ -12,14 +12,14 @@ public abstract class BaseViewModel extends ViewModel {
     public final LiveData<String> errorMessage = _errorMessage;
 
     public void showLoading() {
-        _isLoading.setValue(true);
+        _isLoading.postValue(true);
     }
 
     public void hideLoading() {
-        _isLoading.setValue(false);
+        _isLoading.postValue(false);
     }
 
     public void setError(String message) {
-        _errorMessage.setValue(message);
+        _errorMessage.postValue(message);
     }
 }
