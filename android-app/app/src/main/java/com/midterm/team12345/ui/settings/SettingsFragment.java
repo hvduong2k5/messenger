@@ -85,8 +85,12 @@ public class SettingsFragment extends Fragment {
     }
 
     private void setupUI() {
-        // Dark Mode
-        setupRow(binding.itemDarkMode, "Dark Mode", null, android.R.drawable.ic_menu_month, true);
+        // Hide Dark Mode and other unused settings sections
+        binding.itemDarkMode.getRoot().setVisibility(View.GONE);
+        binding.itemNotifications.getRoot().setVisibility(View.GONE);
+        binding.itemPeople.getRoot().setVisibility(View.GONE);
+        binding.itemMessaging.getRoot().setVisibility(View.GONE);
+        binding.tvHeaderPreferences.setVisibility(View.GONE);
         
         // Active Status
         setupRow(binding.itemActiveStatus, "Active Status", "On", android.R.drawable.presence_online, false);
@@ -94,15 +98,6 @@ public class SettingsFragment extends Fragment {
 
         // Edit Profile
         setupRow(binding.itemEditProfile, "Edit Profile", null, android.R.drawable.ic_menu_edit, false);
-
-        // Notifications & Sounds
-        setupRow(binding.itemNotifications, "Notifications & Sounds", null, android.R.drawable.ic_lock_silent_mode, false);
-
-        // People
-        setupRow(binding.itemPeople, "People", null, android.R.drawable.ic_menu_manage, false);
-
-        // Messaging Settings
-        setupRow(binding.itemMessaging, "Messaging Settings", null, android.R.drawable.stat_notify_chat, false);
 
         binding.btnLogout.setOnClickListener(v -> viewModel.logout());
     }
