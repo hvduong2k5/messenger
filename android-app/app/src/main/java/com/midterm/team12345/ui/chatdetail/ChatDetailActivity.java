@@ -170,6 +170,7 @@ public class ChatDetailActivity extends AppCompatActivity {
                                         adapter.setRecipientAvatarUrl(conversation.getAvatarUrl());
                                         adapter.notifyDataSetChanged();
                                     }
+                                    updateCallingButtonsVisibility();
                                 }
                             });
                             viewModel.loadMessages(conversationId);
@@ -262,6 +263,7 @@ public class ChatDetailActivity extends AppCompatActivity {
                 Toast.makeText(this, "Đang tải thông tin người dùng...", Toast.LENGTH_SHORT).show();
             }
         });
+        updateCallingButtonsVisibility();
     }
 
     private void openFilePicker() {
@@ -416,6 +418,7 @@ public class ChatDetailActivity extends AppCompatActivity {
                         .fallback(R.drawable.ic_avatar_placeholder)
                         .error(R.drawable.ic_avatar_placeholder)
                         .into(binding.ivPartnerAvatar);
+                updateCallingButtonsVisibility();
             } else if (resource.status == Resource.Status.ERROR) {
                 binding.loadingProgressBar.setVisibility(View.GONE);
                 Toast.makeText(this, "Không thể tạo cuộc hội thoại: " + resource.message, Toast.LENGTH_SHORT).show();
@@ -434,5 +437,26 @@ public class ChatDetailActivity extends AppCompatActivity {
                 binding.rvSelectedFiles.setVisibility(View.GONE);
             }
         });
+    }
+
+    private void updateCallingButtonsVisibility() {
+        if (conversation != null) {
+            if (conversation.getGroup()) {
+                binding.btnCall.setVisibility(View.GONE);
+                binding.btnVideoCall.setVisibility(View.GONE);
+            } else {
+                binding.btnCall.setVisibility(View.VISIBLE);
+                binding.btnVideoCall.setVisibility(View.VISIBLE);
+            }
+        } else {
+            Long partnerIdExtra = getIntent().getLongExtra("PARTNER_ID", -1L);
+            if (partnerIdExtra != -1L) {
+                binding.btnCall.setVisibility(View.VISIBLE);
+                binding.btnVideoCall.setVisibility(View.VISIBLE);
+            } else {
+                binding.btnCall.setVisibility(View.GONE);
+                binding.btnVideoCall.setVisibility(View.GONE);
+            }
+        }
     }
 }
