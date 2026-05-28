@@ -103,6 +103,16 @@ public class ConversationRepositoryImpl implements ConversationRepository {
     }
 
     @Override
+    public LiveData<List<com.midterm.team12345.data.local.entity.ConversationEntity>> getLocalConversations() {
+        return conversationDao.getConversations();
+    }
+
+    @Override
+    public LiveData<List<com.midterm.team12345.data.local.entity.ConversationEntity>> searchLocalConversations(String query) {
+        return conversationDao.searchConversations(query);
+    }
+
+    @Override
     public LiveData<Resource<ConversationResponseDTO>> getConversationDetails(Long id) {
         MutableLiveData<Resource<ConversationResponseDTO>> data = new MutableLiveData<>();
         data.setValue(Resource.loading(null));
