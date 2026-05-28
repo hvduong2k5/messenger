@@ -12,7 +12,9 @@ import com.midterm.team12345.domain.repository.ConversationRepository;
 import com.midterm.team12345.domain.repository.UserRepository;
 import com.midterm.team12345.ui.base.BaseViewModel;
 import com.midterm.team12345.utils.Resource;
-import com.midterm.team12345.data.mapper.ConversationMapper;
+import com.midterm.team12345.data.local.entity.ConversationEntity;
+import com.midterm.team12345.data.local.database.DatabaseProvider;
+import androidx.lifecycle.Transformations;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
@@ -34,10 +36,40 @@ public class ChatListViewModel extends BaseViewModel {
         return conversationRepository.getConnectionStatus();
     }
 
+    private final MutableLiveData<String> searchQuery = new MutableLiveData<>("");
+    private LiveData<List<ConversationEntity>> localSource;
+
+    private final Observer<List<ConversationEntity>> localObserver = entities -> {
+        if (entities != null) {
+            new java.lang.Thread(() -> {
+                List<Conversation> domainList = entities.stream()
+                        .map(this::mapEntityToDomain)
+                        .collect(Collectors.toList());
+                _conversationState.postValue(Resource.success(domainList));
+                hideLoading();
+            }).start();
+        }
+    };
+
     public ChatListViewModel(ConversationRepository conversationRepository, UserRepository userRepository) {
         this.conversationRepository = conversationRepository;
         this.userRepository = userRepository;
+        
+        localSource = Transformations.switchMap(searchQuery, query -> {
+            showLoading();
+            if (query == null || query.trim().isEmpty()) {
+                return conversationRepository.getLocalConversations();
+            } else {
+                return conversationRepository.searchLocalConversations("%" + query.trim() + "%");
+            }
+        });
+        localSource.observeForever(localObserver);
+
         observeRealTimeMessages();
+    }
+
+    public void onSearchQueryChanged(String query) {
+        searchQuery.setValue(query);
     }
 
     private void observeRealTimeMessages() {
@@ -55,128 +87,56 @@ public class ChatListViewModel extends BaseViewModel {
     }
 
     private void updateConversationList(MqttMessageDTO mqttMessage) {
-        Resource<List<Conversation>> currentResource = _conversationState.getValue();
-        if (currentResource != null && currentResource.status == Resource.Status.SUCCESS
-                && currentResource.data != null) {
-            List<Conversation> list = new ArrayList<>(currentResource.data);
-
-            Long conversationId = mqttMessage.getConversationId();
-            Long senderId = null;
+        // Just trigger fetchConversations to sync from network, or let local Room DB handle it if it was saved by MessageRepository.
+        // Actually, we can just update the local DB directly.
+        new java.lang.Thread(() -> {
             try {
-                if (mqttMessage.getSender() != null) {
-                    senderId = Long.parseLong(mqttMessage.getSender());
+                Long conversationId = mqttMessage.getConversationId();
+                if (conversationId != null) {
+                    Long senderId = null;
+                    try {
+                        if (mqttMessage.getSender() != null) senderId = Long.parseLong(mqttMessage.getSender());
+                    } catch (Exception ignored) {}
+                    
+                    Long timestamp = mqttMessage.getTimestamp() != null ? mqttMessage.getTimestamp() : System.currentTimeMillis();
+                    
+                    // Lấy application context qua DatabaseProvider (phải dùng Context tĩnh hoặc repository)
+                    // Vì ChatListViewModel không có tham chiếu tới Database, chúng ta có thể gọi API fetch để đồng bộ lại
+                    fetchConversations();
                 }
-            } catch (NumberFormatException ignored) {
+            } catch (Exception e) {
+                e.printStackTrace();
             }
-
-            int foundIndex = -1;
-            for (int i = 0; i < list.size(); i++) {
-                Conversation item = list.get(i);
-                if (conversationId != null && item.getConversationId().equals(conversationId)) {
-                    foundIndex = i;
-                    break;
-                } else if (conversationId == null && senderId != null && item.getConversationId().equals(senderId)) {
-                    foundIndex = i;
-                    break;
-                }
-            }
-
-            if (foundIndex != -1) {
-                Conversation old = list.remove(foundIndex);
-                Conversation updated = new Conversation(
-                        old.getConversationId(),
-                        old.getConversationName(),
-                        old.getGroup(),
-                        old.getAvatarUrl(),
-                        mqttMessage.getTimestamp() != null ? mqttMessage.getTimestamp() : System.currentTimeMillis(),
-                        mqttMessage.getPayload(),
-                        senderId,
-                        mqttMessage.getTimestamp() != null ? mqttMessage.getTimestamp() : System.currentTimeMillis(),
-                        (old.getUnreadCount() != null ? old.getUnreadCount() : 0) + 1);
-                list.add(0, updated);
-            } else {
-                fetchConversations();
-                return;
-            }
-            _conversationState.setValue(Resource.success(list));
-        }
+        }).start();
     }
 
     private void updateConversationListOnEditOrRevoke(MqttMessageDTO mqttMessage) {
-        Resource<List<Conversation>> currentResource = _conversationState.getValue();
-        if (currentResource != null && currentResource.status == Resource.Status.SUCCESS
-                && currentResource.data != null) {
-            List<Conversation> list = new ArrayList<>(currentResource.data);
-            Long conversationId = mqttMessage.getConversationId();
-
-            if (conversationId != null) {
-                for (int i = 0; i < list.size(); i++) {
-                    Conversation old = list.get(i);
-                    if (old.getConversationId().equals(conversationId)) {
-                        Conversation updated = new Conversation(
-                                old.getConversationId(),
-                                old.getConversationName(),
-                                old.getGroup(),
-                                old.getAvatarUrl(),
-                                old.getUpdatedAt(),
-                                mqttMessage.getPayload(),
-                                old.getLastMessageSenderId(),
-                                old.getLastMessageCreatedAt(),
-                                old.getUnreadCount());
-                        list.set(i, updated);
-                        break;
-                    }
-                }
-                _conversationState.setValue(Resource.success(list));
-            }
-        }
+        fetchConversations();
     }
 
     public void fetchConversations() {
         showLoading();
         conversationRepository.getConversations(0, 50).observeForever(resource -> {
-            if (resource.status == Resource.Status.SUCCESS && resource.data != null) {
-                // Thực hiện mapping từ DTO sang Domain model và sắp xếp theo cái mới nhất lên
-                // trên
-                List<Conversation> domainList = resource.data.getContent().stream()
-                        .map(this::mapToDomain)
-                        .sorted((c1, c2) -> {
-                            long t1 = Math.max(
-                                    c1.getLastMessageCreatedAt() != null ? c1.getLastMessageCreatedAt() : 0L,
-                                    c1.getUpdatedAt() != null ? c1.getUpdatedAt() : 0L);
-                            long t2 = Math.max(
-                                    c2.getLastMessageCreatedAt() != null ? c2.getLastMessageCreatedAt() : 0L,
-                                    c2.getUpdatedAt() != null ? c2.getUpdatedAt() : 0L);
-                            return Long.compare(t2, t1);
-                        })
-                        .collect(Collectors.toList());
-
-                _conversationState.setValue(Resource.success(domainList));
-                hideLoading();
-            } else if (resource.status == Resource.Status.ERROR) {
-                _conversationState
-                        .setValue(Resource.error(resource.message != null ? resource.message : "Error", null));
+            if (resource.status == Resource.Status.ERROR) {
                 setError(resource.message);
                 hideLoading();
             }
+            // Note: SUCCESS is handled by localObserver since Room DB will emit new list!
         });
     }
 
-    private Conversation mapToDomain(ConversationResponseDTO dto) {
-        String timeStr = (dto.getLastMessageCreatedAt() != null) ? dto.getLastMessageCreatedAt() : dto.getUpdatedAt();
-        Long parsed = ConversationMapper.parseDateStringToLong(timeStr);
-        long timestamp = parsed != null ? parsed : 0L;
-
+    private Conversation mapEntityToDomain(ConversationEntity entity) {
         return new Conversation(
-                dto.getId(),
-                dto.getName(),
-                dto.getIsGroup(),
-                dto.getAvatarUrl(),
-                timestamp,
-                dto.getLastMessageContent(),
-                null,
-                timestamp,
-                dto.getUnreadCount() != null ? dto.getUnreadCount().intValue() : 0);
+                entity.getId(),
+                entity.getName(),
+                entity.getIsGroup(),
+                entity.getAvatarUrl(),
+                entity.getUpdatedAt() != null ? entity.getUpdatedAt() : 0L,
+                entity.getLastMessageContent(),
+                entity.getLastMessageSenderId(),
+                entity.getLastMessageCreatedAt() != null ? entity.getLastMessageCreatedAt() : 0L,
+                entity.getUnreadCount() != null ? entity.getUnreadCount() : 0
+        );
     }
 
     public void fetchMyProfile() {
