@@ -14,14 +14,19 @@ public class ChatDetailViewModelFactory implements ViewModelProvider.Factory {
     private final MessageRepository messageRepository;
     private final ConversationRepository conversationRepository;
     private final UserRepository userRepository;
+    private final com.midterm.team12345.data.local.dao.ConversationDao conversationDao;
+    private final com.midterm.team12345.data.local.dao.MessageDao messageDao;
 
-    @Contract(pure = true)
     public ChatDetailViewModelFactory(MessageRepository messageRepository,
                                      ConversationRepository conversationRepository,
-                                     UserRepository userRepository) {
+                                     UserRepository userRepository,
+                                     com.midterm.team12345.data.local.dao.ConversationDao conversationDao,
+                                     com.midterm.team12345.data.local.dao.MessageDao messageDao) {
         this.messageRepository = messageRepository;
         this.conversationRepository = conversationRepository;
         this.userRepository = userRepository;
+        this.conversationDao = conversationDao;
+        this.messageDao = messageDao;
     }
 
     @NonNull
@@ -29,7 +34,7 @@ public class ChatDetailViewModelFactory implements ViewModelProvider.Factory {
     @SuppressWarnings("unchecked")
     public <T extends ViewModel> T create(@NonNull Class<T> modelClass) {
         if (modelClass.isAssignableFrom(ChatDetailViewModel.class)) {
-            return (T) new ChatDetailViewModel(messageRepository, conversationRepository, userRepository);
+            return (T) new ChatDetailViewModel(messageRepository, conversationRepository, userRepository, conversationDao, messageDao);
         }
         throw new IllegalArgumentException("Unknown ViewModel class");
     }
