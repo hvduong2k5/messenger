@@ -109,18 +109,4 @@ class RequestsEntryAdapter extends RecyclerView.Adapter<RequestsEntryAdapter.Vie
     }
 }
 
-// Adapter cho bộ lọc
-class FilterAdapter extends RecyclerView.Adapter<FilterAdapter.ViewHolder> {
-    @NonNull
-    @Override
-    public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        return new ViewHolder(ItemFriendsFilterBinding.inflate(LayoutInflater.from(parent.getContext()), parent, false));
-    }
-    @Override
-    public void onBindViewHolder(@NonNull ViewHolder holder, int position) {}
-    @Override
-    public int getItemCount() { return 1; }
-    static class ViewHolder extends RecyclerView.ViewHolder {
-        ViewHolder(ItemFriendsFilterBinding binding) { super(binding.getRoot()); }
-    }
-}
+
