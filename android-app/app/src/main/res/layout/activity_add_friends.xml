@@ -33,49 +33,13 @@
         android:textSize="16sp"
         app:layout_constraintTop_toBottomOf="@id/toolbar" />
 
-    <com.google.android.material.chip.ChipGroup
-        android:id="@+id/chip_group"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginHorizontal="16dp"
-        android:layout_marginTop="12dp"
-        app:singleSelection="true"
-        app:layout_constraintTop_toBottomOf="@id/et_search">
-
-        <com.google.android.material.chip.Chip
-            android:id="@+id/chip_suggestions"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Suggestions"
-            android:checked="true"
-            app:chipBackgroundColor="@color/gray_bg"
-            android:textColor="@color/black" />
-
-        <com.google.android.material.chip.Chip
-            android:id="@+id/chip_contacts"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Contacts"
-            app:chipBackgroundColor="@color/gray_bg"
-            android:textColor="@color/black" />
-
-        <com.google.android.material.chip.Chip
-            android:id="@+id/chip_qr_code"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="QR Code"
-            app:chipBackgroundColor="@color/gray_bg"
-            android:textColor="@color/black" />
-
-    </com.google.android.material.chip.ChipGroup>
-
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rv_search_results"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_marginTop="8dp"
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-        app:layout_constraintTop_toBottomOf="@id/chip_group"
+        app:layout_constraintTop_toBottomOf="@id/et_search"
         app:layout_constraintBottom_toBottomOf="parent" />
 
     <ProgressBar
