@@ -64,6 +64,13 @@ public class ChatDetailViewModel extends ViewModel {
         this.messageDao = messageDao;
     }
 
+    public void setCurrentUserId(Long userId) {
+        this.currentUserId = userId;
+        if (activeConversationId != null && activeConversationId != -1L) {
+            markConversationAsRead(activeConversationId, userId);
+        }
+    }
+
     public void fetchMyProfile() {
         userRepository.getMyProfile().observeForever(resource -> {
             _profileState.setValue(resource);
