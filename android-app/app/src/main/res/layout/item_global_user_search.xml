@@ -29,7 +29,7 @@
         app:layout_constraintTop_toTopOf="@id/iv_avatar"
         app:layout_constraintBottom_toTopOf="@id/tv_username"
         app:layout_constraintStart_toEndOf="@id/iv_avatar"
-        app:layout_constraintEnd_toStartOf="@id/btn_action" />
+        app:layout_constraintEnd_toStartOf="@id/layout_action_container" />
 
     <TextView
         android:id="@+id/tv_username"
@@ -43,20 +43,62 @@
         app:layout_constraintTop_toBottomOf="@id/tv_name"
         app:layout_constraintBottom_toBottomOf="@id/iv_avatar"
         app:layout_constraintStart_toEndOf="@id/iv_avatar"
-        app:layout_constraintEnd_toStartOf="@id/btn_action" />
+        app:layout_constraintEnd_toStartOf="@id/layout_action_container" />
 
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/btn_action"
+    <FrameLayout
+        android:id="@+id/layout_action_container"
         android:layout_width="wrap_content"
-        android:layout_height="36dp"
-        android:text="Add"
-        android:textAllCaps="false"
-        android:textColor="@color/white"
-        android:textSize="14sp"
-        app:cornerRadius="6dp"
-        android:backgroundTint="@color/messenger_blue"
+        android:layout_height="wrap_content"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_action"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:text="Add"
+            android:textAllCaps="false"
+            android:textColor="@color/white"
+            android:textSize="14sp"
+            app:cornerRadius="6dp"
+            android:backgroundTint="@color/messenger_blue" />
+
+        <LinearLayout
+            android:id="@+id/layout_request_actions"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:visibility="gone">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_accept"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:layout_marginEnd="6dp"
+                android:text="Accept"
+                android:textAllCaps="false"
+                android:textColor="@color/white"
+                android:textSize="13sp"
+                app:cornerRadius="6dp"
+                android:insetTop="0dp"
+                android:insetBottom="0dp"
+                android:backgroundTint="@color/messenger_blue" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_decline"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:text="Decline"
+                android:textAllCaps="false"
+                android:textColor="@color/black"
+                android:textSize="13sp"
+                app:cornerRadius="6dp"
+                android:insetTop="0dp"
+                android:insetBottom="0dp"
+                android:backgroundTint="@color/btn_background_gray" />
+
+        </LinearLayout>
+    </FrameLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

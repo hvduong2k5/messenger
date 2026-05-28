@@ -74,6 +74,27 @@ public class AddFriendsViewModel extends BaseViewModel {
         });
     }
 
+    public void acceptFriendRequest(Long targetUserId) {
+        friendRepository.acceptFriendRequest(targetUserId).observeForever(resource -> {
+            if (resource != null && resource.status == Resource.Status.SUCCESS) {
+                updateUserStatusLocally(targetUserId, FriendshipStatus.FRIEND);
+            } else if (resource != null && resource.status == Resource.Status.ERROR) {
+                setError(resource.message);
+            }
+        });
+    }
+
+    public void rejectFriendRequest(Long targetUserId) {
+        friendRepository.rejectFriendRequest(targetUserId).observeForever(resource -> {
+            if (resource != null && resource.status == Resource.Status.SUCCESS) {
+                updateUserStatusLocally(targetUserId, FriendshipStatus.STRANGER);
+            } else if (resource != null && resource.status == Resource.Status.ERROR) {
+                setError(resource.message);
+            }
+        });
+    }
+
+
     private void updateUserStatusLocally(Long userId, FriendshipStatus newStatus) {
         Resource<List<UserSearchResponseDTO>> currentResource = _searchResults.getValue();
         if (currentResource != null && currentResource.data != null) {
