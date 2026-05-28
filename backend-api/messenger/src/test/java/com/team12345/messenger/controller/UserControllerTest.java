@@ -401,15 +401,20 @@ class UserControllerTest {
 
     @Test
     void searchUsers_ShouldReturnUserList() throws Exception {
-        List<UserResponseDTO> users = Arrays.asList(mockUserResponse);
-        when(userService.searchUsers(anyString(), anyLong())).thenReturn(users);
+        com.team12345.messenger.dto.response.UserSearchResponseDTO searchResponse = com.team12345.messenger.dto.response.UserSearchResponseDTO.builder()
+                .id(2L)
+                .username("otheruser")
+                .build();
+        org.springframework.data.domain.Page<com.team12345.messenger.dto.response.UserSearchResponseDTO> page = new org.springframework.data.domain.PageImpl<>(Arrays.asList(searchResponse));
+        
+        when(userService.searchUsers(eq("other"), any(org.springframework.data.domain.Pageable.class), eq(1L))).thenReturn(page);
 
-        mockMvc.perform(get("/users/search")
+        mockMvc.perform(get("/users/search/paged")
                         .param("q", "other"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id").value(2L))
-                .andExpect(jsonPath("$[0].username").value("otheruser"));
+                .andExpect(jsonPath("$.content[0].id").value(2L))
+                .andExpect(jsonPath("$.content[0].username").value("otheruser"));
 
-        verify(userService, times(1)).searchUsers("other", 1L);
+        verify(userService, times(1)).searchUsers(eq("other"), any(org.springframework.data.domain.Pageable.class), eq(1L));
     }
 }
