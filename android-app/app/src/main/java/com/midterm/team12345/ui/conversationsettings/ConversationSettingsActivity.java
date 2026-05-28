@@ -265,31 +265,51 @@ public class ConversationSettingsActivity extends BaseActivity<ActivityConversat
         Long myId = TokenManager.getInstance(this).getUserId();
         Long conversationId = conversation.getConversationId();
 
+        // 1. Check local Room DB first for instant UI response
         java.util.concurrent.Executors.newSingleThreadExecutor().execute(() -> {
-            java.util.List<com.midterm.team12345.data.local.entity.ConversationParticipantEntity> participants = 
+            java.util.List<com.midterm.team12345.data.local.entity.ConversationParticipantEntity> localParts = 
                 com.midterm.team12345.data.local.database.DatabaseProvider.getInstance(getApplicationContext())
                     .getConversationParticipantDao()
                     .getParticipantsForConversationSync(conversationId);
-            if (participants != null) {
+            if (localParts != null && !localParts.isEmpty()) {
                 boolean amIAdmin = false;
-                for (com.midterm.team12345.data.local.entity.ConversationParticipantEntity p : participants) {
+                for (com.midterm.team12345.data.local.entity.ConversationParticipantEntity p : localParts) {
                     if (p.getUserId().equals(myId)) {
                         amIAdmin = "ADMIN".equalsIgnoreCase(p.getRole()) || "OWNER".equalsIgnoreCase(p.getRole());
                         break;
                     }
                 }
                 final boolean finalAmIAdmin = amIAdmin;
-                runOnUiThread(() -> {
-                    if (finalAmIAdmin) {
-                        binding.itemAddMember.getRoot().setVisibility(View.VISIBLE);
-                        binding.btnAddMember.setVisibility(View.VISIBLE);
-                        bindRow(binding.itemAddMember, "Add Member", null, R.drawable.ic_back_arrow);
-                    } else {
-                        binding.itemAddMember.getRoot().setVisibility(View.GONE);
-                        binding.btnAddMember.setVisibility(View.GONE);
-                    }
-                });
+                runOnUiThread(() -> updateAdminUi(finalAmIAdmin));
             }
         });
+
+        // 2. Fetch from remote API to ensure correctness and handle cases where local DB is empty
+        viewModel.getParticipants(conversationId).observe(this, resource -> {
+            if (resource != null && resource.status == Resource.Status.SUCCESS && resource.data != null) {
+                java.util.List<com.midterm.team12345.data.remote.dto.response.ParticipantResponseDTO> remoteParts = resource.data.getContent();
+                if (remoteParts != null) {
+                    boolean amIAdmin = false;
+                    for (com.midterm.team12345.data.remote.dto.response.ParticipantResponseDTO p : remoteParts) {
+                        if (p.getUserId().equals(myId)) {
+                            amIAdmin = "ADMIN".equalsIgnoreCase(p.getRole()) || "OWNER".equalsIgnoreCase(p.getRole());
+                            break;
+                        }
+                    }
+                    updateAdminUi(amIAdmin);
+                }
+            }
+        });
+    }
+
+    private void updateAdminUi(boolean amIAdmin) {
+        if (amIAdmin) {
+            binding.itemAddMember.getRoot().setVisibility(View.VISIBLE);
+            binding.btnAddMember.setVisibility(View.VISIBLE);
+            bindRow(binding.itemAddMember, "Add Member", null, R.drawable.ic_back_arrow);
+        } else {
+            binding.itemAddMember.getRoot().setVisibility(View.GONE);
+            binding.btnAddMember.setVisibility(View.GONE);
+        }
     }
 }
