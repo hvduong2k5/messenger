@@ -135,9 +135,14 @@ class ConversationServiceTest {
 
     @Test
     void testRemoveParticipant() {
-        when(participantRepository.existsById(new ParticipantId(1L, 1L))).thenReturn(true);
+        Participant adminParticipant = Participant.builder()
+                .conversation(testConversation)
+                .role(ParticipantRole.admin)
+                .build();
+        when(participantRepository.findById(new ParticipantId(1L, 1L))).thenReturn(Optional.of(adminParticipant));
+        when(participantRepository.existsById(new ParticipantId(1L, 2L))).thenReturn(true);
 
-        conversationService.removeParticipant(1L, 1L, 1L);
+        conversationService.removeParticipant(1L, 1L, 2L);
 
         verify(participantRepository).deleteById(any(ParticipantId.class));
     }
