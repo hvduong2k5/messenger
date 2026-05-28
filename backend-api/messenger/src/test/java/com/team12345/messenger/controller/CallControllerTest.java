@@ -161,6 +161,7 @@ class CallControllerTest {
     @Test
     void sendSignaling_ShouldReturnCreated() throws Exception {
         SignalingRequestDTO request = new SignalingRequestDTO();
+        request.setCallId(1L);
         request.setSignalType("offer");
         request.setData("{\"sdp\":\"test-offer\"}");
 
