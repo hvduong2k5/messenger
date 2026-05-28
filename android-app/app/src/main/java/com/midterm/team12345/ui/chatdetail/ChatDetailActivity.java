@@ -152,6 +152,9 @@ public class ChatDetailActivity extends AppCompatActivity {
         binding.ivPartnerAvatar.setOnClickListener(goToSettings);
 
         adapter = new MessageAdapter(currentUserId);
+        if (conversation != null) {
+            adapter.setRecipientAvatarUrl(conversation.getAvatarUrl());
+        }
         binding.rvMessages.setAdapter(adapter);
 
         selectedFilesAdapter = new SelectedFilesAdapter(file -> viewModel.removeSelectedFile(file));
@@ -239,10 +242,14 @@ public class ChatDetailActivity extends AppCompatActivity {
     }
 
     private void setupViewModel() {
+        com.midterm.team12345.data.local.database.MessengerDatabase db = 
+                com.midterm.team12345.data.local.database.MessengerDatabase.getInstance(this);
         ChatDetailViewModelFactory factory = new ChatDetailViewModelFactory(
                 MessageRepositoryImpl.getInstance(this),
                 ConversationRepositoryImpl.getInstance(getApplication()),
-                UserRepositoryImpl.getInstance(getApplication()));
+                UserRepositoryImpl.getInstance(getApplication()),
+                db.conversationDao(),
+                db.messageDao());
         viewModel = new ViewModelProvider(this, factory).get(ChatDetailViewModel.class);
     }
 
@@ -292,7 +299,7 @@ public class ChatDetailActivity extends AppCompatActivity {
                 binding.loadingProgressBar.setVisibility(View.GONE);
                 ConversationResponseDTO dto = resource.data;
                 conversationId = dto.getId();
-
+ 
                 conversation = new Conversation(
                         dto.getId(),
                         dto.getName(),
@@ -303,6 +310,11 @@ public class ChatDetailActivity extends AppCompatActivity {
                         null,
                         System.currentTimeMillis(),
                         dto.getUnreadCount() != null ? dto.getUnreadCount().intValue() : 0);
+ 
+                if (adapter != null) {
+                    adapter.setRecipientAvatarUrl(conversation.getAvatarUrl());
+                    adapter.notifyDataSetChanged();
+                }
 
                 binding.tvPartnerName.setText(conversation.getConversationName());
                 String avatarUrl = conversation.getAvatarUrl();
