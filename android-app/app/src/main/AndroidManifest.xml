@@ -87,6 +87,11 @@
             android:exported="false"
             android:windowSoftInputMode="adjustPan" />
 
+        <activity
+            android:name=".ui.friends.AddFriendsActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
         <service
             android:name=".data.remote.mqtt.MessagingService"
             android:enabled="true"
