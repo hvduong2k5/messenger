@@ -333,6 +333,8 @@ public class ChatDetailActivity extends AppCompatActivity {
                 db.conversationDao(),
                 db.messageDao());
         viewModel = new ViewModelProvider(this, factory).get(ChatDetailViewModel.class);
+        Long myId = com.midterm.team12345.data.local.TokenManager.getInstance(this).getUserId();
+        viewModel.setCurrentUserId(myId);
     }
 
     private void setupObservers() {

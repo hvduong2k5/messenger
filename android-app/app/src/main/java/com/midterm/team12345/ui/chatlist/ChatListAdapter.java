@@ -32,7 +32,10 @@ public class ChatListAdapter extends ListAdapter<Conversation, ChatListAdapter.V
                 return oldItem.getConversationId().equals(newItem.getConversationId()) &&
                        java.util.Objects.equals(oldItem.getConversationName(), newItem.getConversationName()) &&
                        java.util.Objects.equals(oldItem.getLastMessage(), newItem.getLastMessage()) &&
-                       java.util.Objects.equals(oldItem.getAvatarUrl(), newItem.getAvatarUrl());
+                       java.util.Objects.equals(oldItem.getAvatarUrl(), newItem.getAvatarUrl()) &&
+                       java.util.Objects.equals(oldItem.getUnreadCount(), newItem.getUnreadCount()) &&
+                       java.util.Objects.equals(oldItem.getLastMessageCreatedAt(), newItem.getLastMessageCreatedAt()) &&
+                       java.util.Objects.equals(oldItem.getUpdatedAt(), newItem.getUpdatedAt());
             }
         });
         this.listener = listener;
