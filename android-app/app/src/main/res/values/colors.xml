@@ -16,4 +16,5 @@
     <color name="brand_4">#FFB300</color>
     <color name="brand_5">#9C27B0</color>
     <color name="badge_green">#31A24C</color>
+    <color name="gray_bg">#F2F2F7</color>
 </resources>
