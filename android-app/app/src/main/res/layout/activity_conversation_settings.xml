@@ -194,6 +194,7 @@
 
             <!-- More Actions Section -->
             <TextView
+                android:id="@+id/tvHeaderMoreActions"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:paddingHorizontal="16dp"
@@ -218,6 +219,7 @@
 
             <!-- Privacy Section -->
             <TextView
+                android:id="@+id/tvHeaderPrivacy"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:paddingHorizontal="16dp"

@@ -106,33 +106,41 @@ public class ConversationSettingsActivity extends BaseActivity<ActivityConversat
     private void setupSettingRows() {
         boolean isGroup = conversation.getGroup();
 
-        bindRow(binding.itemColor, "Color", null, R.drawable.ic_check_circle);
-        bindRow(binding.itemEmoji, "Emoji", "👍", R.drawable.ic_check_circle);
-        bindRow(binding.itemNicknames, "Nicknames", null, R.drawable.ic_back_arrow);
-
+        binding.itemColor.getRoot().setVisibility(View.GONE);
+        binding.itemEmoji.getRoot().setVisibility(View.GONE);
+        binding.itemNicknames.getRoot().setVisibility(View.GONE);
         binding.itemSearch.getRoot().setVisibility(View.GONE);
         binding.itemNotifications.getRoot().setVisibility(View.GONE);
         binding.itemIgnore.getRoot().setVisibility(View.GONE);
+        binding.itemBlock.getRoot().setVisibility(View.GONE);
+        binding.itemDeleteHistory.getRoot().setVisibility(View.GONE);
 
-        binding.itemBlock.getRoot().setVisibility(isGroup ? View.GONE : View.VISIBLE);
-        
-        // Requirement 2.2: Row for Profile in 1-1
+        // Hide headers
+        binding.tvHeaderPrivacy.setVisibility(View.GONE);
+
+        // Hide calling/mute buttons from quick actions
+        binding.btnAudioCall.setVisibility(View.GONE);
+        binding.btnVideoCall.setVisibility(View.GONE);
+        binding.btnMute.setVisibility(View.GONE);
+
         if (isGroup) {
+            binding.tvHeaderMoreActions.setVisibility(View.VISIBLE);
             binding.itemViewMembers.getRoot().setVisibility(View.VISIBLE);
-            binding.itemAddMember.getRoot().setVisibility(View.GONE); // Admin only
+            binding.itemAddMember.getRoot().setVisibility(View.GONE); // Admin only, checkAdminStatus toggles
             bindRow(binding.itemViewMembers, "View Members", null, R.drawable.ic_back_arrow);
             binding.tvAddAction.setText("Add");
+
+            binding.itemLeave.getRoot().setVisibility(View.VISIBLE);
+            bindRow(binding.itemLeave, "Leave Group", null, 0);
+            binding.itemLeave.tvTitle.setTextColor(getResources().getColor(android.R.color.holo_red_dark));
         } else {
+            binding.tvHeaderMoreActions.setVisibility(View.GONE);
             binding.itemViewMembers.getRoot().setVisibility(View.GONE);
-            binding.itemAddMember.getRoot().setVisibility(View.GONE); // Hide duplicate list row in 1-1
+            binding.itemAddMember.getRoot().setVisibility(View.GONE);
             binding.tvAddAction.setText("Profile");
+
+            binding.itemLeave.getRoot().setVisibility(View.GONE);
         }
-
-        bindRow(binding.itemLeave, isGroup ? "Leave Group" : "Delete Chat", null, 0);
-        binding.itemLeave.tvTitle.setTextColor(getResources().getColor(android.R.color.holo_red_dark));
-
-        bindRow(binding.itemDeleteHistory, "Delete History", null, 0);
-        binding.itemDeleteHistory.tvTitle.setTextColor(getResources().getColor(android.R.color.holo_red_dark));
     }
 
     private void setupListeners() {
