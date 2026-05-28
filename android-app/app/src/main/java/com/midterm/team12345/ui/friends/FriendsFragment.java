@@ -83,17 +83,17 @@ public class FriendsFragment extends BaseFragment<FragmentFriendsBinding, Friend
                 String query = s.toString();
                 if (query.trim().isEmpty()) {
                     showDefaultMode();
-                    viewModel.onLocalSearch(query);
                 } else {
-                    showSearchMode();
-                    viewModel.searchUser(query);
+                    showLocalSearchMode();
                 }
+                viewModel.onLocalSearch(query);
             }
 
             @Override
             public void afterTextChanged(Editable s) {}
         }, v -> {
-            Toast.makeText(requireContext(), "Nhập tên người dùng vào ô Tìm kiếm để tìm bạn mới!", Toast.LENGTH_SHORT).show();
+            Intent intent = new Intent(requireContext(), AddFriendsActivity.class);
+            startActivity(intent);
         });
 
         // Clicking "Lời mời kết bạn" opens the Bottom Sheet
@@ -214,7 +214,7 @@ public class FriendsFragment extends BaseFragment<FragmentFriendsBinding, Friend
         }
     }
 
-    private void showSearchMode() {
+    private void showLocalSearchMode() {
         binding.llAlphabetIndex.setVisibility(View.GONE);
         if (concatAdapter.getAdapters().contains(requestsEntryAdapter)) {
             concatAdapter.removeAdapter(requestsEntryAdapter);
@@ -222,14 +222,12 @@ public class FriendsFragment extends BaseFragment<FragmentFriendsBinding, Friend
         if (concatAdapter.getAdapters().contains(filterAdapter)) {
             concatAdapter.removeAdapter(filterAdapter);
         }
-        if (concatAdapter.getAdapters().contains(friendsListAdapter)) {
-            concatAdapter.removeAdapter(friendsListAdapter);
+        if (!concatAdapter.getAdapters().contains(friendsListAdapter)) {
+            concatAdapter.addAdapter(friendsListAdapter);
         }
-        if (!concatAdapter.getAdapters().contains(userSearchAdapter)) {
-            concatAdapter.addAdapter(userSearchAdapter);
+        if (concatAdapter.getAdapters().contains(userSearchAdapter)) {
+            concatAdapter.removeAdapter(userSearchAdapter);
         }
-        
-        // Clear empty state temporarily until search results load
         binding.tvEmptyState.setVisibility(View.GONE);
     }
 
