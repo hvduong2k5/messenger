@@ -103,7 +103,12 @@ public class UserProfileActivity extends AppCompatActivity {
     private void updateUI(UserEntity user) {
         binding.tvFullName.setText(user.getUsername());
         binding.tvUsername.setText("@" + user.getUsername());
-        binding.tvBio.setText(user.getBio() != null && !user.getBio().isEmpty() ? user.getBio() : "No bio yet");
+        if (user.getBio() != null && !user.getBio().isEmpty()) {
+            binding.tvBio.setText(user.getBio());
+            binding.tvBio.setVisibility(View.VISIBLE);
+        } else {
+            binding.tvBio.setVisibility(View.GONE);
+        }
 
         String avatarUrl = user.getAvatarUrl();
         if (avatarUrl != null && !avatarUrl.startsWith("http")) {
