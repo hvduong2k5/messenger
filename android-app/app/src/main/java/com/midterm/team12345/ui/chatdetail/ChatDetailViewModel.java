@@ -26,10 +26,15 @@ public class ChatDetailViewModel extends ViewModel {
     private final MessageRepository messageRepository;
     private final ConversationRepository conversationRepository;
     private final UserRepository userRepository;
+    private final com.midterm.team12345.data.local.dao.ConversationDao conversationDao;
+    private final com.midterm.team12345.data.local.dao.MessageDao messageDao;
     private Long activeConversationId;
+    private Long currentUserId;
 
     private LiveData<Resource<List<MessageResponseDTO>>> currentMessagesSource;
     private Observer<Resource<List<MessageResponseDTO>>> messagesObserver;
+    private Observer<com.midterm.team12345.data.remote.dto.MqttMessageDTO> realTimeMessageObserver;
+    private Observer<Boolean> connectionStatusObserver;
 
     private final MutableLiveData<Resource<List<MessageResponseDTO>>> _messageState = new MutableLiveData<>();
     public final LiveData<Resource<List<MessageResponseDTO>>> messageState = _messageState;
@@ -45,16 +50,45 @@ public class ChatDetailViewModel extends ViewModel {
 
     public ChatDetailViewModel(MessageRepository messageRepository, 
                                ConversationRepository conversationRepository,
-                               UserRepository userRepository) {
+                               UserRepository userRepository,
+                               com.midterm.team12345.data.local.dao.ConversationDao conversationDao,
+                               com.midterm.team12345.data.local.dao.MessageDao messageDao) {
         this.messageRepository = messageRepository;
         this.conversationRepository = conversationRepository;
         this.userRepository = userRepository;
+        this.conversationDao = conversationDao;
+        this.messageDao = messageDao;
     }
 
     public void fetchMyProfile() {
         userRepository.getMyProfile().observeForever(resource -> {
             _profileState.setValue(resource);
+            if (resource != null && resource.status == Resource.Status.SUCCESS && resource.data != null) {
+                this.currentUserId = resource.data.getId();
+                markConversationAsRead(activeConversationId, currentUserId);
+            }
         });
+    }
+
+    public Long getActiveConversationId() {
+        return activeConversationId;
+    }
+
+    private void markConversationAsRead(Long conversationId, Long userId) {
+        if (conversationId == null || userId == null || userId == -1L) return;
+        new java.lang.Thread(() -> {
+            try {
+                conversationDao.resetUnreadCount(conversationId);
+                messageDao.markAllReceivedMessagesAsRead(conversationId, userId);
+                
+                Long lastMessageId = messageDao.getLastReceivedMessageServerId(conversationId, userId);
+                if (lastMessageId != null) {
+                    messageRepository.updateMessageStatus(lastMessageId, "READ");
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }).start();
     }
 
     public void startConversationWithPartner(Long partnerId, String partnerName) {
@@ -85,6 +119,39 @@ public class ChatDetailViewModel extends ViewModel {
         if (currentMessagesSource != null && messagesObserver != null) {
             currentMessagesSource.removeObserver(messagesObserver);
         }
+
+        if (realTimeMessageObserver != null) {
+            conversationRepository.getRealTimeMessages().removeObserver(realTimeMessageObserver);
+        }
+        if (connectionStatusObserver != null) {
+            conversationRepository.getConnectionStatus().removeObserver(connectionStatusObserver);
+        }
+
+        markConversationAsRead(conversationId, currentUserId);
+
+        realTimeMessageObserver = mqttMessage -> {
+            if (mqttMessage != null && conversationId.equals(mqttMessage.getConversationId())) {
+                Long senderId = mqttMessage.getSenderId();
+                if (senderId != null && !senderId.equals(currentUserId)) {
+                    String type = mqttMessage.getType();
+                    if ("NEW_MESSAGE".equals(type) || "text".equalsIgnoreCase(type) || "media".equalsIgnoreCase(type)) {
+                        Long incomingMessageId = mqttMessage.getMessageId();
+                        if (incomingMessageId != null) {
+                            messageRepository.updateMessageStatus(incomingMessageId, "READ");
+                        }
+                    }
+                }
+            }
+        };
+        conversationRepository.getRealTimeMessages().observeForever(realTimeMessageObserver);
+
+        connectionStatusObserver = connected -> {
+            if (connected != null && connected) {
+                com.midterm.team12345.data.remote.mqtt.MqttManager.getInstance().subscribe("conversation/" + conversationId + "/read");
+                com.midterm.team12345.data.remote.mqtt.MqttManager.getInstance().subscribe("conversation/" + conversationId + "/message-status");
+            }
+        };
+        conversationRepository.getConnectionStatus().observeForever(connectionStatusObserver);
 
         _messageState.setValue(Resource.loading(null));
         
@@ -133,6 +200,16 @@ public class ChatDetailViewModel extends ViewModel {
         super.onCleared();
         if (currentMessagesSource != null && messagesObserver != null) {
             currentMessagesSource.removeObserver(messagesObserver);
+        }
+        if (realTimeMessageObserver != null) {
+            conversationRepository.getRealTimeMessages().removeObserver(realTimeMessageObserver);
+        }
+        if (connectionStatusObserver != null) {
+            conversationRepository.getConnectionStatus().removeObserver(connectionStatusObserver);
+        }
+        if (activeConversationId != null) {
+            com.midterm.team12345.data.remote.mqtt.MqttManager.getInstance().unsubscribe("conversation/" + activeConversationId + "/read");
+            com.midterm.team12345.data.remote.mqtt.MqttManager.getInstance().unsubscribe("conversation/" + activeConversationId + "/message-status");
         }
     }
 }
