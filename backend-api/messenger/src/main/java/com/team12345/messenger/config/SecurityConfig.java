@@ -84,7 +84,8 @@ public class SecurityConfig {
 
     @Bean
     public JwtAuthenticationFilter jwtAuthenticationFilter() {
-        return new JwtAuthenticationFilter(jwtUtils, userDetailsService(), blacklistedTokenRepository);
+        // JwtAuthenticationFilter now uses optional autowired dependencies; return default instance
+        return new JwtAuthenticationFilter();
     }
 
     @Bean
