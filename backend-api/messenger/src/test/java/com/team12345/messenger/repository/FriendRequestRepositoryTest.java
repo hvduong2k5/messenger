@@ -16,6 +16,9 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
+
 @DataJpaTest
 @TestPropertySource(properties = {
         "spring.datasource.url=jdbc:h2:mem:testdb",
@@ -26,6 +29,10 @@ import static org.assertj.core.api.Assertions.assertThat;
         "spring.jpa.hibernate.ddl-auto=create-drop"
 })
 class FriendRequestRepositoryTest {
+
+    @TestConfiguration
+    @EnableJpaAuditing
+    static class AuditConfig {}
 
     @Autowired
     private TestEntityManager entityManager;
