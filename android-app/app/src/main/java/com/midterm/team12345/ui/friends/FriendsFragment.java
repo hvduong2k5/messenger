@@ -35,7 +35,6 @@ public class FriendsFragment extends BaseFragment<FragmentFriendsBinding, Friend
     private TitleAdapter titleAdapter;
     private SearchAdapter searchAdapter;
     private RequestsEntryAdapter requestsEntryAdapter;
-    private FilterAdapter filterAdapter;
     private FriendsListAdapter friendsListAdapter;
     private UserSearchAdapter userSearchAdapter;
 
@@ -96,9 +95,7 @@ public class FriendsFragment extends BaseFragment<FragmentFriendsBinding, Friend
             startActivity(intent);
         });
 
-        // Clicking "Lời mời kết bạn" opens the Bottom Sheet
         requestsEntryAdapter = new RequestsEntryAdapter(v -> showPendingRequestsBottomSheet());
-        filterAdapter = new FilterAdapter();
 
         friendsListAdapter = new FriendsListAdapter(new FriendsListAdapter.OnFriendActionListener() {
             @Override
@@ -181,7 +178,6 @@ public class FriendsFragment extends BaseFragment<FragmentFriendsBinding, Friend
                 titleAdapter,
                 searchAdapter,
                 requestsEntryAdapter,
-                filterAdapter,
                 friendsListAdapter
         );
 
@@ -197,11 +193,8 @@ public class FriendsFragment extends BaseFragment<FragmentFriendsBinding, Friend
         if (!concatAdapter.getAdapters().contains(requestsEntryAdapter)) {
             concatAdapter.addAdapter(2, requestsEntryAdapter);
         }
-        if (!concatAdapter.getAdapters().contains(filterAdapter)) {
-            concatAdapter.addAdapter(3, filterAdapter);
-        }
         if (!concatAdapter.getAdapters().contains(friendsListAdapter)) {
-            concatAdapter.addAdapter(4, friendsListAdapter);
+            concatAdapter.addAdapter(3, friendsListAdapter);
         }
         
         // Update empty state based on default friends list
@@ -219,9 +212,7 @@ public class FriendsFragment extends BaseFragment<FragmentFriendsBinding, Friend
         if (concatAdapter.getAdapters().contains(requestsEntryAdapter)) {
             concatAdapter.removeAdapter(requestsEntryAdapter);
         }
-        if (concatAdapter.getAdapters().contains(filterAdapter)) {
-            concatAdapter.removeAdapter(filterAdapter);
-        }
+
         if (!concatAdapter.getAdapters().contains(friendsListAdapter)) {
             concatAdapter.addAdapter(friendsListAdapter);
         }
@@ -324,8 +315,7 @@ public class FriendsFragment extends BaseFragment<FragmentFriendsBinding, Friend
             Object item = currentList.get(i);
             if (item instanceof String && ((String) item).equalsIgnoreCase(letter)) {
                 int position = i + titleAdapter.getItemCount() + searchAdapter.getItemCount() 
-                               + (concatAdapter.getAdapters().contains(requestsEntryAdapter) ? requestsEntryAdapter.getItemCount() : 0)
-                               + (concatAdapter.getAdapters().contains(filterAdapter) ? filterAdapter.getItemCount() : 0);
+                               + (concatAdapter.getAdapters().contains(requestsEntryAdapter) ? requestsEntryAdapter.getItemCount() : 0);
                 layoutManager.scrollToPositionWithOffset(position, 0);
                 break;
             }
