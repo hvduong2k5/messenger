@@ -68,9 +68,8 @@
             android:id="@+id/iv_status_sent"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:src="@drawable/ic_check_circle"
-            android:visibility="gone"
-            app:tint="@color/messenger_blue" />
+            android:src="@drawable/ic_tick_single"
+            android:visibility="gone" />
 
         <!-- Read status (Avatar) -->
         <de.hdodenhof.circleimageview.CircleImageView
