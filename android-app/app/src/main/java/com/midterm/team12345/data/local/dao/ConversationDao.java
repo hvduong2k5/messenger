@@ -46,6 +46,9 @@ public interface ConversationDao {
     @Query("UPDATE conversations SET unread_count = 0 WHERE id = :conversationId")
     void clearUnreadCount(Long conversationId);
 
+    @Query("UPDATE conversations SET unread_count = 0 WHERE id = :conversationId")
+    void resetUnreadCount(Long conversationId);
+
     @Query("DELETE FROM conversations WHERE id = :conversationId")
     void deleteConversationById(Long conversationId);
 
