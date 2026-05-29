@@ -33,6 +33,30 @@ public class SplashActivity extends AppCompatActivity {
 
         tokenManager = new TokenManager(this);
 
+        // Ensure local user profile exists for offline/local use
+        Long userId = tokenManager.getUserId();
+        String username = tokenManager.getUsername();
+        if (userId != null && userId != -1L) {
+            new Thread(() -> {
+                try {
+                    com.midterm.team12345.data.local.database.MessengerDatabase db =
+                            com.midterm.team12345.data.local.database.MessengerDatabase.getInstance(this);
+                    com.midterm.team12345.data.local.entity.UserEntity entity = db.userDao().getUserByIdSync(userId);
+                    if (entity == null) {
+                        entity = new com.midterm.team12345.data.local.entity.UserEntity();
+                        entity.setId(userId);
+                        entity.setUsername(username != null ? username : "");
+                        db.userDao().insertUser(entity);
+                    } else if (entity.getUsername() == null || entity.getUsername().isEmpty()) {
+                        entity.setUsername(username != null ? username : "");
+                        db.userDao().insertUser(entity);
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }).start();
+        }
+
         ViewCompat.setOnApplyWindowInsetsListener(binding.splashRoot, (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
