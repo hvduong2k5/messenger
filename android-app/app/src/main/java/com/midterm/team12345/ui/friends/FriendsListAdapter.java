@@ -47,7 +47,17 @@ public class FriendsListAdapter extends ListAdapter<Object, RecyclerView.ViewHol
 
             @Override
             public boolean areContentsTheSame(@NonNull Object oldItem, @NonNull Object newItem) {
-                return oldItem.equals(newItem);
+                if (oldItem instanceof String && newItem instanceof String) {
+                    return oldItem.equals(newItem);
+                }
+                if (oldItem instanceof UserResponseDTO && newItem instanceof UserResponseDTO) {
+                    UserResponseDTO oldUser = (UserResponseDTO) oldItem;
+                    UserResponseDTO newUser = (UserResponseDTO) newItem;
+                    return java.util.Objects.equals(oldUser.getUsername(), newUser.getUsername()) &&
+                           java.util.Objects.equals(oldUser.getIsOnline(), newUser.getIsOnline()) &&
+                           java.util.Objects.equals(oldUser.getAvatarUrl(), newUser.getAvatarUrl());
+                }
+                return false;
             }
         });
         this.listener = listener;

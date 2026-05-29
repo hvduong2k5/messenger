@@ -34,7 +34,7 @@ public class DiscoverAdapter extends ListAdapter<UserSearchResponseDTO, Discover
 
             @Override
             public boolean areContentsTheSame(@NonNull UserSearchResponseDTO oldItem, @NonNull UserSearchResponseDTO newItem) {
-                return oldItem.getFriendshipStatus() == newItem.getFriendshipStatus() &&
+                return java.util.Objects.equals(oldItem.getFriendshipStatus(), newItem.getFriendshipStatus()) &&
                         oldItem.getUsername().equals(newItem.getUsername()) &&
                         (oldItem.getAvatarUrl() != null ? oldItem.getAvatarUrl().equals(newItem.getAvatarUrl()) : newItem.getAvatarUrl() == null);
             }
