@@ -46,14 +46,14 @@ public class CallServiceImpl implements CallService {
         User receiver = userRepository.findById(request.getReceiverId())
                 .orElseThrow(() -> new CallNotFoundException("Receiver not found: " + request.getReceiverId()));
 
-        // Create new call
         Call call = Call.builder()
                 .caller(caller)
                 .receiver(receiver)
                 .callType(request.getCallType())
                 .status(CallStatus.ringing)
                 .build();
-
+        call.setCreatedAt(java.time.LocalDateTime.now());
+        
         call = callRepository.save(call);
 
         // Create call participants
@@ -201,7 +201,8 @@ public class CallServiceImpl implements CallService {
                 .signalType(request.getSignalType())
                 .data(request.getData())
                 .build();
-
+        signaling.setCreatedAt(java.time.LocalDateTime.now());
+        
         signaling = callSignalingRepository.save(signaling);
 
         // Broadcast signaling data to other participants

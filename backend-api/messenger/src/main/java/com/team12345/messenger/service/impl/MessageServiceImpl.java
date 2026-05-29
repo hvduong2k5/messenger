@@ -65,11 +65,17 @@ public class MessageServiceImpl implements MessageService {
                 .clientMessageId(requestDTO.getClientMessageId())
                 .build();
 
+        message.setCreatedAt(java.time.LocalDateTime.now());
+
         if (requestDTO.getFiles() != null && !requestDTO.getFiles().isEmpty()) {
             message.setAttachments(processAttachments(requestDTO.getFiles(), message));
         }
 
         Message savedMessage = messageRepository.save(message);
+
+        // Update the conversation's updatedAt field to ensure it is ordered correctly in the conversation list
+        conversation.setUpdatedAt(java.time.LocalDateTime.now());
+        conversationRepository.save(conversation);
 
         createMessageStatusRecords(savedMessage, participants, sender.getId());
 
