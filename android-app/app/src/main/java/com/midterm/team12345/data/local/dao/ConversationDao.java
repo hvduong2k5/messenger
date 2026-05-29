@@ -23,7 +23,7 @@ public interface ConversationDao {
     void updateConversation(ConversationEntity conversation);
 
     @Query("SELECT * FROM conversations ORDER BY last_message_created_at DESC")
-    LiveData<List<ConversationEntity>> getConversations();
+    LiveData<List<ConversationEntity>> getAllConversations();
 
     @Query("SELECT * FROM conversations WHERE name LIKE :searchQuery ORDER BY last_message_created_at DESC")
     LiveData<List<ConversationEntity>> searchConversations(String searchQuery);

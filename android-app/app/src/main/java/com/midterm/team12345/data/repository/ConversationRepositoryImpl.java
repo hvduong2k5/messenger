@@ -56,7 +56,7 @@ public class ConversationRepositoryImpl implements ConversationRepository {
         mediator.setValue(Resource.loading(null));
 
         // 1. Get LiveData source from Room DB
-        LiveData<List<com.midterm.team12345.data.local.entity.ConversationEntity>> dbSource = conversationDao.getConversations();
+        LiveData<List<com.midterm.team12345.data.local.entity.ConversationEntity>> dbSource = conversationDao.getAllConversations();
 
         // 2. Add dbSource to MediatorLiveData
         mediator.addSource(dbSource, localEntities -> {
@@ -115,7 +115,7 @@ public class ConversationRepositoryImpl implements ConversationRepository {
 
     @Override
     public LiveData<List<com.midterm.team12345.data.local.entity.ConversationEntity>> getLocalConversations() {
-        return conversationDao.getConversations();
+        return conversationDao.getAllConversations();
     }
 
     @Override
