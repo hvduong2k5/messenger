@@ -90,7 +90,7 @@ public class EditProfileActivity extends BaseActivity<ActivityEditProfileBinding
                     binding.etEmail.setText(user.getEmail());
                     
                     Glide.with(this)
-                            .load(user.getAvatarUrl())
+                            .load(com.midterm.team12345.utils.ImageUtils.optimizeAvatarUrl(user.getAvatarUrl()))
                             .placeholder(R.drawable.ic_avatar_placeholder)
                             .fallback(R.drawable.ic_avatar_placeholder)
                             .error(R.drawable.ic_avatar_placeholder)

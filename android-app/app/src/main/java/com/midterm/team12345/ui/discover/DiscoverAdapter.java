@@ -68,7 +68,7 @@ public class DiscoverAdapter extends ListAdapter<UserSearchResponseDTO, Discover
             binding.tvSubtitle.setText("@" + user.getUsername());
 
             Glide.with(binding.ivAvatar.getContext())
-                    .load(user.getAvatarUrl())
+                    .load(com.midterm.team12345.utils.ImageUtils.optimizeAvatarUrl(user.getAvatarUrl()))
                     .circleCrop()
                     .placeholder(R.drawable.ic_avatar_placeholder)
                     .fallback(R.drawable.ic_avatar_placeholder)

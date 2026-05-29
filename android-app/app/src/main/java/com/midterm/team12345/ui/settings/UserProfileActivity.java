@@ -115,13 +115,8 @@ public class UserProfileActivity extends AppCompatActivity {
             binding.tvBio.setVisibility(View.GONE);
         }
 
-        String avatarUrl = user.getAvatarUrl();
-        if (avatarUrl != null && !avatarUrl.startsWith("http")) {
-            avatarUrl = com.midterm.team12345.data.remote.RetrofitClient.getBaseUrl() + (avatarUrl.startsWith("/") ? "" : "/") + avatarUrl;
-        }
-
         Glide.with(this)
-                .load(avatarUrl)
+                .load(com.midterm.team12345.utils.ImageUtils.optimizeAvatarUrl(user.getAvatarUrl()))
                 .placeholder(R.drawable.ic_avatar_placeholder)
                 .circleCrop()
                 .into(binding.ivAvatar);
