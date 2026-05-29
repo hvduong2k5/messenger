@@ -173,15 +173,19 @@ public class AuthServiceImpl implements AuthService {
     @Transactional
     public void logout(Long userId, String token) {
         if (token != null) {
-            // Calculate expiration time of the token
-            Date expirationDate = jwtUtils.getExpirationDateFromJwtToken(token);
-            LocalDateTime expiresAt = expirationDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
-            // Add to blacklist
-            BlacklistedToken blacklistedToken = BlacklistedToken.builder()
-                    .token(token)
-                    .expiresAt(expiresAt)
-                    .build();
-            blacklistedTokenRepository.save(blacklistedToken);
+            try {
+                // Calculate expiration time of the token
+                Date expirationDate = jwtUtils.getExpirationDateFromJwtToken(token);
+                LocalDateTime expiresAt = expirationDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
+                // Add to blacklist
+                BlacklistedToken blacklistedToken = BlacklistedToken.builder()
+                        .token(token)
+                        .expiresAt(expiresAt)
+                        .build();
+                blacklistedTokenRepository.save(blacklistedToken);
+            } catch (Exception e) {
+                // If token is invalid or expired, no need to blacklist it
+            }
         }
     }
 }
