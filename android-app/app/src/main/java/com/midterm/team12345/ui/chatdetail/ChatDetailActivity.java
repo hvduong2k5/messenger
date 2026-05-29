@@ -324,6 +324,9 @@ public class ChatDetailActivity extends AppCompatActivity {
                 db.messageDao());
         viewModel = new ViewModelProvider(this, factory).get(ChatDetailViewModel.class);
         Long myId = com.midterm.team12345.data.local.TokenManager.getInstance(this).getUserId();
+        if (myId != null && myId != -1L) {
+            currentUserId = myId;
+        }
         viewModel.setCurrentUserId(myId);
     }
 

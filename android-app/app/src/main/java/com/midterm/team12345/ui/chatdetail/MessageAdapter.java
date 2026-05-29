@@ -70,7 +70,8 @@ public class MessageAdapter extends ListAdapter<MessageResponseDTO, RecyclerView
 
     @Override
     public int getItemViewType(int position) {
-        if (getItem(position).getSenderId().equals(currentUserId)) {
+        MessageResponseDTO message = getItem(position);
+        if (message != null && message.getSenderId() != null && message.getSenderId().equals(currentUserId)) {
             return TYPE_SENT;
         } else {
             return TYPE_RECEIVED;

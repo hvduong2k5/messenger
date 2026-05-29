@@ -178,6 +178,27 @@ public class AuthRepositoryImpl implements AuthRepository {
         if (response.getUser() != null) {
             tokenManager.saveUsername(response.getUser().getUsername());
             tokenManager.saveUserId(response.getUser().getId());
+
+            // Save user profile to Room DB immediately for offline support
+            new Thread(() -> {
+                try {
+                    com.midterm.team12345.data.local.database.MessengerDatabase db =
+                            com.midterm.team12345.data.local.database.MessengerDatabase.getInstance(application);
+                    com.midterm.team12345.data.local.entity.UserEntity entity = db.userDao().getUserByIdSync(response.getUser().getId());
+                    if (entity == null) {
+                        entity = new com.midterm.team12345.data.local.entity.UserEntity();
+                        entity.setId(response.getUser().getId());
+                    }
+                    entity.setUsername(response.getUser().getUsername());
+                    entity.setEmail(response.getUser().getEmail());
+                    entity.setAvatarUrl(response.getUser().getAvatarUrl());
+                    entity.setBio(response.getUser().getStatus());
+
+                    db.userDao().insertUser(entity);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }).start();
         }
     }
 }
