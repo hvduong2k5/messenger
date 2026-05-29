@@ -93,11 +93,6 @@ public class ChatDetailViewModel extends ViewModel {
                 messageDao.markAllReceivedMessagesAsRead(conversationId, userId);
                 
                 messageRepository.markConversationAsRead(conversationId);
-                
-                Long lastMessageId = messageDao.getLastReceivedMessageServerId(conversationId, userId);
-                if (lastMessageId != null) {
-                    messageRepository.updateMessageStatus(lastMessageId, "READ");
-                }
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -151,10 +146,7 @@ public class ChatDetailViewModel extends ViewModel {
                 if (senderId != null && !senderId.equals(currentUserId)) {
                     String type = mqttMessage.getType();
                     if ("NEW_MESSAGE".equals(type) || "text".equalsIgnoreCase(type) || "media".equalsIgnoreCase(type)) {
-                        Long incomingMessageId = mqttMessage.getMessageId();
-                        if (incomingMessageId != null) {
-                            messageRepository.updateMessageStatus(incomingMessageId, "READ");
-                        }
+                        markConversationAsRead(conversationId, currentUserId);
                     }
                 }
             }
