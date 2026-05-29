@@ -51,7 +51,7 @@ public class MediaPreviewAdapter extends ListAdapter<AttachmentResponseDTO, Medi
 
         void bind(AttachmentResponseDTO media) {
             Glide.with(binding.ivMediaThumbnail.getContext())
-                    .load(media.getUrl())
+                    .load(com.midterm.team12345.utils.ImageUtils.optimizeMediaUrl(media.getUrl()))
                     .placeholder(R.color.btn_background_gray)
                     .fallback(R.color.btn_background_gray)
                     .error(R.color.btn_background_gray)

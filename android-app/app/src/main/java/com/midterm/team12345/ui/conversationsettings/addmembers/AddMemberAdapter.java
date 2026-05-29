@@ -71,7 +71,7 @@ public class AddMemberAdapter extends ListAdapter<UserEntity, AddMemberAdapter.V
             binding.tvFullName.setText(user.getUsername());
             
             Glide.with(binding.ivAvatar.getContext())
-                    .load(user.getAvatarUrl())
+                    .load(com.midterm.team12345.utils.ImageUtils.optimizeAvatarUrl(user.getAvatarUrl()))
                     .placeholder(R.drawable.ic_avatar_placeholder)
                     .fallback(R.drawable.ic_avatar_placeholder)
                     .error(R.drawable.ic_avatar_placeholder)

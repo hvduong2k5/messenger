@@ -28,11 +28,8 @@ class TitleAdapter extends RecyclerView.Adapter<TitleAdapter.ViewHolder> {
     }
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        String finalUrl = avatarUrl;
+        String finalUrl = com.midterm.team12345.utils.ImageUtils.optimizeAvatarUrl(avatarUrl);
         if (finalUrl != null && !finalUrl.isEmpty()) {
-            if (!finalUrl.startsWith("http")) {
-                finalUrl = RetrofitClient.getBaseUrl() + (finalUrl.startsWith("/") ? "" : "/") + finalUrl;
-            }
             Glide.with(holder.binding.ivUserAvatar.getContext())
                     .load(finalUrl)
                     .placeholder(R.drawable.ic_avatar_placeholder)

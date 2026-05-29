@@ -154,13 +154,8 @@ public class ChatDetailActivity extends AppCompatActivity {
                                 if (entity != null) {
                                     conversation = com.midterm.team12345.data.mapper.ConversationMapper.toDomain(entity);
                                     binding.tvPartnerName.setText(conversation.getConversationName());
-                                    String avatarUrl = conversation.getAvatarUrl();
-                                    if (avatarUrl != null && !avatarUrl.startsWith("http")) {
-                                        avatarUrl = com.midterm.team12345.data.remote.RetrofitClient.getBaseUrl()
-                                                + (avatarUrl.startsWith("/") ? "" : "/") + avatarUrl;
-                                    }
                                     Glide.with(this)
-                                            .load(avatarUrl)
+                                            .load(com.midterm.team12345.utils.ImageUtils.optimizeAvatarUrl(conversation.getAvatarUrl()))
                                             .placeholder(R.drawable.ic_avatar_placeholder)
                                             .fallback(R.drawable.ic_avatar_placeholder)
                                             .error(R.drawable.ic_avatar_placeholder)
@@ -186,13 +181,8 @@ public class ChatDetailActivity extends AppCompatActivity {
     private void setupUI() {
         if (conversation != null) {
             binding.tvPartnerName.setText(conversation.getConversationName());
-            String avatarUrl = conversation.getAvatarUrl();
-            if (avatarUrl != null && !avatarUrl.startsWith("http")) {
-                avatarUrl = com.midterm.team12345.data.remote.RetrofitClient.getBaseUrl()
-                        + (avatarUrl.startsWith("/") ? "" : "/") + avatarUrl;
-            }
             Glide.with(this)
-                    .load(avatarUrl)
+                    .load(com.midterm.team12345.utils.ImageUtils.optimizeAvatarUrl(conversation.getAvatarUrl()))
                     .placeholder(R.drawable.ic_avatar_placeholder)
                     .fallback(R.drawable.ic_avatar_placeholder)
                     .error(R.drawable.ic_avatar_placeholder)
@@ -409,13 +399,8 @@ public class ChatDetailActivity extends AppCompatActivity {
                 }
 
                 binding.tvPartnerName.setText(conversation.getConversationName());
-                String avatarUrl = conversation.getAvatarUrl();
-                if (avatarUrl != null && !avatarUrl.startsWith("http")) {
-                    avatarUrl = com.midterm.team12345.data.remote.RetrofitClient.getBaseUrl()
-                            + (avatarUrl.startsWith("/") ? "" : "/") + avatarUrl;
-                }
                 Glide.with(this)
-                        .load(avatarUrl)
+                        .load(com.midterm.team12345.utils.ImageUtils.optimizeAvatarUrl(conversation.getAvatarUrl()))
                         .placeholder(R.drawable.ic_avatar_placeholder)
                         .fallback(R.drawable.ic_avatar_placeholder)
                         .error(R.drawable.ic_avatar_placeholder)

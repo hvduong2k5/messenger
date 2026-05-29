@@ -82,7 +82,7 @@ public class GroupMemberAdapter extends ListAdapter<ParticipantResponseDTO, Grou
             }
 
             Glide.with(binding.ivAvatar.getContext())
-                    .load(member.getAvatarUrl())
+                    .load(com.midterm.team12345.utils.ImageUtils.optimizeAvatarUrl(member.getAvatarUrl()))
                     .placeholder(R.drawable.ic_avatar_placeholder)
                     .fallback(R.drawable.ic_avatar_placeholder)
                     .error(R.drawable.ic_avatar_placeholder)

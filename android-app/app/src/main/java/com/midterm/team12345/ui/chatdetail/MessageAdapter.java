@@ -234,7 +234,7 @@ public class MessageAdapter extends ListAdapter<MessageResponseDTO, RecyclerView
             }
 
             Glide.with(binding.ivAvatar.getContext())
-                    .load(getFullUrl(message.getSenderAvatarUrl()))
+                    .load(com.midterm.team12345.utils.ImageUtils.optimizeAvatarUrl(message.getSenderAvatarUrl()))
                     .placeholder(R.drawable.ic_avatar_placeholder)
                     .fallback(R.drawable.ic_avatar_placeholder)
                     .error(R.drawable.ic_avatar_placeholder)

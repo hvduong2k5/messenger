@@ -78,14 +78,8 @@ public class FriendAdapter extends ListAdapter<UserResponseDTO, FriendAdapter.Vi
             }
 
             // Load Avatar using Glide
-            String avatarUrl = user.getAvatarUrl();
-            if (avatarUrl != null && !avatarUrl.startsWith("http")) {
-                avatarUrl = com.midterm.team12345.data.remote.RetrofitClient.getBaseUrl() + 
-                            (avatarUrl.startsWith("/") ? "" : "/") + avatarUrl;
-            }
-
             Glide.with(binding.ivAvatar.getContext())
-                    .load(avatarUrl)
+                    .load(com.midterm.team12345.utils.ImageUtils.optimizeAvatarUrl(user.getAvatarUrl()))
                     .placeholder(R.drawable.ic_avatar_placeholder)
                     .fallback(R.drawable.ic_avatar_placeholder)
                     .error(R.drawable.ic_avatar_placeholder)

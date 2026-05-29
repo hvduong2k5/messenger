@@ -70,14 +70,8 @@ public class FriendRequestAdapter extends ListAdapter<FriendRequestResponseDTO, 
             binding.tvName.setText(request.getSenderUsername());
 
             // Load Avatar using Glide
-            String avatarUrl = request.getSenderAvatarUrl();
-            if (avatarUrl != null && !avatarUrl.startsWith("http")) {
-                avatarUrl = com.midterm.team12345.data.remote.RetrofitClient.getBaseUrl() + 
-                            (avatarUrl.startsWith("/") ? "" : "/") + avatarUrl;
-            }
-
             Glide.with(binding.ivAvatar.getContext())
-                    .load(avatarUrl)
+                    .load(com.midterm.team12345.utils.ImageUtils.optimizeAvatarUrl(request.getSenderAvatarUrl()))
                     .placeholder(R.drawable.ic_avatar_placeholder)
                     .fallback(R.drawable.ic_avatar_placeholder)
                     .error(R.drawable.ic_avatar_placeholder)

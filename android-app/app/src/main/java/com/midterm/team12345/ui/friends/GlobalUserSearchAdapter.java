@@ -58,12 +58,8 @@ public class GlobalUserSearchAdapter extends ListAdapter<UserSearchResponseDTO, 
         holder.binding.tvName.setText(user.getUsername()); // Or full name if available
         holder.binding.tvUsername.setText("@" + user.getUsername());
 
-        String avatarUrl = user.getAvatarUrl();
-        if (avatarUrl != null && !avatarUrl.startsWith("http")) {
-            avatarUrl = RetrofitClient.getBaseUrl() + (avatarUrl.startsWith("/") ? "" : "/") + avatarUrl;
-        }
         Glide.with(holder.itemView.getContext())
-                .load(avatarUrl)
+                .load(com.midterm.team12345.utils.ImageUtils.optimizeAvatarUrl(user.getAvatarUrl()))
                 .placeholder(R.drawable.ic_avatar_placeholder)
                 .error(R.drawable.ic_avatar_placeholder)
                 .into(holder.binding.ivAvatar);

@@ -123,7 +123,7 @@ public class MyProfileFragment extends BaseFragment<FragmentMyProfileBinding, My
                 binding.onlineIndicator.setVisibility((user.getIsOnline() != null && user.getIsOnline()) ? View.VISIBLE : View.GONE);
 
                 Glide.with(this)
-                        .load(user.getAvatarUrl())
+                        .load(com.midterm.team12345.utils.ImageUtils.optimizeAvatarUrl(user.getAvatarUrl()))
                         .placeholder(R.drawable.ic_avatar_placeholder)
                         .fallback(R.drawable.ic_avatar_placeholder)
                         .error(R.drawable.ic_avatar_placeholder)

@@ -90,13 +90,8 @@ public class ConversationSettingsActivity extends BaseActivity<ActivityConversat
         binding.tvName.setText(conversation.getConversationName());
         binding.tvSubInfo.setText(conversation.getGroup() ? "Group Chat" : "Messenger");
 
-        String avatarUrl = conversation.getAvatarUrl();
-        if (avatarUrl != null && !avatarUrl.startsWith("http")) {
-            avatarUrl = com.midterm.team12345.data.remote.RetrofitClient.getBaseUrl() + (avatarUrl.startsWith("/") ? "" : "/") + avatarUrl;
-        }
-
         Glide.with(this)
-                .load(avatarUrl)
+                .load(com.midterm.team12345.utils.ImageUtils.optimizeAvatarUrl(conversation.getAvatarUrl()))
                 .placeholder(R.drawable.ic_avatar_placeholder)
                 .fallback(R.drawable.ic_avatar_placeholder)
                 .error(R.drawable.ic_avatar_placeholder)
