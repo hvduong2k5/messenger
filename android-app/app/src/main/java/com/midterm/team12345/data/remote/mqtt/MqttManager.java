@@ -175,6 +175,21 @@ public class MqttManager {
                                     );
                                 } else {
                                     messageDao.insertMessage(entity);
+                                    
+                                    // Save attachments to Room immediately for real-time incoming messages
+                                    com.midterm.team12345.data.remote.dto.response.MessageResponseDTO responseDto = message.toMessageResponseDTO();
+                                    if (responseDto != null && responseDto.getAttachments() != null && !responseDto.getAttachments().isEmpty()) {
+                                        com.midterm.team12345.data.local.dao.AttachmentDao attachmentDao = 
+                                                com.midterm.team12345.data.local.database.MessengerDatabase.getInstance(context)
+                                                        .attachmentDao();
+                                        java.util.List<com.midterm.team12345.data.local.entity.AttachmentEntity> attachmentEntities = new java.util.ArrayList<>();
+                                        for (com.midterm.team12345.data.remote.dto.response.AttachmentResponseDTO attDto : responseDto.getAttachments()) {
+                                            com.midterm.team12345.data.local.entity.AttachmentEntity attEntity = 
+                                                    com.midterm.team12345.data.mapper.MessageMapper.toAttachmentEntity(attDto, entity.getClientMessageId());
+                                            attachmentEntities.add(attEntity);
+                                        }
+                                        attachmentDao.insertAttachments(attachmentEntities);
+                                    }
                                 }
 
                                 // Auto-report DELIVERED status for incoming messages when app is open:
