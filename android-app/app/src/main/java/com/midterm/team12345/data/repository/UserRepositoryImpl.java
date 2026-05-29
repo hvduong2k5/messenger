@@ -176,6 +176,14 @@ public class UserRepositoryImpl implements UserRepository {
     @Override
     public LiveData<Resource<PageResponse<UserSearchResponseDTO>>> searchUsers(String query, int page, int size) {
         MutableLiveData<Resource<PageResponse<UserSearchResponseDTO>>> data = new MutableLiveData<>();
+        if (query == null || query.trim().length() < 2) {
+            PageResponse<UserSearchResponseDTO> emptyPage = new PageResponse<>();
+            emptyPage.setContent(new java.util.ArrayList<>());
+            emptyPage.setTotalElements(0L);
+            emptyPage.setTotalPages(0);
+            data.setValue(Resource.success(emptyPage));
+            return data;
+        }
         data.setValue(Resource.loading(null));
         userApiService.searchUsers(query, page, size).enqueue(new Callback<PageResponse<UserSearchResponseDTO>>() {
             @Override
