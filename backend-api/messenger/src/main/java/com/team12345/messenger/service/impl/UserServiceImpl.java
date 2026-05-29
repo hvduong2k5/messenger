@@ -138,7 +138,7 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional(readOnly = true)
     public List<UserResponseDTO> searchUsers(String query, Long excludeUserId) {
-        List<User> users = userRepository.findByUsernameContainingIgnoreCaseOrEmailContainingIgnoreCase(query, query);
+        List<User> users = userRepository.searchByUsername(query);
         return users.stream()
                 .filter(u -> !u.getId().equals(excludeUserId))
                 .map(this::mapToUserResponse)
@@ -148,7 +148,7 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional(readOnly = true)
     public Page<UserSearchResponseDTO> searchUsers(String query, Pageable pageable, Long currentUserId) {
-        Page<User> users = userRepository.findByUsernameContainingIgnoreCaseOrEmailContainingIgnoreCase(query, query, pageable);
+        Page<User> users = userRepository.searchByUsername(query, pageable);
         // Loại bỏ bản thân khỏi kết quả bằng stream, rồi tạo lại Page
         List<User> filteredList = users.getContent().stream()
                 .filter(u -> !u.getId().equals(currentUserId))
