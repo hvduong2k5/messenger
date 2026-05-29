@@ -223,6 +223,8 @@ public class FriendsFragment extends BaseFragment<FragmentFriendsBinding, Friend
     }
 
     private void showPendingRequestsBottomSheet() {
+        viewModel.fetchPendingRequests();
+
         com.google.android.material.bottomsheet.BottomSheetDialog dialog = 
                 new com.google.android.material.bottomsheet.BottomSheetDialog(requireContext());
 
