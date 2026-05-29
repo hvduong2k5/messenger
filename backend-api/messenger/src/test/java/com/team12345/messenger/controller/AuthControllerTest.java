@@ -85,4 +85,14 @@ class AuthControllerTest {
         mockMvc.perform(post("/auth/logout"))
                 .andExpect(status().isOk());
     }
+
+    @Test
+    void logout_WithNullUserDetails_ShouldReturnOk() throws Exception {
+        SecurityContextHolder.clearContext();
+
+        doNothing().when(authService).logout(null, "");
+
+        mockMvc.perform(post("/auth/logout"))
+                .andExpect(status().isOk());
+    }
 }
