@@ -10,7 +10,8 @@ import androidx.room.PrimaryKey;
     tableName = "messages",
     indices = {
         @Index(value = "conversation_id"),
-        @Index(value = "client_message_id", unique = true)
+        @Index(value = "client_message_id", unique = true),
+        @Index(value = "message_id", unique = true)
     }
 )
 public class MessageEntity {

@@ -64,6 +64,7 @@ public class MessageMapper {
         }
         
         MessageEntity entity = new MessageEntity();
+        entity.setMessageId(mqttDto.getMessageId());
         
         Long senderId = null;
         try {
