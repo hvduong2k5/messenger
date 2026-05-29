@@ -1,23 +1,24 @@
 plugins {
     alias(libs.plugins.android.application)
+    alias(libs.plugins.kotlin.android)
 }
 
 android {
     namespace = "com.midterm.team12345"
-    compileSdk {
-        version = release(36) {
-            minorApiLevel = 1
-        }
-    }
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.midterm.team12345"
-        minSdk = 21
-        targetSdk = 36
+        minSdk = 26
+        targetSdk = 35
         versionCode = 1
-        versionName = "1.0"
+        versionName = "1.0.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        vectorDrawables {
+            useSupportLibrary = true
+        }
     }
 
     buildTypes {
@@ -33,6 +34,13 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
+    kotlinOptions {
+        jvmTarget = "11"
+    }
+
+    viewBinding {
+        enable = true
+    }
 }
 
 dependencies {
@@ -40,7 +48,49 @@ dependencies {
     implementation(libs.material)
     implementation(libs.activity)
     implementation(libs.constraintlayout)
+    implementation(libs.annotation)
+
+    // Retrofit & OkHttp
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.gson)
+    implementation(libs.okhttp.logging)
+
+    // Coroutines
+    implementation(libs.kotlinx.coroutines.android)
+
+    // Lifecycle
+    implementation(libs.lifecycle.viewmodel.ktx)
+    implementation(libs.lifecycle.runtime.ktx)
+
+    // Security
+    implementation(libs.security.crypto)
+
+    // Image loading
+    implementation("com.github.bumptech.glide:glide:4.15.1")
+
+    // CircleImageView
+    implementation("de.hdodenhof:circleimageview:3.1.0")
+
+    // SwipeRefresh
+    implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.2.0")
+    implementation("androidx.recyclerview:recyclerview:1.3.2")
+
+    // MQTT
+    implementation(libs.mqtt.paho)
+    implementation("androidx.localbroadcastmanager:localbroadcastmanager:1.1.0")
+
+    // Room Database
+    implementation(libs.room.runtime)
+    annotationProcessor(libs.room.compiler)
+    implementation(libs.room.ktx)
+
+    // Bean Validation API (provides javax.validation annotations at compile time)
+    implementation("javax.validation:validation-api:2.0.1.Final")
+
     testImplementation(libs.junit)
+    testImplementation(libs.core.testing)
+    testImplementation(libs.mockito.core)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
 }
+

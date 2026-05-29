@@ -1,0 +1,36 @@
+package com.midterm.team12345.domain.repository;
+
+import androidx.lifecycle.LiveData;
+import com.midterm.team12345.data.remote.dto.request.ConversationRequestDTO;
+import com.midterm.team12345.data.remote.dto.request.ConversationUpdateDTO;
+import com.midterm.team12345.data.remote.dto.response.ConversationResponseDTO;
+import com.midterm.team12345.data.remote.dto.response.MessageResponseDTO;
+import com.midterm.team12345.data.remote.dto.response.PageResponse;
+import com.midterm.team12345.data.remote.dto.response.ParticipantResponseDTO;
+import com.midterm.team12345.data.remote.dto.MqttMessageDTO;
+import com.midterm.team12345.utils.Resource;
+
+public interface ConversationRepository {
+    LiveData<Resource<PageResponse<ConversationResponseDTO>>> getConversations(int page, int size);
+    LiveData<Resource<ConversationResponseDTO>> getConversationDetails(Long id);
+    LiveData<Resource<ConversationResponseDTO>> createConversation(ConversationRequestDTO request);
+    LiveData<Resource<Void>> addParticipant(Long conversationId, Long userId);
+    LiveData<Resource<Void>> addParticipants(Long conversationId, java.util.List<Long> userIds);
+    LiveData<Resource<Void>> removeParticipant(Long conversationId, Long userId);
+    LiveData<Resource<Void>> updateConversation(Long id, ConversationUpdateDTO request);
+    LiveData<Resource<Void>> leaveConversation(Long conversationId);
+    LiveData<Resource<Void>> updateParticipantRole(Long conversationId, Long participantId, String newRole);
+    LiveData<Resource<PageResponse<MessageResponseDTO>>> getMessages(Long conversationId, int page, int size);
+    
+    LiveData<Resource<PageResponse<ParticipantResponseDTO>>> getParticipants(Long id, String keyword, int page, int size);
+
+    // Local DB Room
+    LiveData<java.util.List<com.midterm.team12345.data.local.entity.ConversationEntity>> getLocalConversations();
+    LiveData<java.util.List<com.midterm.team12345.data.local.entity.ConversationEntity>> searchLocalConversations(String query);
+
+    // Real-time (Mqtt)
+    LiveData<MqttMessageDTO> getRealTimeMessages();
+    LiveData<Boolean> getConnectionStatus();
+    void emitRealTimeMessage(MqttMessageDTO message);
+    void updateConnectionStatus(boolean connected);
+}

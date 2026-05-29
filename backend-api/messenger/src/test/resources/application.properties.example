@@ -1,0 +1,19 @@
+# JWT Test config
+app.jwt.secret=a_very_secret_key_for_testing_purposes_only_which_needs_to_be_long
+app.jwt.expiration=86400000
+
+# MQTT Integration (Disabled by default for tests)
+mqtt.enabled=false
+mqtt.broker.url=tcp://localhost:1883
+mqtt.username=admin
+mqtt.password=public
+mqtt.client.id=server-messenger
+mqtt.default.topic=chat/server/default
+
+# Cloudinary Config
+cloudinary.cloud_name=your_cloud_name
+cloudinary.api_key=your_api_key
+cloudinary.api_secret=your_api_secret
+
+# Email Config (needed for JavaMailSender auto-configuration)
+spring.mail.host=localhost
