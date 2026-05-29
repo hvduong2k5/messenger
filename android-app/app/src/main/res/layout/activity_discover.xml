@@ -51,7 +51,7 @@
             android:layout_marginEnd="8dp"
             android:padding="8dp"
             android:src="@android:drawable/ic_menu_close_clear_cancel"
-            android:tint="#BDBDBD"
+            app:tint="#BDBDBD"
             android:visibility="gone"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"

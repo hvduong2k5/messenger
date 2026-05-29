@@ -39,7 +39,7 @@ public class UserSearchAdapter extends ListAdapter<UserSearchResponseDTO, UserSe
             @Override
             public boolean areContentsTheSame(@NonNull UserSearchResponseDTO oldItem, @NonNull UserSearchResponseDTO newItem) {
                 return oldItem.getUsername().equals(newItem.getUsername()) &&
-                       oldItem.getFriendshipStatus() == newItem.getFriendshipStatus() &&
+                       java.util.Objects.equals(oldItem.getFriendshipStatus(), newItem.getFriendshipStatus()) &&
                        (oldItem.getAvatarUrl() != null && oldItem.getAvatarUrl().equals(newItem.getAvatarUrl()));
             }
         });
