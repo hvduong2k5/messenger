@@ -169,6 +169,8 @@ public class ConversationServiceImpl implements ConversationService {
                 .name(name)
                 .isGroup(isGroup)
                 .build();
+        conversation.setCreatedAt(java.time.LocalDateTime.now());
+        conversation.setUpdatedAt(java.time.LocalDateTime.now());
         
         conversation = conversationRepository.save(conversation);
         

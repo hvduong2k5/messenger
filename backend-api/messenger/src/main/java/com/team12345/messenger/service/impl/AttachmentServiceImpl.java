@@ -49,6 +49,7 @@ public class AttachmentServiceImpl implements AttachmentService {
                 .fileSize((Integer) uploadResult.get("size"))
                 .publicId((String) uploadResult.get("publicId"))
                 .uploader(uploader)
+                .uploadedAt(java.time.LocalDateTime.now())
                 .build();
 
         Attachment savedAttachment = attachmentRepository.save(attachment);
